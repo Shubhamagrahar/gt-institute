@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'Dashboard') — {{ auth()->user()->institute?->name ?? 'Institute' }}</title>
+  <title>@yield('title', 'Dashboard') — {{ Auth::guard('institute')->user()->institute?->name ?? 'Institute' }}</title>
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   @stack('styles')
 </head>
@@ -28,22 +28,22 @@
     {{-- Institute badge --}}
     <div class="gt-sidebar-inst" style="margin:10px 12px 6px;">
       <div class="inst-ava">
-        @php $logo = auth()->user()->institute?->logo; @endphp
+        @php $logo = Auth::guard('institute')->user()->institute?->logo; @endphp
         @if($logo && $logo !== 'images/default-institute.png')
           <img src="{{ asset($logo) }}" alt="logo">
         @else
-          {{ strtoupper(substr(auth()->user()->institute?->short_name ?? auth()->user()->institute?->name ?? 'IN', 0, 2)) }}
+          {{ strtoupper(substr(Auth::guard('institute')->user()->institute?->short_name ?? Auth::guard('institute')->user()->institute?->name ?? 'IN', 0, 2)) }}
         @endif
       </div>
       <div>
-        <div class="inst-name">{{ Str::limit(auth()->user()->institute?->name ?? 'Institute', 20) }}</div>
+        <div class="inst-name">{{ Str::limit(Auth::guard('institute')->user()->institute?->name ?? 'Institute', 20) }}</div>
         <div class="inst-role">Institute Panel</div>
       </div>
     </div>
 
     {{-- Session selector --}}
     @php
-      $sessions = \App\Models\Owner\Institute::find(auth()->user()->institute_id)?->sessions ?? collect();
+      $sessions = \App\Models\Owner\Institute::find(Auth::guard('institute')->user()->institute_id)?->sessions ?? collect();
     @endphp
     <div class="gt-session-wrap" style="margin:0 12px 4px;">
       <select>
@@ -122,10 +122,10 @@
     {{-- Footer --}}
     <div class="gt-sidebar-footer">
       <div class="gt-user-card">
-        <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+        <div class="avatar">{{ strtoupper(substr(Auth::guard('institute')->user()->studentProfile?->name ?? Auth::guard('institute')->user()->staffProfile?->name ?? Auth::guard('institute')->user()->user_id, 0, 1)) }}</div>
         <div class="user-info">
-          <div class="name">{{ Str::limit(auth()->user()->name, 16) }}</div>
-          <div class="role">{{ ucfirst(str_replace('_',' ', auth()->user()->role)) }}</div>
+          <div class="name">{{ Str::limit(Auth::guard('institute')->user()->studentProfile?->name ?? Auth::guard('institute')->user()->staffProfile?->name ?? Auth::guard('institute')->user()->user_id, 16) }}</div>
+          <div class="role">{{ ucfirst(str_replace('_',' ', Auth::guard('institute')->user()->role)) }}</div>
         </div>
       </div>
       <form action="{{ route('logout') }}" method="POST" style="margin-top:10px;">

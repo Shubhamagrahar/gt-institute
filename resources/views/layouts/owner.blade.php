@@ -55,10 +55,10 @@
     {{-- Footer --}}
     <div class="gt-sidebar-footer">
       <div class="gt-user-card">
-        <div class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+        <div class="avatar">{{ strtoupper(substr(Auth::guard('web')->user()->name, 0, 1)) }}</div>
         <div class="user-info">
-          <div class="name">{{ Str::limit(auth()->user()->name, 16) }}</div>
-          <div class="role">{{ auth()->user()->user_id }}</div>
+          <div class="name">{{ Str::limit(Auth::guard('web')->user()->name, 16) }}</div>
+          <div class="role">{{ Auth::guard('web')->user()->admin_id }}</div>
         </div>
       </div>
       <form action="{{ route('logout') }}" method="POST" style="margin-top:10px;">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\CourseBook;
 use App\Models\CourseDetail;
 use App\Models\FeeCollectDetail;
@@ -12,7 +13,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $institute = auth()->user()->institute;
+        $institute = Auth::guard('institute')->user()->institute;
         $stats = [
             'total_students' => User::where('institute_id', $institute->id)->where('role', 'student')->count(),
             'total_staff'    => User::where('institute_id', $institute->id)->where('role', 'staff')->count(),

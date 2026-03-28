@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Owner\{Feature, Institute, InstitutePayCollect, InstituteWallet, Plan};
 use App\Services\{InstituteOnboardingService, InvoiceService, WalletService};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InstituteController extends Controller
 {
@@ -137,7 +138,7 @@ class InstituteController extends Controller
             'date'         => $data['date'],
             'note'         => $data['note'] ?? null,
             'status'       => 'received',
-            'received_by'  => auth()->id(),
+            'received_by'  => Auth::guard('web')->id(),
             'c_date'       => now(),
         ]);
 

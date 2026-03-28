@@ -12,7 +12,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'user_id', 'name', 'mobile', 'email', 'password',
+        'user_id', 'mobile', 'email', 'password',
         'role', 'institute_id', 'status',
     ];
 
@@ -24,10 +24,18 @@ class User extends Authenticatable
     }
 
     // Roles
-    public function isOwner(): bool       { return $this->role === 'owner'; }
     public function isInstituteHead(): bool { return $this->role === 'institute_head'; }
-    public function isStaff(): bool       { return $this->role === 'staff'; }
-    public function isStudent(): bool     { return $this->role === 'student'; }
+    public function isStaff(): bool         { return $this->role === 'staff'; }
+    public function isStudent(): bool       { return $this->role === 'student'; }
+
+    // Name helper — comes from profile
+    public function getNameAttribute(): string
+    {
+        if ($this->role === 'student') {
+            return $this->studentProfile?->name ?? $this->user_id;
+        }
+        return $this->staffProfile?->name ?? $this->user_id;
+    }
 
     public function institute()
     {

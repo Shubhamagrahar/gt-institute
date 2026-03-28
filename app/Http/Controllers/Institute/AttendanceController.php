@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\{AttendanceStudent, AttendanceStaff, BatchDetail, User};
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
 {
-    private function institute() { return auth()->user()->institute; }
+    private function institute() { return Auth::guard('institute')->user()->institute; }
 
     public function studentIndex()
     {
@@ -45,7 +46,7 @@ class AttendanceController extends Controller
         foreach ($data['attendance'] as $userId => $status) {
             \App\Models\AttendanceStudent::updateOrCreate(
                 ['institute_id'=>$institute->id,'user_id'=>$userId,'date'=>$data['date'],'batch_id'=>$data['batch_id']??null],
-                ['status'=>$status,'created_by'=>auth()->id()]
+                ['status'=>$status,'created_by'=>Auth::guard('institute')->id()]
             );
         }
         return back()->with('success','Attendance marked for '.$data['date'].'.');
@@ -72,7 +73,7 @@ class AttendanceController extends Controller
         foreach ($data['attendance'] as $userId => $status) {
             \App\Models\AttendanceStaff::updateOrCreate(
                 ['institute_id'=>$institute->id,'user_id'=>$userId,'date'=>$data['date']],
-                ['status'=>$status,'created_by'=>auth()->id()]
+                ['status'=>$status,'created_by'=>Auth::guard('institute')->id()]
             );
         }
         return back()->with('success','Staff attendance marked.');

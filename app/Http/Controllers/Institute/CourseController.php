@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\{BatchDetail, CourseBook, CourseDetail, CourseType, Transaction, User, Wallet};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class CourseController extends Controller
 {
-    private function institute() { return auth()->user()->institute; }
+    private function institute() { return Auth::guard('institute')->user()->institute; }
 
     public function index()
     {
@@ -133,7 +134,7 @@ class CourseController extends Controller
                     'c_date'       => now(),
                     'op_bal'       => $opBal,
                     'cl_bal'       => $clBal,
-                    'by_userid'    => auth()->id(),
+                    'by_userid'    => Auth::guard('institute')->id(),
                 ]);
                 $wallet->update(['main_b' => $clBal]);
 
@@ -152,7 +153,7 @@ class CourseController extends Controller
                         'c_date'       => now(),
                         'op_bal'       => $opBal2,
                         'cl_bal'       => $clBal2,
-                        'by_userid'    => auth()->id(),
+                        'by_userid'    => Auth::guard('institute')->id(),
                     ]);
                     $wallet->update(['main_b' => $clBal2]);
                 }

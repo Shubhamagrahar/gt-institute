@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\{CourseBook, CourseDetail, FeeCollectDetail, Transaction, User, Wallet};
 use App\Services\{InvoiceService, WalletService as StudentWalletService};
 use Illuminate\Http\Request;
@@ -10,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class FeeController extends Controller
 {
-    private function institute() { return auth()->user()->institute; }
+    private function institute() { return Auth::guard('institute')->user()->institute; }
 
     public function index()
     {
@@ -53,7 +54,7 @@ class FeeController extends Controller
                 'c_date'       => now(),
                 'op_bal'       => $opBal,
                 'cl_bal'       => $clBal,
-                'by_userid'    => auth()->id(),
+                'by_userid'    => Auth::guard('institute')->id(),
             ]);
 
             $wallet->update(['main_b' => $clBal]);
@@ -66,7 +67,7 @@ class FeeController extends Controller
                 'utr'          => $data['utr'] ?? null,
                 'amt'          => $data['amt'],
                 'date'         => $data['date'],
-                'by_rcv'       => auth()->id(),
+                'by_rcv'       => Auth::guard('institute')->id(),
             ]);
         });
 

@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use App\Models\{StudentProfile, Transaction, User, Wallet};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Hash};
 
 class StudentController extends Controller
 {
-    private function institute() { return auth()->user()->institute; }
+    private function institute() { return Auth::guard('institute')->user()->institute; }
 
     public function index()
     {
