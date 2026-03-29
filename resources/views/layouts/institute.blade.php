@@ -41,16 +41,50 @@
       </div>
     </div>
 
-    {{-- Session selector --}}
-    @php
-      $sessions = \App\Models\Owner\Institute::find(Auth::guard('institute')->user()->institute_id)?->sessions ?? collect();
-    @endphp
-    <div class="gt-session-wrap" style="margin:0 12px 4px;">
-      <select>
-        <option>JAN-JUNE (2025-26)</option>
-        <option>JULY-DEC (2025-26)</option>
+   {{-- Active Session Display --}}
+{{-- Session Dropdown --}}
+@php
+  $instituteId    = Auth::guard('institute')->user()->institute_id;
+  $allSessions    = \App\Models\InstituteSession::where('institute_id', $instituteId)
+                      ->orderByDesc('is_active')->orderByDesc('start_date')->get();
+  $activeSession  = $allSessions->where('is_active', true)->first();
+  $selectedSessId = session('selected_session_id', $activeSession?->id);
+@endphp
+
+<div style="margin:8px 12px 4px;background:rgba(108,93,211,.12);border:1px solid rgba(108,93,211,.25);border-radius:7px;padding:9px 12px;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a89cf5" stroke-width="2" style="flex-shrink:0;">
+      <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
+      <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    <span style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;">Session</span>
+    @if($activeSession)
+      <span style="width:6px;height:6px;border-radius:50%;background:#10b981;flex-shrink:0;margin-left:auto;"></span>
+    @endif
+  </div>
+
+  @if($allSessions->isEmpty())
+    <a href="{{ route('institute.sessions.create') }}"
+       style="display:block;font-size:11.5px;color:#a89cf5;font-weight:600;">
+      + Create First Session
+    </a>
+  @else
+    <form method="POST" action="{{ route('institute.sessions.switch') }}" id="session-switch-form">
+      @csrf
+      <select name="session_id"
+        onchange="document.getElementById('session-switch-form').submit()"
+        style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:5px;color:rgba(255,255,255,.85);font-size:12px;font-weight:500;padding:5px 8px;outline:none;cursor:pointer;appearance:none;font-family:inherit;">
+        @foreach($allSessions as $sess)
+          <option value="{{ $sess->id }}"
+            {{ $selectedSessId == $sess->id ? 'selected' : '' }}
+            style="background:#1a1f3c;color:#fff;">
+            {{ $sess->name }}{{ $sess->is_active ? ' ●' : '' }}
+          </option>
+        @endforeach
       </select>
-    </div>
+    </form>
+  @endif
+</div>git add .
 
     {{-- Search --}}
     <div class="gt-sidebar-search-wrap" style="margin:4px 12px 8px;">
@@ -68,13 +102,19 @@
       Dashboard
     </a>
 
+    <div class="gt-sidebar-section">Session</div>
+    <a href="{{ route('institute.sessions.index') }}" class="gt-nav-item">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+  Manage Sessions
+</a>
+
     <div class="gt-sidebar-section">Academics</div>
     <a href="{{ route('institute.courses.index') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.*') || request()->routeIs('institute.course-types.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       Courses
     </a>
-    <a href="{{ route('institute.courses.enrollments') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.enrollments') || request()->routeIs('institute.courses.enroll') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <a href="{{ route('institute.subjects.index') }}" class="gt-nav-item {{ request()->routeIs('institute.subjects.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/></svg>
       Subjects
     </a>
 

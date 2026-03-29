@@ -93,7 +93,7 @@
 }
 
 .status-switch.is-active .status-switch-track {
-  background: rgba(108,93,211,.34);
+  background: rgb(108 93 211);
 }
 
 .status-switch.is-active .status-switch-thumb {

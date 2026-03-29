@@ -31,20 +31,30 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $institute = $this->institute();
-        $data = $request->validate([
-            'name'              => 'required|string|max:150',
-            'course_code'       => 'nullable|string|max:20',
-            'course_type_id'    => [
-                'nullable',
-                Rule::exists('course_types', 'id')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+        $data = $request->validate(
+            [
+                'name'              => [
+                    'required',
+                    'string',
+                    'max:150',
+                    Rule::unique('course_details', 'name')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+                ],
+                'course_code'       => 'nullable|string|max:20',
+                'course_type_id'    => [
+                    'nullable',
+                    Rule::exists('course_types', 'id')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+                ],
+                'course_short_name' => 'nullable|string|max:50',
+                'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+                'duration'          => 'required|integer|min:1',
+                'max_fee'           => 'required|numeric|min:0|gte:fee',
+                'fee'               => 'required|numeric|min:0',
+                'description'       => 'nullable|string',
             ],
-            'course_short_name' => 'nullable|string|max:50',
-            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'duration'          => 'required|integer|min:1',
-            'max_fee'           => 'required|numeric|min:0|gte:fee',
-            'fee'               => 'required|numeric|min:0',
-            'description'       => 'nullable|string',
-        ]);
+            [
+                'name.unique' => 'This course name already exists for your institute.',
+            ]
+        );
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('course-images', 'public');
@@ -70,21 +80,33 @@ class CourseController extends Controller
     {
         abort_unless($course->institute_id === $this->institute()->id, 403);
         $institute = $this->institute();
-        $data = $request->validate([
-            'name'              => 'required|string|max:150',
-            'course_code'       => 'nullable|string|max:20',
-            'course_type_id'    => [
-                'nullable',
-                Rule::exists('course_types', 'id')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+        $data = $request->validate(
+            [
+                'name'              => [
+                    'required',
+                    'string',
+                    'max:150',
+                    Rule::unique('course_details', 'name')
+                        ->where(fn ($query) => $query->where('institute_id', $institute->id))
+                        ->ignore($course->id),
+                ],
+                'course_code'       => 'nullable|string|max:20',
+                'course_type_id'    => [
+                    'nullable',
+                    Rule::exists('course_types', 'id')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+                ],
+                'course_short_name' => 'nullable|string|max:50',
+                'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+                'duration'          => 'required|integer|min:1',
+                'max_fee'           => 'required|numeric|min:0|gte:fee',
+                'fee'               => 'required|numeric|min:0',
+                'description'       => 'nullable|string',
+                'status'            => 'required|in:active,inactive',
             ],
-            'course_short_name' => 'nullable|string|max:50',
-            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
-            'duration'          => 'required|integer|min:1',
-            'max_fee'           => 'required|numeric|min:0|gte:fee',
-            'fee'               => 'required|numeric|min:0',
-            'description'       => 'nullable|string',
-            'status'            => 'required|in:active,inactive',
-        ]);
+            [
+                'name.unique' => 'This course name already exists for your institute.',
+            ]
+        );
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('course-images', 'public');

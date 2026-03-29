@@ -13,6 +13,8 @@ use App\Http\Controllers\Institute\CourseController;
 use App\Http\Controllers\Institute\CourseTypeController;
 use App\Http\Controllers\Institute\FeeController;
 use App\Http\Controllers\Institute\AttendanceController;
+use App\Http\Controllers\Institute\SubjectController;
+use App\Http\Controllers\Institute\SessionController;
 
 // Root redirect
 Route::get('/', fn() => redirect()->route('login'));
@@ -45,8 +47,16 @@ Route::prefix('owner')
 // Institute Panel — guard: institute
 Route::prefix('dashboard')
     ->name('institute.')
-    ->middleware(['auth:institute', 'role:institute_head,staff'])
+    ->middleware(['auth:institute', 'role:institute_head,staff', 'check.session'])
     ->group(function () {
+
+         Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index')->withoutMiddleware('check.session');
+        Route::get('/sessions/create', [SessionController::class, 'create'])->name('sessions.create')->withoutMiddleware('check.session');
+        Route::post('/sessions', [SessionController::class, 'store'])->name('sessions.store')->withoutMiddleware('check.session');
+        Route::patch('/sessions/{session}/toggle', [SessionController::class, 'toggle'])->name('sessions.toggle');
+        Route::delete('/sessions/{session}', [SessionController::class, 'destroy'])->name('sessions.destroy');
+        Route::post('/sessions/switch', [SessionController::class, 'switch'])->name('sessions.switch')->withoutMiddleware('check.session');
+        
         Route::get('/', [InstituteDashboard::class, 'index'])->name('dashboard');
         Route::resource('students', StudentController::class);
         Route::get('students/{student}/ledger', [StudentController::class, 'ledger'])->name('students.ledger');
@@ -56,6 +66,11 @@ Route::prefix('dashboard')
         Route::resource('course-types', CourseTypeController::class)
             ->parameters(['course-types' => 'courseType'])
             ->except(['show', 'create']);
+        Route::resource('subjects', SubjectController::class);
+        Route::patch('subjects/{subject}/toggle', [SubjectController::class, 'toggle'])->name('subjects.toggle');
+        Route::get('subjects-bind', [SubjectController::class, 'bindIndex'])->name('subjects.bind');
+        Route::post('subjects-bind', [SubjectController::class, 'bindStore'])->name('subjects.bind.store');
+        Route::delete('subjects-bind/{binding}', [SubjectController::class, 'bindDestroy'])->name('subjects.bind.destroy');
         Route::get('course-enrollment', [CourseController::class, 'enrollmentList'])->name('courses.enrollments');
         Route::post('course-enrollment/{student}', [CourseController::class, 'enroll'])->name('courses.enroll');
         Route::get('fee', [FeeController::class, 'index'])->name('fee.index');
