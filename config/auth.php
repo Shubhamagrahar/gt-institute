@@ -8,13 +8,11 @@ return [
     ],
 
     'guards' => [
-        // Super Admin guard (owner panel)
         'web' => [
             'driver'   => 'session',
             'provider' => 'super_admins',
         ],
 
-        // Institute users guard (staff + students)
         'institute' => [
             'driver'   => 'session',
             'provider' => 'users',

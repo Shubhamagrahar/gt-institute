@@ -10,44 +10,31 @@ use App\Http\Controllers\Institute\DashboardController as InstituteDashboard;
 use App\Http\Controllers\Institute\StudentController;
 use App\Http\Controllers\Institute\StaffController;
 use App\Http\Controllers\Institute\CourseController;
+use App\Http\Controllers\Institute\CourseTypeController;
 use App\Http\Controllers\Institute\FeeController;
 use App\Http\Controllers\Institute\AttendanceController;
 
-/*
-|--------------------------------------------------------------------------
-| AUTH ROUTES
-|--------------------------------------------------------------------------
-*/
+// Root redirect
 Route::get('/', fn() => redirect()->route('login'));
 
-Route::middleware('guest')->group(function () {
+// Auth routes
+Route::middleware('guest:web,institute')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 });
 
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-/*
-|--------------------------------------------------------------------------
-| OWNER PANEL ROUTES
-|--------------------------------------------------------------------------
-*/
+// Owner Panel — guard: web
 Route::prefix('owner')
     ->name('owner.')
-    ->middleware(['auth', 'role:owner'])
+    ->middleware(['auth:web', 'role:owner'])
     ->group(function () {
-
         Route::get('/dashboard', [OwnerDashboard::class, 'index'])->name('dashboard');
-
-        // Features
         Route::resource('features', FeatureController::class);
         Route::patch('features/{feature}/toggle', [FeatureController::class, 'toggle'])->name('features.toggle');
-
-        // Plans
         Route::resource('plans', PlanController::class);
         Route::patch('plans/{plan}/toggle', [PlanController::class, 'toggle'])->name('plans.toggle');
-
-        // Institutes
         Route::resource('institutes', InstituteController::class);
         Route::get('institutes/{institute}/transactions', [InstituteController::class, 'transactions'])->name('institutes.transactions');
         Route::post('institutes/{institute}/payment', [InstituteController::class, 'recordPayment'])->name('institutes.payment');
@@ -55,36 +42,25 @@ Route::prefix('owner')
         Route::post('institutes/{institute}/resend-credentials', [InstituteController::class, 'resendCredentials'])->name('institutes.resend-credentials');
     });
 
-/*
-|--------------------------------------------------------------------------
-| INSTITUTE PANEL ROUTES
-|--------------------------------------------------------------------------
-*/
+// Institute Panel — guard: institute
 Route::prefix('dashboard')
     ->name('institute.')
-    ->middleware(['auth', 'role:institute_head,staff'])
+    ->middleware(['auth:institute', 'role:institute_head,staff'])
     ->group(function () {
-
         Route::get('/', [InstituteDashboard::class, 'index'])->name('dashboard');
-
-        // Students
         Route::resource('students', StudentController::class);
         Route::get('students/{student}/ledger', [StudentController::class, 'ledger'])->name('students.ledger');
-
-        // Staff
         Route::resource('staff', StaffController::class);
-
-        // Courses
         Route::resource('courses', CourseController::class);
+        Route::patch('courses/{course}/toggle', [CourseController::class, 'toggle'])->name('courses.toggle');
+        Route::resource('course-types', CourseTypeController::class)
+            ->parameters(['course-types' => 'courseType'])
+            ->except(['show', 'create']);
         Route::get('course-enrollment', [CourseController::class, 'enrollmentList'])->name('courses.enrollments');
         Route::post('course-enrollment/{student}', [CourseController::class, 'enroll'])->name('courses.enroll');
-
-        // Fee
         Route::get('fee', [FeeController::class, 'index'])->name('fee.index');
         Route::post('fee/collect', [FeeController::class, 'collect'])->name('fee.collect');
         Route::get('fee/{student}/history', [FeeController::class, 'history'])->name('fee.history');
-
-        // Attendance
         Route::get('attendance/student', [AttendanceController::class, 'studentIndex'])->name('attendance.student');
         Route::post('attendance/student/mark', [AttendanceController::class, 'markStudent'])->name('attendance.student.mark');
         Route::get('attendance/staff', [AttendanceController::class, 'staffIndex'])->name('attendance.staff');

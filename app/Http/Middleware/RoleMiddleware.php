@@ -10,7 +10,7 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string ...$roles): mixed
     {
-        // ── Owner panel roles ─────────────────────────────────────────────────
+        // Owner panel
         if (in_array('owner', $roles)) {
             if (!Auth::guard('web')->check()) {
                 return redirect()->route('login');
@@ -23,22 +23,18 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // ── Institute panel roles (institute_head, staff, student) ────────────
+        // Institute panel
         if (!Auth::guard('institute')->check()) {
             return redirect()->route('login');
         }
-
         $user = Auth::guard('institute')->user();
-
         if (!in_array($user->role, $roles)) {
-            abort(403, 'You do not have permission to access this page.');
+            abort(403, 'Unauthorized');
         }
-
         if ($user->status === 'inactive') {
             Auth::guard('institute')->logout();
-            return redirect()->route('login')->withErrors(['login' => 'Your account has been deactivated. Contact your institute.']);
+            return redirect()->route('login')->withErrors(['login' => 'Account deactivated.']);
         }
-
         return $next($request);
     }
 }

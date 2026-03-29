@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\{BatchDetail, CourseBook, CourseDetail, CourseType, Transaction, User, Wallet};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class CourseController extends Controller
 {
@@ -21,22 +22,37 @@ class CourseController extends Controller
 
     public function create()
     {
-        $types = CourseType::where('institute_id', $this->institute()->id)->get();
+        $types = CourseType::where('institute_id', $this->institute()->id)
+            ->orderBy('name')
+            ->get();
         return view('institute.courses.create', compact('types'));
     }
 
     public function store(Request $request)
     {
+        $institute = $this->institute();
         $data = $request->validate([
-            'name'            => 'required|string|max:150',
-            'short_name'      => 'nullable|string|max:50',
-            'course_type_id'  => 'nullable|exists:course_types,id',
-            'duration_months' => 'required|integer|min:1',
-            'fee'             => 'required|numeric|min:0',
-            'description'     => 'nullable|string',
-            'status'          => 'required|in:active,inactive',
+            'name'              => 'required|string|max:150',
+            'course_code'       => 'nullable|string|max:20',
+            'course_type_id'    => [
+                'nullable',
+                Rule::exists('course_types', 'id')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+            ],
+            'course_short_name' => 'nullable|string|max:50',
+            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'duration'          => 'required|integer|min:1',
+            'max_fee'           => 'required|numeric|min:0|gte:fee',
+            'fee'               => 'required|numeric|min:0',
+            'description'       => 'nullable|string',
         ]);
-        $data['institute_id'] = $this->institute()->id;
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('course-images', 'public');
+            $data['image'] = 'storage/' . $path;
+        }
+
+        $data['institute_id'] = $institute->id;
+        $data['status'] = 'active';
         CourseDetail::create($data);
         return redirect()->route('institute.courses.index')->with('success', 'Course added.');
     }
@@ -44,22 +60,39 @@ class CourseController extends Controller
     public function edit(CourseDetail $course)
     {
         abort_unless($course->institute_id === $this->institute()->id, 403);
-        $types = CourseType::where('institute_id', $this->institute()->id)->get();
+        $types = CourseType::where('institute_id', $this->institute()->id)
+            ->orderBy('name')
+            ->get();
         return view('institute.courses.edit', compact('course', 'types'));
     }
 
     public function update(Request $request, CourseDetail $course)
     {
         abort_unless($course->institute_id === $this->institute()->id, 403);
+        $institute = $this->institute();
         $data = $request->validate([
-            'name'            => 'required|string|max:150',
-            'short_name'      => 'nullable|string|max:50',
-            'course_type_id'  => 'nullable|exists:course_types,id',
-            'duration_months' => 'required|integer|min:1',
-            'fee'             => 'required|numeric|min:0',
-            'description'     => 'nullable|string',
-            'status'          => 'required|in:active,inactive',
+            'name'              => 'required|string|max:150',
+            'course_code'       => 'nullable|string|max:20',
+            'course_type_id'    => [
+                'nullable',
+                Rule::exists('course_types', 'id')->where(fn ($query) => $query->where('institute_id', $institute->id)),
+            ],
+            'course_short_name' => 'nullable|string|max:50',
+            'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
+            'duration'          => 'required|integer|min:1',
+            'max_fee'           => 'required|numeric|min:0|gte:fee',
+            'fee'               => 'required|numeric|min:0',
+            'description'       => 'nullable|string',
+            'status'            => 'required|in:active,inactive',
         ]);
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('course-images', 'public');
+            $data['image'] = 'storage/' . $path;
+        } else {
+            unset($data['image']);
+        }
+
         $course->update($data);
         return redirect()->route('institute.courses.index')->with('success', 'Course updated.');
     }
@@ -69,6 +102,16 @@ class CourseController extends Controller
         abort_unless($course->institute_id === $this->institute()->id, 403);
         $course->delete();
         return redirect()->route('institute.courses.index')->with('success', 'Course deleted.');
+    }
+
+    public function toggle(CourseDetail $course)
+    {
+        abort_unless($course->institute_id === $this->institute()->id, 403);
+        $course->update([
+            'status' => $course->status === 'active' ? 'inactive' : 'active',
+        ]);
+
+        return back()->with('success', 'Course status updated.');
     }
 
     public function enrollmentList()

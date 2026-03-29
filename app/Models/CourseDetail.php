@@ -8,8 +8,9 @@ class CourseDetail extends Model
 {
     protected $table = 'course_details';
     protected $fillable = [
-        'institute_id', 'course_type_id', 'name', 'short_name',
-        'duration_months', 'fee', 'description', 'status',
+        'institute_id', 'course_type_id', 'name', 'course_code',
+        'course_short_name', 'image', 'duration', 'max_fee',
+        'fee', 'description', 'status',
     ];
 
     public function institute()   { return $this->belongsTo(\App\Models\Owner\Institute::class); }

@@ -109,15 +109,15 @@
     .inst-val {
       font-weight: 600;
       color: #f0f0f0;
-      text-align: right;
-      margin-left: auto;
+      text-align: left;
+      margin-left: 15px;
       word-break: break-word;
     }
 
     .login-btn {
       display: block;
       background: #7c3aed;
-      color: #ffffff;
+      color: #ffffff !important;
       text-align: center;
       padding: 14px 24px;
       border-radius: 8px;
