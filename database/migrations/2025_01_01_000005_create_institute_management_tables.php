@@ -86,8 +86,7 @@ return new class extends Migration {
             $table->string('name', 150);
             $table->string('short_name', 50)->nullable();
             $table->integer('duration_months')->default(6);
-            $table->decimal('fee', 11, 2)->default(0.00);
-            $table->decimal('max_fee', 11, 2)->default(0.00);   // max chargeable fee
+            
             $table->text('description')->nullable();
             $table->string('img', 300)->nullable();
             $table->enum('status', ['active', 'inactive'])->default('active');

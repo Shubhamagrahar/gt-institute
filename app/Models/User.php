@@ -24,9 +24,9 @@ class User extends Authenticatable
     }
 
     // Roles
-    public function isInstituteHead(): bool { return $this->role === 'institute_head'; }
-    public function isStaff(): bool         { return $this->role === 'staff'; }
-    public function isStudent(): bool       { return $this->role === 'student'; }
+    public function isManager(): bool { return $this->role === 'manager'; }
+public function isStaff(): bool   { return $this->role === 'staff'; }
+public function isStudent(): bool { return $this->role === 'student'; }
 
     // Name helper — comes from profile
     public function getNameAttribute(): string

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use App\Models\Owner\Institute;
 use Illuminate\Support\Facades\Auth;
 use App\Models\CourseBook;
 use App\Models\CourseDetail;
@@ -13,7 +14,17 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $institute = Auth::guard('institute')->user()->institute;
+        $user = Auth::guard('institute')->user();
+        $institute = $user?->institute ?? ($user?->institute_id ? Institute::find($user->institute_id) : null);
+
+        if (!$user || !$institute) {
+            Auth::guard('institute')->logout();
+
+            return redirect()
+                ->route('login')
+                ->withErrors(['login' => 'Your institute account is not linked to any institute. Please contact support/admin.']);
+        }
+
         $stats = [
             'total_students' => User::where('institute_id', $institute->id)->where('role', 'student')->count(),
             'total_staff'    => User::where('institute_id', $institute->id)->where('role', 'staff')->count(),
