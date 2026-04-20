@@ -84,7 +84,7 @@
       </select>
     </form>
   @endif
-</div>git add .
+</div>
 
     {{-- Search --}}
     <div class="gt-sidebar-search-wrap" style="margin:4px 12px 8px;">
@@ -108,7 +108,7 @@
   Manage Sessions
 </a>
 
-    <div class="gt-sidebar-section">Academics</div>
+    <div class="gt-sidebar-section">Setup</div>
     <a href="{{ route('institute.courses.index') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.*') || request()->routeIs('institute.course-types.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       Courses
@@ -117,6 +117,60 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/><line x1="6" y1="8" x2="6" y2="8"/><line x1="18" y1="8" x2="18" y2="8"/></svg>
       Subjects
     </a>
+    <a href="{{ route('institute.batches.index') }}" class="gt-nav-item {{ request()->routeIs('institute.batches.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15h.01"/></svg>
+      Batch
+    </a>
+    <a href="{{ route('institute.form-builder.index') }}" class="gt-nav-item {{ request()->routeIs('institute.form-builder.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Form Builder
+    </a>
+
+    <div class="gt-sidebar-section">Admission</div>
+<a href="{{ route('institute.enrollment.choose') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.*') ? 'active' : '' }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+  New Admission
+</a>
+<a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+  Fee Collection
+</a>
+
+<div class="gt-sidebar-section">Fee Setup</div>
+<a href="{{ route('institute.fee-types.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-types.*') ? 'active' : '' }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+  Fee Types
+</a>
+
+    <div class="gt-sidebar-section">Accounts</div>
+    <a href="{{ route('institute.accounts.billing') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.billing') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h3"/></svg>
+      Billing & Subscription
+    </a>
+    <a href="{{ route('institute.accounts.password.edit') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.password.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/><circle cx="12" cy="16" r="1"/></svg>
+      Change Password
+    </a>
+
+    <div class="gt-sidebar-section">Franchise</div>
+    <a href="{{ route('institute.franchise-levels.create') }}" class="gt-nav-item {{ request()->routeIs('institute.franchise-levels.create') || request()->routeIs('institute.franchise-levels.edit') || request()->routeIs('institute.franchise-levels.index') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l4 7h-8l4-7z"/><path d="M5 22h14"/><path d="M7 22V10h10v12"/></svg>
+      Add Level
+    </a>
+    <a href="{{ route('institute.franchises.create') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.create') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
+      Franchise
+    </a>
+    <a href="{{ route('institute.franchises.index') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.index') || request()->routeIs('institute.franchises.show') || request()->routeIs('institute.franchises.edit') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M9 13h.01"/><path d="M15 13h.01"/><path d="M10 21v-4h4v4"/></svg>
+      Franchise List
+    </a>
+    <a href="{{ route('institute.franchises.wallets') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.wallets') || request()->routeIs('institute.franchises.transactions') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/></svg>
+      Franchise Wallet
+    </a>
+
+    
 
     <div class="gt-sidebar-section">Students</div>
     <a href="{{ route('institute.students.index') }}" class="gt-nav-item {{ request()->routeIs('institute.students.*') ? 'active' : '' }}">
@@ -146,6 +200,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Academic History
     </a>
+
 
     <div class="gt-sidebar-section">Fees</div>
     <a href="{{ route('institute.fee.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee.*') ? 'active' : '' }}">

@@ -2,6 +2,8 @@
 
 namespace App\Models\Owner;
 
+use App\Models\Franchise;
+use App\Models\InstituteStudentWallet;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\User;
@@ -46,6 +48,11 @@ class Institute extends Model
         return $this->hasOne(InstituteWallet::class);
     }
 
+    public function studentWallet()
+    {
+        return $this->hasOne(InstituteStudentWallet::class);
+    }
+
     public function transactions()
     {
         return $this->hasMany(InstituteTransaction::class)->orderByDesc('id');
@@ -61,5 +68,10 @@ class Institute extends Model
         return $this->features()
             ->whereHas('feature', fn($q) => $q->where('slug', $featureSlug))
             ->exists();
+    }
+
+    public function franchises()
+    {
+        return $this->hasMany(Franchise::class)->latest();
     }
 }

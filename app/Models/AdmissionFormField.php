@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class AdmissionFormField extends Model
 {
@@ -22,8 +23,19 @@ class AdmissionFormField extends Model
     // All available fields with defaults
     public static function allDefinedFields(): array
     {
+        $stateOptions = '__states__';
+
+        if (Schema::hasTable('states')) {
+            $states = State::orderBy('name')->pluck('name')->all();
+            if (!empty($states)) {
+                $stateOptions = implode(',', $states);
+            }
+        }
+
         return [
             ['key' => 'name',                'label' => 'Full Name',              'type' => 'text'],
+            ['key' => 'mobile',              'label' => 'Mobile Number',          'type' => 'number'],
+            ['key' => 'email',               'label' => 'Email',                  'type' => 'email'],
             ['key' => 'photo',               'label' => 'Photo',                  'type' => 'file'],
             ['key' => 'father_name',         'label' => "Father's Name",          'type' => 'text'],
             ['key' => 'mother_name',         'label' => "Mother's Name",          'type' => 'text'],
@@ -54,10 +66,17 @@ class AdmissionFormField extends Model
              'options' => 'Below 10th,10th,12th,Diploma,Graduation,Post Graduation,Other'],
             ['key' => 'address',             'label' => 'Present Address',        'type' => 'textarea'],
             ['key' => 'permanent_address',   'label' => 'Permanent Address',      'type' => 'textarea'],
-            ['key' => 'state',               'label' => 'State',                  'type' => 'text'],
+            ['key' => 'state',               'label' => 'State',                  'type' => 'select',
+             'options' => $stateOptions],
             ['key' => 'district',            'label' => 'District',               'type' => 'text'],
             ['key' => 'pin_code',            'label' => 'PIN Code',               'type' => 'number'],
+            ['key' => 'education_details',   'label' => 'Education Details',      'type' => 'text'],
         ];
+    }
+
+    public static function nonProfileKeys(): array
+    {
+        return ['education_details'];
     }
 
     public function institute()

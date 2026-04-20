@@ -44,7 +44,7 @@ class SessionController extends Controller
 
         $session = InstituteSession::create($data);
 
-        // Pehla session hai to auto-activate karo
+        // Auto-activate the first session.
         if ($noSessionExists) {
             $session->activate();
         }
@@ -59,7 +59,7 @@ class SessionController extends Controller
         if ($session->institute_id !== $this->instituteId()) abort(403);
 
         if ($session->is_active) {
-            // Already active — deactivate mat karo, ek active rehna chahiye
+            // Keep at least one session active.
             return back()->with('error', 'At least one session must remain active. Activate another session first.');
         }
 
@@ -88,7 +88,7 @@ class SessionController extends Controller
         ->where('institute_id', $this->instituteId())
         ->firstOrFail();
 
-    // Laravel session mein selected session store karo (DB change nahi hoga)
+        // Store the selected session in Laravel session without changing the database.
     session(['selected_session_id' => $session->id]);
 
     return back()->with('success', "Viewing data for: {$session->name}");

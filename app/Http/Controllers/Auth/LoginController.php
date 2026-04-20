@@ -63,7 +63,9 @@ class LoginController extends Controller
 
             return match ($user->role) {
                 'institute_head', 'staff' => redirect()->route('institute.dashboard'),
+                'franchise_head', 'franchise_staff' => redirect()->route('franchise.dashboard'),
                 'student'                 => redirect()->route('institute.dashboard'),
+                'franchise_student'       => redirect()->route('franchise.dashboard'),
                 default                   => redirect('/'),
             };
         }

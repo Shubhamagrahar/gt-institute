@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('institute_id')->constrained()->cascadeOnDelete();
             $table->string('field_key', 60);       // matches user_profiles column
             $table->string('field_label', 100);
-            $table->enum('field_type', ['text','number','date','select','textarea','file'])
+            $table->enum('field_type', ['text','number','email','date','select','textarea','file'])
                   ->default('text');
             $table->text('options')->nullable();   // comma separated for select
             $table->boolean('is_required')->default(false);

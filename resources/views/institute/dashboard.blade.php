@@ -48,9 +48,9 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
     </div>
     <div>
-      <div class="gt-stat-value mono" style="font-size:17px;">₹{{ number_format($institute->wallet?->main_b ?? 0, 0) }}</div>
-      <div class="gt-stat-label">Wallet</div>
-      <div class="gt-stat-sub">Balance</div>
+      <div class="gt-stat-value mono" style="font-size:17px;">₹{{ number_format($stats['student_wallet_balance'] ?? 0, 0) }}</div>
+      <div class="gt-stat-label">Student Wallet</div>
+      <div class="gt-stat-sub">Institute earnings balance</div>
     </div>
   </div>
   <div class="gt-stat">

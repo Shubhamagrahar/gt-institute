@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <td>
             <div class="course-price-wrap">
               <div class="course-price-main">Fee: Rs. {{ number_format($c->fee, 2) }}</div>
-              <div class="course-price-sub">Max Fee: Rs. {{ number_format($c->max_fee, 2) }}</div>
+              <div class="course-price-sub">Max Fee: Rs. {{ number_format($c->display_max_fee, 2) }}</div>
             </div>
           </td>
           <td>

@@ -24,7 +24,15 @@ return new class extends Migration {
             if (!Schema::hasColumn('course_details', 'course_code')) {
                 $table->string('course_code', 20)->nullable()->after('course_type_id');
             }
+        });
 
+        Schema::table('course_details', function (Blueprint $table) {
+            if (!Schema::hasColumn('course_details', 'fee')) {
+                $table->decimal('fee', 11, 2)->default(0.00)->after('duration');
+            }
+        });
+
+        Schema::table('course_details', function (Blueprint $table) {
             if (!Schema::hasColumn('course_details', 'max_fee')) {
                 $table->decimal('max_fee', 11, 2)->default(0.00)->after('fee');
             }
@@ -68,6 +76,14 @@ return new class extends Migration {
 
             if (Schema::hasColumn('course_details', 'duration')) {
                 $table->dropColumn('duration');
+            }
+
+            if (Schema::hasColumn('course_details', 'max_fee')) {
+                $table->dropColumn('max_fee');
+            }
+
+            if (Schema::hasColumn('course_details', 'fee')) {
+                $table->dropColumn('fee');
             }
         });
     }

@@ -31,6 +31,7 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $institute = $this->institute();
+        $hasMaxFeeColumn = CourseDetail::hasMaxFeeColumn();
         $data = $request->validate(
             [
                 'name'              => [
@@ -47,7 +48,7 @@ class CourseController extends Controller
                 'course_short_name' => 'nullable|string|max:50',
                 'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'duration'          => 'required|integer|min:1',
-                'max_fee'           => 'required|numeric|min:0|gte:fee',
+                'max_fee'           => ($hasMaxFeeColumn ? 'required' : 'nullable') . '|numeric|min:0|gte:fee',
                 'fee'               => 'required|numeric|min:0',
                 'description'       => 'nullable|string',
             ],
@@ -63,6 +64,9 @@ class CourseController extends Controller
 
         $data['institute_id'] = $institute->id;
         $data['status'] = 'active';
+        if (! $hasMaxFeeColumn) {
+            unset($data['max_fee']);
+        }
         CourseDetail::create($data);
         return redirect()->route('institute.courses.index')->with('success', 'Course added.');
     }
@@ -80,6 +84,7 @@ class CourseController extends Controller
     {
         abort_unless($course->institute_id === $this->institute()->id, 403);
         $institute = $this->institute();
+        $hasMaxFeeColumn = CourseDetail::hasMaxFeeColumn();
         $data = $request->validate(
             [
                 'name'              => [
@@ -98,7 +103,7 @@ class CourseController extends Controller
                 'course_short_name' => 'nullable|string|max:50',
                 'image'             => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
                 'duration'          => 'required|integer|min:1',
-                'max_fee'           => 'required|numeric|min:0|gte:fee',
+                'max_fee'           => ($hasMaxFeeColumn ? 'required' : 'nullable') . '|numeric|min:0|gte:fee',
                 'fee'               => 'required|numeric|min:0',
                 'description'       => 'nullable|string',
                 'status'            => 'required|in:active,inactive',
@@ -113,6 +118,10 @@ class CourseController extends Controller
             $data['image'] = 'storage/' . $path;
         } else {
             unset($data['image']);
+        }
+
+        if (! $hasMaxFeeColumn) {
+            unset($data['max_fee']);
         }
 
         $course->update($data);

@@ -13,7 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'user_id', 'mobile', 'email', 'password',
-        'role', 'institute_id', 'status',
+        'role', 'institute_id', 'franchise_id', 'status',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -23,37 +23,51 @@ class User extends Authenticatable
         return ['password' => 'hashed'];
     }
 
-    // Roles
+    // ── Roles ──────────────────────────────────────────
     public function isManager(): bool { return $this->role === 'manager'; }
-public function isStaff(): bool   { return $this->role === 'staff'; }
-public function isStudent(): bool { return $this->role === 'student'; }
+    public function isStaff(): bool   { return $this->role === 'staff'; }
+    public function isStudent(): bool { return $this->role === 'student'; }
 
-    // Name helper — comes from profile
+    // ── Name helper ────────────────────────────────────
+    // users table mein name column nahi hai
+    // profile table se aata hai
     public function getNameAttribute(): string
     {
-        if ($this->role === 'student') {
-            return $this->studentProfile?->name ?? $this->user_id;
-        }
-        return $this->staffProfile?->name ?? $this->user_id;
+        return $this->profile?->name ?? $this->user_id;
     }
 
+    // ── Relationships ──────────────────────────────────
     public function institute()
     {
         return $this->belongsTo(Institute::class);
     }
 
-    public function studentProfile()
+    public function franchise()
     {
-        return $this->hasOne(StudentProfile::class);
+        return $this->belongsTo(Franchise::class);
     }
 
-    public function staffProfile()
+    // NEW — unified profile (sabke liye ek hi table)
+    public function profile()
     {
-        return $this->hasOne(StaffProfile::class);
+        return $this->hasOne(UserProfile::class);
     }
 
-    public function wallet()
+    // NEW — education details
+    public function education()
     {
-        return $this->hasOne(Wallet::class);
+        return $this->hasMany(UserEducation::class);
+    }
+
+    // NEW — student wallet
+    public function studentWallet()
+    {
+        return $this->hasOne(StudentWallet::class);
+    }
+
+    // NEW — enrollments
+    public function enrollments()
+    {
+        return $this->hasMany(CourseBook::class);
     }
 }

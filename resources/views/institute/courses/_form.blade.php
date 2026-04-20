@@ -183,8 +183,11 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
 
       <div class="gt-form-group course-span-3">
-        <label class="gt-label">Max Fee (Rs.) <span style="color:var(--danger)">*</span></label>
-        <input type="number" name="max_fee" class="gt-input" value="{{ old('max_fee', $course->max_fee ?? 0) }}" min="0" step="0.01" required>
+        <label class="gt-label">Max Fee (Rs.) @if(\App\Models\CourseDetail::hasMaxFeeColumn())<span style="color:var(--danger)">*</span>@endif</label>
+        <input type="number" name="max_fee" class="gt-input" value="{{ old('max_fee', $course->display_max_fee ?? $course->fee ?? 0) }}" min="0" step="0.01" @if(\App\Models\CourseDetail::hasMaxFeeColumn()) required @endif>
+        @if(!\App\Models\CourseDetail::hasMaxFeeColumn())
+          <div class="text-xs text-muted" style="margin-top:6px;">Database me `max_fee` column abhi nahi hai, isliye abhi ye value display-only fallback mode me hai.</div>
+        @endif
         @error('max_fee')<div class="gt-error">{{ $message }}</div>@enderror
       </div>
 
