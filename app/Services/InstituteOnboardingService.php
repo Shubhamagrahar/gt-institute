@@ -54,12 +54,13 @@ class InstituteOnboardingService
             // ── 3. Create institute head user ─────────────────────────────────
             $user = User::create([
                 'user_id'      => $institute->unique_id . '/HEAD',
-                'name'         => $data['owner_name'],
                 'mobile'       => $data['owner_mobile'],
                 'email'        => $data['email'],
                 'password'     => Hash::make($plainPassword),
                 'role'         => 'institute_head',
+                'user_type'    => 'staff',
                 'institute_id' => $institute->id,
+                'owner_type'   => 'institute',
                 'status'       => 'active',
             ]);
 

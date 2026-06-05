@@ -1,0 +1,9 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Stop exposing the project directory listing and always serve Laravel from /public.
+    RewriteCond %{REQUEST_URI} !^/institute_computer/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+Options -Indexes

@@ -5,7 +5,11 @@
 @section('content')
 <div class="gt-card">
   <div class="gt-card-header">
-    <div class="gt-card-title">Students with Pending Dues</div>
+    <div>
+      <div class="gt-card-title">Students with Pending Dues</div>
+      <div class="text-xs text-muted" style="margin-top:4px;">Seat booked students bhi yahan aa sakte hain agar unka fee debit create ho chuka hai.</div>
+    </div>
+    <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline btn-sm">Pending Admissions</a>
   </div>
   @if($students->isEmpty())
     <div class="gt-empty">

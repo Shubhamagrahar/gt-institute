@@ -186,6 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
           <th>Code / Type</th>
           <th>Duration</th>
           <th>Pricing</th>
+          <th>Extra Fees</th>
           <th>Action</th>
           <th>Status</th>
         </tr>
@@ -219,6 +220,15 @@ document.addEventListener('DOMContentLoaded', function () {
               <div class="course-price-main">Fee: Rs. {{ number_format($c->fee, 2) }}</div>
               <div class="course-price-sub">Max Fee: Rs. {{ number_format($c->display_max_fee, 2) }}</div>
             </div>
+          </td>
+          <td>
+            @if($c->feeStructures->isNotEmpty())
+              <div class="course-sub">
+                {{ $c->feeStructures->map(fn($row) => $row->fee_type_name . ' Rs. ' . number_format($row->amount, 2))->join(', ') }}
+              </div>
+            @else
+              <div class="course-sub">No extra fees</div>
+            @endif
           </td>
           <td>
             <div class="flex gap-2">
@@ -255,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </tr>
         @empty
         <tr>
-          <td colspan="7">
+          <td colspan="8">
             <div class="gt-empty">
               <div class="gt-empty-icon">Courses</div>
               <div class="gt-empty-title">No courses yet</div>

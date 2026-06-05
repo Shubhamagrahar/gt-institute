@@ -10,7 +10,7 @@ class FeeCollectDetail extends Model
     protected $table = 'fee_collect_details';
 
     protected $fillable = [
-        'institute_id', 'user_id', 'invoice_no',
+        'institute_id', 'franchise_id', 'user_id', 'course_book_id', 'invoice_no',
         'payment_mode', 'utr', 'amount', 'amt', 'date',
         'note', 'received_by',
     ];

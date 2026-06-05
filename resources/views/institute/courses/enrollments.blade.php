@@ -74,7 +74,7 @@
           <td class="text-muted text-sm">{{ $e->batch?->name ?? '—' }}</td>
           <td class="mono">₹{{ number_format($e->fee,2) }}</td>
           <td class="text-sm">{{ $e->start_date ? date('d M Y',strtotime($e->start_date)) : '—' }}</td>
-          <td><span class="badge {{ match($e->status){ 'RUN'=>'badge-success','OPEN'=>'badge-warning','CLOSE'=>'badge-neutral',default=>'badge-danger' } }}">{{ $e->status }}</span></td>
+          <td><span class="badge {{ match($e->status){ 'RUN'=>'badge-success','OPEN'=>'badge-warning','CLOSE'=>'badge-neutral',default=>'badge-danger' } }}">{{ $e->status === 'OPEN' ? 'SEAT BOOKED' : $e->status }}</span></td>
         </tr>
         @empty
         <tr><td colspan="6"><div class="gt-empty"><div class="gt-empty-title">No enrollments yet</div></div></td></tr>

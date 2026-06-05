@@ -53,13 +53,17 @@ class FranchiseOnboardingService
                 'email' => $data['email'],
                 'password' => $plainPassword,
                 'role' => 'franchise_head',
+                'user_type' => 'staff',
                 'institute_id' => $instituteId,
                 'franchise_id' => $franchise->id,
+                'owner_type' => 'franchise',
                 'status' => 'active',
             ]);
 
             UserProfile::create([
                 'user_id' => $user->id,
+                'institute_id' => $instituteId,
+                'franchise_id' => $franchise->id,
                 'name' => $data['owner_name'],
                 'address' => $data['address'] ?? null,
                 'state' => $data['state'] ?? null,

@@ -9,8 +9,9 @@ class UserEducation extends Model
     protected $table = 'user_education';
 
     protected $fillable = [
-        'user_id', 'examination',
-        'board_university', 'passing_year', 'marks_percentage',
+        'user_id', 'institute_id', 'franchise_id', 'examination',
+        'institute_name', 'board_university', 'passing_year', 'division',
+        'marks_percentage',
     ];
 
     public function user()

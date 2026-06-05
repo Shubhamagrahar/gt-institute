@@ -41,6 +41,40 @@
   padding: 20px;
 }
 
+.course-fee-bindings {
+  background: #f8fbff;
+  border: 1px solid rgba(23, 70, 162, .12);
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.course-fee-bindings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.course-fee-binding-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, .2);
+  background: #fff;
+}
+
+.course-fee-binding-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.course-fee-binding-amount {
+  width: 140px;
+}
+
 .course-fields-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -82,6 +116,10 @@
 @media (max-width: 640px) {
   .course-fields-card {
     padding: 16px;
+  }
+
+  .course-fee-bindings-grid {
+    grid-template-columns: 1fr;
   }
 
   .course-span-3,

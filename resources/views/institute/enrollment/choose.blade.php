@@ -18,8 +18,17 @@
           <line x1="20" y1="8" x2="20" y2="14"/>
           <line x1="23" y1="11" x2="17" y2="11"/>
         </svg>
-        <div style="font-size:14px;font-weight:700;color:var(--accent);">New Admission</div>
-        <div class="text-xs text-muted" style="text-align:center;">Create a new student and continue admission</div>
+        <div style="font-size:14px;font-weight:700;color:var(--accent);">Full Seat Booking</div>
+        <div class="text-xs text-muted" style="text-align:center;">Full form bharo, seat book karo, payment par admission complete hoga</div>
+      </a>
+
+      <a href="{{ route('institute.enrollment.quick') }}"
+        style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;background:var(--bg-3);border:2px solid var(--border);border-radius:10px;text-decoration:none;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/>
+        </svg>
+        <div style="font-size:14px;font-weight:700;color:var(--text);">Quick Booking</div>
+        <div class="text-xs text-muted" style="text-align:center;">Rush mode me basic details leke seat save karo</div>
       </a>
 
       <button type="button" id="existing-student-toggle"
@@ -31,6 +40,15 @@
         <div style="font-size:14px;font-weight:700;color:var(--text);">Existing Student</div>
         <div class="text-xs text-muted" style="text-align:center;">Search existing student by mobile or student ID</div>
       </button>
+
+      <a href="{{ route('institute.enrollment.pending') }}"
+        style="display:flex;flex-direction:column;align-items:center;gap:10px;padding:24px;background:#fff7ed;border:2px solid #fdba74;border-radius:10px;text-decoration:none;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#c2410c" stroke-width="2">
+          <path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/>
+        </svg>
+        <div style="font-size:14px;font-weight:700;color:#c2410c;">Pending Admissions</div>
+        <div class="text-xs text-muted" style="text-align:center;">Seat booked students jinke details ya payment pending hain</div>
+      </a>
     </div>
 
     <div id="existing-student-search-box" style="display:none;margin-top:16px;padding:18px;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;">

@@ -109,7 +109,7 @@
 </a>
 
     <div class="gt-sidebar-section">Setup</div>
-    <a href="{{ route('institute.courses.index') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.*') || request()->routeIs('institute.course-types.*') ? 'active' : '' }}">
+    <a href="{{ route('institute.courses.index') }}" class="gt-nav-item {{ ((request()->routeIs('institute.courses.*') && !request()->routeIs('institute.courses.fee-bindings*')) || request()->routeIs('institute.course-types.*')) ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       Courses
     </a>
@@ -131,6 +131,10 @@
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
   New Admission
 </a>
+<a href="{{ route('institute.enrollment.pending') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.pending') ? 'active' : '' }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+  Pending Admission
+</a>
 <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
   Fee Collection
@@ -140,6 +144,10 @@
 <a href="{{ route('institute.fee-types.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-types.*') ? 'active' : '' }}">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
   Fee Types
+</a>
+<a href="{{ route('institute.courses.fee-bindings') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.fee-bindings*') ? 'active' : '' }}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/><path d="M18 16v4"/><path d="M16 18h4"/></svg>
+  Course Fee Setup
 </a>
 
     <div class="gt-sidebar-section">Accounts</div>

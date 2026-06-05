@@ -12,12 +12,14 @@ class AdmissionFormField extends Model
     protected $fillable = [
         'institute_id', 'field_key', 'field_label',
         'field_type', 'options', 'is_required',
-        'is_active', 'sort_order',
+        'is_active', 'quick_is_active', 'quick_is_required', 'sort_order',
     ];
 
     protected $casts = [
         'is_required' => 'boolean',
         'is_active'   => 'boolean',
+        'quick_is_active' => 'boolean',
+        'quick_is_required' => 'boolean',
     ];
 
     // All available fields with defaults

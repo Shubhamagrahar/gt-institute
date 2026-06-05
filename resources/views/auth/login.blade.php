@@ -8,6 +8,20 @@
   <style>
     /* Password toggle */
     #toggle-pwd { cursor: pointer; }
+    .login-meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+    }
+    .login-meta-row a {
+      color: rgba(138,115,245,.92);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .login-meta-row a:hover { color: #fff; }
   </style>
 </head>
 <body>
@@ -40,6 +54,12 @@
       <div class="gt-alert gt-alert-error" style="background:rgba(239,68,68,.12);border-color:#ef4444;color:#fca5a5;margin-bottom:16px;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         {{ $errors->first() }}
+      </div>
+    @endif
+
+    @if(session('success'))
+      <div class="gt-alert gt-alert-success" style="background:rgba(34,197,94,.12);border-color:#22c55e;color:#bbf7d0;margin-bottom:16px;">
+        {{ session('success') }}
       </div>
     @endif
 
@@ -82,6 +102,11 @@
             <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
+      </div>
+
+      <div class="login-meta-row">
+        <span style="font-size:12px;color:rgba(255,255,255,.42);">Use email, mobile, or application number</span>
+        <a href="{{ route('password.request') }}">Forgot Password?</a>
       </div>
 
       {{-- Submit --}}

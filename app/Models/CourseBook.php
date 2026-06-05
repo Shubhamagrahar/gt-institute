@@ -7,14 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 class CourseBook extends Model
 {
     protected $fillable = [
-        'institute_id', 'session_id', 'user_id', 'course_id',
+        'institute_id', 'franchise_id', 'session_id', 'user_id', 'course_id',
         'batch_id', 'enrollment_no', 'final_fee',
-        'start_date', 'complete_date', 'status', 'admission_by',
+        'start_date', 'complete_date', 'status', 'booking_mode',
+        'profile_completed_at', 'admission_by',
     ];
 
     protected $casts = [
         'start_date'    => 'date',
         'complete_date' => 'date',
+        'profile_completed_at' => 'datetime',
     ];
 
     public function student()    { return $this->belongsTo(User::class, 'user_id'); }

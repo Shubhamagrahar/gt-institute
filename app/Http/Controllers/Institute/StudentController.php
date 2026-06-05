@@ -3,21 +3,30 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Auth;
-use App\Models\{StudentProfile, Transaction, User, Wallet};
+use App\Models\CourseBook;
+use App\Models\State;
+use App\Models\StudentTransaction;
+use App\Models\StudentWallet;
+use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{DB, Hash};
+use Illuminate\Support\Facades\Auth;
 
 class StudentController extends Controller
 {
-    private function institute() { return Auth::guard('institute')->user()->institute; }
+    private function instituteId(): int
+    {
+        return Auth::guard('institute')->user()->institute_id;
+    }
 
     public function index()
     {
-        $students = User::with('studentProfile')
-            ->where('institute_id', $this->institute()->id)
+        $students = User::with(['profile', 'studentWallet'])
+            ->where('institute_id', $this->instituteId())
             ->where('role', 'student')
-            ->latest()->paginate(20);
+            ->latest()
+            ->paginate(20);
+
         return view('institute.students.index', compact('students'));
     }
 
@@ -28,122 +37,102 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-        $institute = $this->institute();
-
-        $data = $request->validate([
-            'name'            => 'required|string|max:100',
-            'mobile'          => 'required|string|max:15|unique:users,mobile',
-            'email'           => 'nullable|email|max:100',
-            'father_name'     => 'nullable|string|max:100',
-            'mother_name'     => 'nullable|string|max:100',
-            'father_mobile'   => 'nullable|string|max:15',
-            'dob'             => 'nullable|date',
-            'gender'          => 'nullable|in:Male,Female,Other',
-            'qualification'   => 'nullable|string|max:50',
-            'state'           => 'nullable|string|max:60',
-            'pin_code'        => 'nullable|string|max:10',
-            'full_add'        => 'nullable|string',
-            'fee_collect_type'=> 'required|in:MONTHLY,PART,OTP',
-            'monthly_fee'     => 'nullable|numeric|min:0',
-            'r_date'          => 'required|date',
-        ]);
-
-        $plain = strtoupper(substr(str_shuffle('ABCDEFGHJKLMNPQRSTUVWXYZ0123456789'), 0, 8));
-
-        DB::transaction(function () use ($data, $institute, $plain) {
-            // Generate reg_no
-            $count  = User::where('institute_id', $institute->id)->where('role', 'student')->count();
-            $regNo  = $institute->short_name
-                ? strtoupper($institute->short_name) . '/' . now()->year . '/' . str_pad($count + 1, 4, '0', STR_PAD_LEFT)
-                : 'STU/' . now()->year . '/' . str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-
-            $user = User::create([
-                'user_id'      => $regNo,
-                'name'         => $data['name'],
-                'mobile'       => $data['mobile'],
-                'email'        => $data['email'] ?? null,
-                'password'     => Hash::make($plain),
-                'role'         => 'student',
-                'institute_id' => $institute->id,
-                'status'       => 'active',
-            ]);
-
-            StudentProfile::create([
-                'user_id'          => $user->id,
-                'institute_id'     => $institute->id,
-                'reg_no'           => $regNo,
-                'father_name'      => $data['father_name'] ?? null,
-                'mother_name'      => $data['mother_name'] ?? null,
-                'father_mobile'    => $data['father_mobile'] ?? null,
-                'dob'              => $data['dob'] ?? null,
-                'gender'           => $data['gender'] ?? null,
-                'qualification'    => $data['qualification'] ?? null,
-                'state'            => $data['state'] ?? null,
-                'pin_code'         => $data['pin_code'] ?? null,
-                'full_add'         => $data['full_add'] ?? null,
-                'fee_collect_type' => $data['fee_collect_type'],
-                'monthly_fee'      => $data['monthly_fee'] ?? 0,
-                'r_date'           => $data['r_date'],
-            ]);
-
-            Wallet::create(['user_id' => $user->id, 'main_b' => 0.00]);
-        });
-
-        return redirect()->route('institute.students.index')->with('success', 'Student added successfully.');
+        return redirect()->route('institute.enrollment.new')
+            ->with('error', 'Student creation ka recommended flow ab admission module se hai. Wahi se seat booking/admission karo.');
     }
 
     public function show(User $student)
     {
-        abort_unless($student->institute_id === $this->institute()->id, 403);
-        $student->load('studentProfile', 'wallet');
-        $enrollments = \App\Models\CourseBook::with('course', 'batch')
-            ->where('user_id', $student->id)->latest()->get();
+        $this->authorizeStudent($student);
+
+        $student->load(['profile', 'studentWallet', 'education']);
+        $enrollments = CourseBook::with(['course', 'batch', 'paymentPlan'])
+            ->where('user_id', $student->id)
+            ->latest()
+            ->get();
+
         return view('institute.students.show', compact('student', 'enrollments'));
     }
 
     public function edit(User $student)
     {
-        abort_unless($student->institute_id === $this->institute()->id, 403);
-        $student->load('studentProfile');
-        return view('institute.students.edit', compact('student'));
+        $this->authorizeStudent($student);
+        $student->load(['profile', 'education']);
+        $states = State::orderBy('name')->pluck('name');
+
+        return view('institute.students.edit', compact('student', 'states'));
     }
 
     public function update(Request $request, User $student)
     {
-        abort_unless($student->institute_id === $this->institute()->id, 403);
+        $this->authorizeStudent($student);
+
         $data = $request->validate([
-            'name'          => 'required|string|max:100',
-            'father_name'   => 'nullable|string|max:100',
-            'mother_name'   => 'nullable|string|max:100',
-            'father_mobile' => 'nullable|string|max:15',
-            'dob'           => 'nullable|date',
-            'gender'        => 'nullable|in:Male,Female,Other',
-            'qualification' => 'nullable|string|max:50',
-            'state'         => 'nullable|string|max:60',
-            'pin_code'      => 'nullable|string|max:10',
-            'full_add'      => 'nullable|string',
-            'fee_collect_type' => 'required|in:MONTHLY,PART,OTP',
-            'monthly_fee'   => 'nullable|numeric|min:0',
+            'name' => 'required|string|max:100',
+            'mobile' => 'required|string|max:15|unique:users,mobile,' . $student->id,
+            'email' => 'nullable|email|max:100|unique:users,email,' . $student->id,
+            'father_name' => 'nullable|string|max:100',
+            'mother_name' => 'nullable|string|max:100',
+            'guardian_name' => 'nullable|string|max:100',
+            'guardian_relation' => 'nullable|string|max:50',
+            'guardian_mobile' => 'nullable|string|max:15',
+            'guardian_occupation' => 'nullable|string|max:80',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|in:Male,Female,Other',
+            'category' => 'nullable|string|max:20',
+            'religion' => 'nullable|string|max:50',
+            'nationality' => 'nullable|string|max:50',
+            'whatsapp_no' => 'nullable|string|max:15',
+            'alternate_mobile' => 'nullable|string|max:15',
+            'aadhar_no' => 'nullable|string|max:16',
+            'pan_no' => 'nullable|string|max:10',
+            'blood_group' => 'nullable|string|max:5',
+            'employment_status' => 'nullable|in:Employed,Unemployed',
+            'computer_literacy' => 'nullable|in:Yes,No',
+            'qualification' => 'nullable|string|max:80',
+            'address' => 'nullable|string',
+            'permanent_address' => 'nullable|string',
+            'state' => 'nullable|string|max:100|exists:states,name',
+            'district' => 'nullable|string|max:60',
+            'pin_code' => 'nullable|string|max:10',
         ]);
 
-        $student->update(['name' => $data['name']]);
-        $student->studentProfile?->update($data);
+        $student->update([
+            'mobile' => $data['mobile'],
+            'email' => $data['email'] ?? null,
+        ]);
 
-        return redirect()->route('institute.students.show', $student)->with('success', 'Student updated.');
+        $profile = $student->profile ?? UserProfile::make([
+            'user_id' => $student->id,
+            'institute_id' => $student->institute_id,
+            'photo' => 'images/user.png',
+            'r_date' => now()->toDateString(),
+        ]);
+        $profile->fill(array_merge($data, ['name' => $data['name']]));
+        $profile->save();
+
+        return redirect()->route('institute.students.show', $student)->with('success', 'Student profile updated.');
     }
 
     public function destroy(User $student)
     {
-        abort_unless($student->institute_id === $this->institute()->id, 403);
+        $this->authorizeStudent($student);
         $student->delete();
+
         return redirect()->route('institute.students.index')->with('success', 'Student removed.');
     }
 
     public function ledger(User $student)
     {
-        abort_unless($student->institute_id === $this->institute()->id, 403);
-        $transactions = Transaction::where('user_id', $student->id)->orderByDesc('id')->paginate(30);
-        $wallet       = $student->wallet;
+        $this->authorizeStudent($student);
+        $transactions = StudentTransaction::where('user_id', $student->id)->orderByDesc('id')->paginate(30);
+        $wallet = $student->studentWallet;
+
         return view('institute.students.ledger', compact('student', 'transactions', 'wallet'));
+    }
+
+    private function authorizeStudent(User $student): void
+    {
+        abort_unless($student->institute_id === $this->instituteId(), 403);
     }
 }

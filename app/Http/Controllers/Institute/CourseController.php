@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\{BatchDetail, CourseBook, CourseDetail, CourseType, Transaction, User, Wallet};
+use App\Models\{BatchDetail, CourseBook, CourseDetail, CourseFeeStructure, CourseType, FeeType, Transaction, User, Wallet};
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -15,7 +15,7 @@ class CourseController extends Controller
 
     public function index()
     {
-        $courses = CourseDetail::with('courseType')
+        $courses = CourseDetail::with(['courseType', 'feeStructures'])
             ->where('institute_id', $this->institute()->id)->latest()->get();
         return view('institute.courses.index', compact('courses'));
     }
@@ -156,6 +156,60 @@ class CourseController extends Controller
         return view('institute.courses.enrollments', compact('enrollments', 'students', 'courses', 'batches'));
     }
 
+    public function feeBindingsIndex()
+    {
+        $courses = CourseDetail::with(['courseType', 'feeStructures.feeType'])
+            ->where('institute_id', $this->institute()->id)
+            ->orderBy('name')
+            ->get();
+
+        return view('institute.courses.fee-bindings', compact('courses'));
+    }
+
+    public function feeBindingsEdit(CourseDetail $course)
+    {
+        abort_unless($course->institute_id === $this->institute()->id, 403);
+
+        $feeTypes = FeeType::where('institute_id', $this->institute()->id)
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        $course->load(['courseType', 'feeStructures']);
+
+        return view('institute.courses.fee-bindings-edit', compact('course', 'feeTypes'));
+    }
+
+    public function feeBindingsUpdate(Request $request, CourseDetail $course)
+    {
+        abort_unless($course->institute_id === $this->institute()->id, 403);
+
+        $data = $request->validate([
+            'fee_type_id' => [
+                'required',
+                Rule::exists('fee_types', 'id')->where(fn ($query) => $query->where('institute_id', $this->institute()->id)->where('is_active', true)),
+            ],
+            'amount' => 'required|numeric|min:0.01',
+        ]);
+
+        $feeType = FeeType::where('institute_id', $this->institute()->id)->findOrFail($data['fee_type_id']);
+
+        CourseFeeStructure::updateOrCreate(
+            [
+                'course_id' => $course->id,
+                'fee_type_id' => $feeType->id,
+            ],
+            [
+                'institute_id' => $this->institute()->id,
+                'fee_type_name' => $feeType->name,
+                'amount' => round((float) $data['amount'], 2),
+            ]
+        );
+
+        return redirect()->route('institute.courses.fee-bindings')
+            ->with('success', 'Course fee binding updated.');
+    }
+
     public function enroll(Request $request, User $student)
     {
         $institute = $this->institute();
@@ -235,5 +289,35 @@ class CourseController extends Controller
         });
 
         return back()->with('success', 'Student enrolled successfully.');
+    }
+
+    private function syncFeeBindings(CourseDetail $course, array $feeBindings): void
+    {
+        $instituteId = $this->institute()->id;
+        $allowedFeeTypes = FeeType::where('institute_id', $instituteId)
+            ->whereIn('id', array_keys($feeBindings))
+            ->get()
+            ->keyBy('id');
+
+        $normalized = collect($feeBindings)
+            ->map(fn ($amount) => is_null($amount) || $amount === '' ? null : round((float) $amount, 2))
+            ->filter(fn ($amount) => ! is_null($amount) && $amount > 0);
+
+        $course->feeStructures()->delete();
+
+        foreach ($normalized as $feeTypeId => $amount) {
+            $feeType = $allowedFeeTypes->get((int) $feeTypeId);
+            if (! $feeType) {
+                continue;
+            }
+
+            CourseFeeStructure::create([
+                'institute_id' => $instituteId,
+                'course_id' => $course->id,
+                'fee_type_id' => $feeType->id,
+                'fee_type_name' => $feeType->name,
+                'amount' => $amount,
+            ]);
+        }
     }
 }

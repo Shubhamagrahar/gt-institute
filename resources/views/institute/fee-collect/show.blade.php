@@ -7,6 +7,32 @@
 
   {{-- Left: Student info + collect fee --}}
   <div style="display:flex;flex-direction:column;gap:16px;">
+    @if($pendingEnrollments->isNotEmpty())
+    <div class="gt-card" style="border:1px solid #fdba74;background:#fff7ed;">
+      <div class="gt-card-title" style="margin-bottom:12px;color:#9a3412;">Pending Admission Status</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        @foreach($pendingEnrollments as $pending)
+          <div style="padding:12px;border-radius:10px;background:#ffffff;border:1px solid #fed7aa;">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;">
+              <div>
+                <div class="fw-600">{{ $pending->course?->name }}</div>
+                <div class="text-xs text-muted">Paid ₹{{ number_format($pending->paid_amount, 2) }} / Need ₹{{ number_format($pending->required_amount, 2) }}</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+                <span class="badge {{ $pending->details_complete ? 'badge-success' : 'badge-danger' }}">
+                  {{ $pending->details_complete ? 'Details Complete' : 'Details Pending' }}
+                </span>
+                @if(!$pending->details_complete)
+                  <a href="{{ route('institute.enrollment.profile', $pending) }}" class="btn btn-outline btn-xs">Complete Details</a>
+                @endif
+              </div>
+            </div>
+          </div>
+        @endforeach
+      </div>
+    </div>
+    @endif
+
     {{-- Student card --}}
     <div class="gt-card">
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
@@ -26,25 +52,51 @@
         </div>
       </div>
       <div style="display:flex;justify-content:space-between;padding:10px 14px;
-        background:{{ $wallet?->balance < 0 ? 'var(--danger-bg)' : 'var(--success-bg)' }};
+        background:{{ ($wallet?->balance ?? 0) < 0 ? 'var(--danger-bg)' : 'var(--success-bg)' }};
         border-radius:8px;">
-        <span style="font-size:13px;">{{ $wallet?->balance < 0 ? 'Due Amount' : 'Advance Balance' }}</span>
-        <span class="mono fw-700 {{ $wallet?->balance < 0 ? 'amount-neg' : 'amount-pos' }}" style="font-size:18px;">
-          ₹{{ number_format(abs($wallet?->balance ?? 0), 2) }}
+        <span style="font-size:13px;">
+          @if($wallet)
+            {{ $wallet->balance < 0 ? 'Due Amount' : 'Advance Balance' }}
+          @elseif($pendingEnrollments->isNotEmpty())
+            Seat Booking Stage
+          @else
+            Balance
+          @endif
+        </span>
+        <span class="mono fw-700 {{ ($wallet?->balance ?? 0) < 0 ? 'amount-neg' : 'amount-pos' }}" style="font-size:18px;">
+          @if($wallet)
+            ₹{{ number_format(abs($wallet->balance), 2) }}
+          @else
+            Not started
+          @endif
         </span>
       </div>
     </div>
 
     {{-- Collect fee form --}}
-    @if($wallet?->balance < 0)
+    @if(($wallet?->balance ?? 0) < 0 || $pendingEnrollments->isNotEmpty())
     <div class="gt-card">
       <div class="gt-card-title" style="margin-bottom:16px;">Collect Fee</div>
       <form method="POST" action="{{ route('institute.fee-collect.collect', $user) }}">
         @csrf
         <div class="gt-form-group">
+          @if($pendingEnrollments->isNotEmpty())
+          <label class="gt-label">For Pending Booking</label>
+          <select name="course_book_id" class="gt-select">
+            <option value="">General Collection</option>
+            @foreach($pendingEnrollments as $pending)
+              <option value="{{ $pending->id }}">
+                {{ $pending->course?->name }} · Need ₹{{ number_format($pending->required_amount, 2) }}
+              </option>
+            @endforeach
+          </select>
+          <div class="text-xs text-muted" style="margin-top:6px;">Pending booking select karoge to required payment complete hote hi admission activate ho jayega.</div>
+          @endif
+        </div>
+        <div class="gt-form-group">
           <label class="gt-label">Amount (₹) <span style="color:var(--danger)">*</span></label>
           <input type="number" name="amount" class="gt-input" min="1"
-            max="{{ abs($wallet->balance) }}"
+            @if(($wallet?->balance ?? 0) < 0) max="{{ abs($wallet->balance) }}" @endif
             placeholder="Enter amount" required>
         </div>
         <div class="gt-form-grid-2">
@@ -83,9 +135,9 @@
       <div style="padding:10px 12px;background:var(--bg-3);border-radius:8px;margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;">
           <span class="fw-600 text-sm">{{ $e->course->name }}</span>
-          <span class="badge {{ $e->status === 'RUN' ? 'badge-success' : 'badge-neutral' }}">{{ $e->status }}</span>
+          <span class="badge {{ $e->status === 'RUN' ? 'badge-success' : 'badge-warning' }}">{{ $e->status === 'OPEN' ? 'SEAT BOOKED' : $e->status }}</span>
         </div>
-        <div class="text-xs text-muted mono">{{ $e->enrollment_no }}</div>
+        <div class="text-xs text-muted mono">{{ $e->enrollment_no ?: 'Enrollment no after required payment' }}</div>
         <div style="margin-top:6px;font-size:12px;">
           Total: <span class="mono fw-600">₹{{ number_format($e->final_fee,2) }}</span>
           @if($e->paymentPlan)

@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class CourseFeeStructure extends Model
 {
+    protected $table = 'course_fee_structure';
+
     protected $fillable = [
         'institute_id', 'course_id', 'fee_type_id',
         'fee_type_name', 'amount',

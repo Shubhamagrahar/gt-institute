@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboard;
 use App\Http\Controllers\Owner\FeatureController;
 use App\Http\Controllers\Owner\PlanController;
@@ -33,6 +34,11 @@ Route::get('/', fn() => redirect()->route('login'));
 Route::middleware('guest:web,institute')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/forgot-password/sent', [PasswordResetController::class, 'showSentPage'])->name('password.sent');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
@@ -73,9 +79,14 @@ Route::prefix('dashboard')
         Route::get('/', [InstituteDashboard::class, 'index'])->name('dashboard');
         Route::resource('students', StudentController::class);
         Route::get('students/{student}/ledger', [StudentController::class, 'ledger'])->name('students.ledger');
+        Route::get('students/{student}/enrollments/{courseBook}/edit', [EnrollmentController::class, 'editBooking'])->name('students.enrollments.edit');
+        Route::put('students/{student}/enrollments/{courseBook}', [EnrollmentController::class, 'updateBooking'])->name('students.enrollments.update');
         Route::resource('staff', StaffController::class);
         Route::resource('courses', CourseController::class);
         Route::patch('courses/{course}/toggle', [CourseController::class, 'toggle'])->name('courses.toggle');
+        Route::get('course-fee-bindings', [CourseController::class, 'feeBindingsIndex'])->name('courses.fee-bindings');
+        Route::get('course-fee-bindings/{course}/edit', [CourseController::class, 'feeBindingsEdit'])->name('courses.fee-bindings.edit');
+        Route::put('course-fee-bindings/{course}', [CourseController::class, 'feeBindingsUpdate'])->name('courses.fee-bindings.update');
         Route::resource('course-types', CourseTypeController::class)
             ->parameters(['course-types' => 'courseType'])
             ->except(['show', 'create']);
@@ -97,8 +108,12 @@ Route::prefix('dashboard')
         Route::post('attendance/student/mark', [AttendanceController::class, 'markStudent'])->name('attendance.student.mark');
         Route::get('attendance/staff', [AttendanceController::class, 'staffIndex'])->name('attendance.staff');
         Route::post('attendance/staff/mark', [AttendanceController::class, 'markStaff'])->name('attendance.staff.mark');
-        Route::get('form-builder', [FormBuilderController::class, 'index'])->name('form-builder.index');
-Route::post('form-builder', [FormBuilderController::class, 'save'])->name('form-builder.save');
+    Route::get('form-builder', [FormBuilderController::class, 'index'])->name('form-builder.index');
+    Route::get('form-builder/admission', [FormBuilderController::class, 'admission'])->name('form-builder.admission');
+    Route::get('form-builder/admission/print', [FormBuilderController::class, 'printAdmission'])->name('form-builder.admission.print');
+    Route::post('form-builder/admission', [FormBuilderController::class, 'saveAdmission'])->name('form-builder.admission.save');
+    Route::get('form-builder/quick', [FormBuilderController::class, 'quick'])->name('form-builder.quick');
+    Route::post('form-builder/quick', [FormBuilderController::class, 'saveQuick'])->name('form-builder.quick.save');
 
 // Fee Types
 Route::resource('fee-types', FeeTypeController::class)->except(['show']);
@@ -114,9 +129,12 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
 
 // Enrollment
 Route::get('enrollment/choose', [EnrollmentController::class, 'choose'])->name('enrollment.choose');
+Route::get('enrollment/pending', [EnrollmentController::class, 'pending'])->name('enrollment.pending');
 Route::post('enrollment/find-student', [EnrollmentController::class, 'findStudent'])->name('enrollment.find-student');
 Route::get('enrollment/new', [EnrollmentController::class, 'newStudent'])->name('enrollment.new');
 Route::post('enrollment/new', [EnrollmentController::class, 'storeNew'])->name('enrollment.store-new');
+Route::get('enrollment/quick', [EnrollmentController::class, 'quickStudent'])->name('enrollment.quick');
+Route::post('enrollment/quick', [EnrollmentController::class, 'storeQuick'])->name('enrollment.store-quick');
 Route::get('enrollment/{courseBook}/profile', [EnrollmentController::class, 'profileForm'])->name('enrollment.profile');
 Route::post('enrollment/{courseBook}/profile', [EnrollmentController::class, 'saveProfile'])->name('enrollment.save-profile');
 Route::get('enrollment/{courseBook}/fee', [EnrollmentController::class, 'feeForm'])->name('enrollment.fee');

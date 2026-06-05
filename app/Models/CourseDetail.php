@@ -17,6 +17,7 @@ class CourseDetail extends Model
     public function institute()   { return $this->belongsTo(\App\Models\Owner\Institute::class); }
     public function courseType()  { return $this->belongsTo(CourseType::class); }
     public function enrollments() { return $this->hasMany(CourseBook::class, 'course_id'); }
+    public function feeStructures() { return $this->hasMany(CourseFeeStructure::class, 'course_id'); }
 
     public static function hasMaxFeeColumn(): bool
     {

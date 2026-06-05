@@ -12,8 +12,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'user_id', 'mobile', 'email', 'password',
-        'role', 'institute_id', 'franchise_id', 'status',
+        'user_id', 'enrollment_no', 'mobile', 'email', 'password',
+        'role', 'user_type', 'institute_id', 'franchise_id', 'owner_type', 'status',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -27,6 +27,8 @@ class User extends Authenticatable
     public function isManager(): bool { return $this->role === 'manager'; }
     public function isStaff(): bool   { return $this->role === 'staff'; }
     public function isStudent(): bool { return $this->role === 'student'; }
+    public function isFranchiseOwned(): bool { return $this->owner_type === 'franchise'; }
+    public function isInstituteOwned(): bool { return $this->owner_type !== 'franchise'; }
 
     // ── Name helper ────────────────────────────────────
     // users table mein name column nahi hai
@@ -63,6 +65,11 @@ class User extends Authenticatable
     public function studentWallet()
     {
         return $this->hasOne(StudentWallet::class);
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(StudentTransaction::class);
     }
 
     // NEW — enrollments
