@@ -34,7 +34,7 @@
       <select name="batch_id" class="gt-select @error('batch_id') is-invalid @enderror">
         <option value="">No Batch</option>
         @foreach($batches as $batch)
-          <option value="{{ $batch->id }}" {{ old('batch_id') == $batch->id ? 'selected' : '' }}>{{ $batch->name }}</option>
+          <option value="{{ $batch->id }}" {{ old('batch_id') == $batch->id ? 'selected' : '' }}>{{ $batch->name }}@if($batch->start_time || $batch->end_time) ({{ $batch->start_time ? \Illuminate\Support\Carbon::parse($batch->start_time)->format('h:i A') : '-' }} - {{ $batch->end_time ? \Illuminate\Support\Carbon::parse($batch->end_time)->format('h:i A') : '-' }})@endif</option>
         @endforeach
       </select>
       @error('batch_id')<div class="gt-error">{{ $message }}</div>@enderror
@@ -44,3 +44,4 @@
   </form>
 </div>
 @endsection
+

@@ -6,15 +6,17 @@
 <div class="gt-card">
   <div class="gt-card-header">
     <div>
-      <div class="gt-card-title">Seat Booked Students</div>
-      <div class="text-xs text-muted" style="margin-top:4px;">Yahan woh sab bookings hain jahan admission abhi pending hai.</div>
+      <div class="gt-card-title">Pending Admissions</div>
+      <div class="text-xs text-muted" style="margin-top:4px;">Yahan seat bookings aur admitted students dono dikhte hain, taaki seat booked aur admission completed ka status clear rahe.</div>
     </div>
     <form method="GET" action="{{ route('institute.enrollment.pending') }}" style="display:flex;gap:8px;align-items:center;">
       <select name="filter" class="gt-select" style="min-width:190px;">
-        <option value="all" {{ ($filter ?? 'all') === 'all' ? 'selected' : '' }}>All Pending</option>
+        <option value="all" {{ ($filter ?? 'all') === 'all' ? 'selected' : '' }}>All Bookings</option>
         <option value="details_pending" {{ ($filter ?? 'all') === 'details_pending' ? 'selected' : '' }}>Details Pending</option>
         <option value="payment_pending" {{ ($filter ?? 'all') === 'payment_pending' ? 'selected' : '' }}>Payment Pending</option>
         <option value="ready" {{ ($filter ?? 'all') === 'ready' ? 'selected' : '' }}>Ready For Admission</option>
+        <option value="booked" {{ ($filter ?? 'all') === 'booked' ? 'selected' : '' }}>Seat Booked</option>
+        <option value="admitted" {{ ($filter ?? 'all') === 'admitted' ? 'selected' : '' }}>Admitted</option>
         <option value="quick" {{ ($filter ?? 'all') === 'quick' ? 'selected' : '' }}>Quick Booking</option>
         <option value="full" {{ ($filter ?? 'all') === 'full' ? 'selected' : '' }}>Full Booking</option>
       </select>
@@ -50,6 +52,7 @@
               <td>
                 <div>{{ $book->course?->name }}</div>
                 <div class="text-xs text-muted">{{ $book->paymentPlan?->plan_type ?? 'NA' }}</div>
+                <div class="text-xs mono text-muted">{{ $book->enrollment_no ?? 'No enrollment no yet' }}</div>
               </td>
               <td>
                 <span class="badge {{ $book->booking_mode === 'quick' ? 'badge-warning' : 'badge-accent' }}">
@@ -64,6 +67,9 @@
                   <span class="badge {{ $book->paid_amount + 0.01 >= $book->required_amount ? 'badge-success' : 'badge-warning' }}">
                     {{ $book->paid_amount + 0.01 >= $book->required_amount ? 'Payment Ready' : 'Payment Pending' }}
                   </span>
+                  <span class="badge {{ $book->status === 'RUN' ? 'badge-success' : 'badge-warning' }}">
+                    {{ $book->status === 'RUN' ? 'ADMISSION COMPLETED' : 'SEAT BOOKED' }}
+                  </span>
                   @if($book->admission_ready)
                     <span class="badge badge-success">Ready For Admission</span>
                   @endif
@@ -74,10 +80,11 @@
                 <div class="text-xs text-muted">Need ₹{{ number_format($book->required_amount, 2) }}</div>
               </td>
               <td style="display:flex;gap:8px;flex-wrap:wrap;">
-                @if(!$book->details_complete)
-                  <a href="{{ route('institute.enrollment.profile', $book) }}" class="btn btn-outline btn-sm">Complete Details</a>
+                @if($book->status === 'OPEN')
+                  <a href="{{ $book->details_complete ? route('institute.enrollment.fee', $book) : route('institute.enrollment.profile', $book) }}" class="btn btn-primary btn-sm">Complete Admission</a>
+                @else
+                  <a href="{{ route('institute.students.show', $book->student) }}" class="btn btn-primary btn-sm">View Admission</a>
                 @endif
-                <a href="{{ route('institute.fee-collect.show', $book->student) }}" class="btn btn-primary btn-sm">Open Payment</a>
               </td>
             </tr>
           @endforeach

@@ -86,6 +86,10 @@ class FeeCollectController extends Controller
                     ->where('id', $data['course_book_id'])
                     ->with('paymentPlan', 'student.profile')
                     ->firstOrFail();
+
+                if ($courseBook->status === 'OPEN' && ! $courseBook->paymentPlan && (float) $courseBook->final_fee <= 0) {
+                    abort(422, 'Fee setup is required before collecting admission payment.');
+                }
             }
 
             // 1. fee_collect_details
@@ -100,14 +104,24 @@ class FeeCollectController extends Controller
                 'date'         => $data['date'],
                 'note'         => $data['note'] ?? null,
                 'received_by'  => $byUser,
+                'by_rcv'       => $byUser,
             ];
-            $feePayload[$feeAmountColumn] = $amount;
+            $feePayload['amount'] = $amount;
+            $feePayload['amt'] = $amount;
 
             $fee = FeeCollectDetail::create($feePayload);
 
             if (! $courseBook || $courseBook->status === 'RUN') {
                 // Existing admitted student payment immediately affects student due ledger.
-                $sw    = StudentWallet::where('user_id', $user->id)->firstOrFail();
+                $sw    = StudentWallet::firstOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'institute_id' => $iid,
+                        'franchise_id' => $user->franchise_id,
+                        'owner_type' => $user->franchise_id ? 'franchise' : 'institute',
+                        'balance' => 0,
+                    ]
+                );
                 $opBal = $sw->balance;
                 $clBal = $opBal + $amount;
                 $sw->update(['balance' => $clBal]);
@@ -225,6 +239,10 @@ class FeeCollectController extends Controller
             return;
         }
 
+        if (! $courseBook->paymentPlan && (float) $courseBook->final_fee <= 0) {
+            return;
+        }
+
         $paidAmount = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)
             ->sum(FeeCollectDetail::amountColumn());
         $requiredAmount = $this->requiredAdmissionAmount($courseBook);
@@ -233,10 +251,8 @@ class FeeCollectController extends Controller
             return;
         }
 
-        if (! $courseBook->student->enrollment_no) {
+        if (! $courseBook->enrollment_no) {
             $enrollmentNo = $this->generateEnrollmentNo($courseBook->institute_id);
-            $courseBook->student->update(['enrollment_no' => $enrollmentNo]);
-            $courseBook->student->profile?->update(['admission_no' => $enrollmentNo]);
             $courseBook->update(['enrollment_no' => $enrollmentNo]);
         }
 

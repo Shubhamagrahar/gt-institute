@@ -135,4 +135,147 @@
     </div>
   </form>
 </div>
+
+<div class="gt-card" style="max-width:980px;margin-top:20px;">
+  <div class="gt-card-header">
+    <div>
+      <div class="gt-card-title">Education Details</div>
+      <div class="text-xs text-muted">Student ki education history yahin add/delete kar sakte hain.</div>
+    </div>
+  </div>
+
+  <div style="overflow:auto;margin-bottom:16px;">
+    <table class="gt-table" id="education-table">
+      <thead>
+        <tr>
+          <th>Exam</th>
+          <th>Institute</th>
+          <th>Board / University</th>
+          <th>Year</th>
+          <th>Division</th>
+          <th>Percentage</th>
+          <th style="width:80px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="education-body">
+        @forelse($student->education as $edu)
+          <tr data-edu-row="{{ $edu->id }}">
+            <td>{{ $edu->examination }}</td>
+            <td>{{ $edu->institute_name ?: '-' }}</td>
+            <td>{{ $edu->board_university ?: '-' }}</td>
+            <td>{{ $edu->passing_year ?: '-' }}</td>
+            <td>{{ $edu->division ?: '-' }}</td>
+            <td>{{ $edu->marks_percentage ?: '-' }}</td>
+            <td><button type="button" class="btn btn-outline btn-xs" data-delete-edu="{{ $edu->id }}">Delete</button></td>
+          </tr>
+        @empty
+          <tr id="education-empty"><td colspan="7" class="text-muted">No education details added.</td></tr>
+        @endforelse
+      </tbody>
+    </table>
+  </div>
+
+  <form id="education-form">
+    @csrf
+    <input type="hidden" name="user_id" value="{{ $student->id }}">
+    <div class="gt-form-grid-3">
+      <div class="gt-form-group">
+        <label class="gt-label">Course / Exam <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="examination" class="gt-input" required>
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Institute</label>
+        <input type="text" name="institute_name" class="gt-input">
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Board / University</label>
+        <input type="text" name="board_university" class="gt-input">
+      </div>
+    </div>
+    <div class="gt-form-grid-3">
+      <div class="gt-form-group">
+        <label class="gt-label">Passing Year</label>
+        <input type="text" name="passing_year" class="gt-input">
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Division</label>
+        <input type="text" name="division" class="gt-input">
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Marks / Percentage</label>
+        <input type="text" name="marks_percentage" class="gt-input">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Add Education</button>
+  </form>
+</div>
 @endsection
+
+@push('scripts')
+<script>
+const educationForm = document.getElementById('education-form');
+const educationBody = document.getElementById('education-body');
+const csrfToken = '{{ csrf_token() }}';
+const deleteEducationUrl = '{{ route("institute.enrollment.education.remove", "__ID__") }}';
+
+function cell(value) {
+  const td = document.createElement('td');
+  td.textContent = value || '-';
+  return td;
+}
+
+educationForm?.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const formData = new FormData(educationForm);
+  const response = await fetch('{{ route("institute.enrollment.education.add") }}', {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    alert('Education detail save nahi ho paya.');
+    return;
+  }
+
+  const result = await response.json();
+  document.getElementById('education-empty')?.remove();
+  const row = document.createElement('tr');
+  row.dataset.eduRow = result.id;
+  row.append(
+    cell(formData.get('examination')),
+    cell(formData.get('institute_name')),
+    cell(formData.get('board_university')),
+    cell(formData.get('passing_year')),
+    cell(formData.get('division')),
+    cell(formData.get('marks_percentage'))
+  );
+  const action = document.createElement('td');
+  action.innerHTML = `<button type="button" class="btn btn-outline btn-xs" data-delete-edu="${result.id}">Delete</button>`;
+  row.appendChild(action);
+  educationBody.appendChild(row);
+  educationForm.reset();
+});
+
+educationBody?.addEventListener('click', async (event) => {
+  const button = event.target.closest('[data-delete-edu]');
+  if (!button || !confirm('Remove this education row?')) return;
+
+  const id = button.dataset.deleteEdu;
+  const response = await fetch(deleteEducationUrl.replace('__ID__', id), {
+    method: 'DELETE',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+  });
+
+  if (!response.ok) {
+    alert('Education detail delete nahi ho paya.');
+    return;
+  }
+
+  button.closest('tr')?.remove();
+  if (!educationBody.querySelector('tr')) {
+    educationBody.innerHTML = '<tr id="education-empty"><td colspan="7" class="text-muted">No education details added.</td></tr>';
+  }
+});
+</script>
+@endpush

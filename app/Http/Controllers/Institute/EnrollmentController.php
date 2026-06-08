@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{
     AdmissionFormField,
     BatchDetail,
+    ChannelPartner,
     CourseBook,
     CourseDetail,
     District,
@@ -24,8 +25,9 @@ use App\Models\{
     UserEducation,
     UserProfile
 };
+use App\Mail\SeatBookingConfirmationMail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\{Auth, DB, Hash, Schema};
+use Illuminate\Support\Facades\{Auth, DB, Hash, Log, Mail, Schema};
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -61,7 +63,7 @@ class EnrollmentController extends Controller
         $filter = request('filter', 'all');
         $pendingBooks = CourseBook::with(['student.profile', 'course', 'paymentPlan'])
             ->where('institute_id', $iid)
-            ->where('status', 'OPEN')
+            ->whereIn('status', ['OPEN', 'RUN'])
             ->latest()
             ->get()
             ->map(function (CourseBook $courseBook) {
@@ -84,6 +86,8 @@ class EnrollmentController extends Controller
                 'details_pending' => ! $courseBook->details_complete,
                 'payment_pending' => $courseBook->paid_amount + 0.01 < $courseBook->required_amount,
                 'ready' => $courseBook->details_complete && $courseBook->paid_amount + 0.01 >= $courseBook->required_amount,
+                'admitted' => $courseBook->status === 'RUN',
+                'booked' => $courseBook->status === 'OPEN',
                 'quick' => $courseBook->booking_mode === 'quick',
                 'full' => $courseBook->booking_mode === 'full',
                 default => true,
@@ -114,7 +118,10 @@ class EnrollmentController extends Controller
             ->where(function ($query) use ($search) {
                 $query->where('mobile', $search)
                     ->orWhere('user_id', $search)
-                    ->orWhere('enrollment_no', $search);
+                    ->orWhereHas('enrollments', function ($enrollments) use ($search, $iid) {
+                        $enrollments->where('institute_id', $iid)
+                            ->where('enrollment_no', $search);
+                    });
             })
             ->with('profile')
             ->first();
@@ -130,6 +137,20 @@ class EnrollmentController extends Controller
         return view('institute.enrollment.existing', compact('user', 'courses', 'batches', 'sessionId'));
     }
 
+    public function validateField(Request $request)
+    {
+        $data = $request->validate([
+            'field' => 'required|in:mobile,email',
+            'value' => 'required|string|max:100',
+        ]);
+
+        $query = User::where($data['field'], trim($data['value']));
+
+        return response()->json([
+            'exists' => $query->exists(),
+        ]);
+    }
+
     public function editBooking(User $student, CourseBook $courseBook)
     {
         $this->authorizeStudentCourseBook($student, $courseBook);
@@ -137,7 +158,7 @@ class EnrollmentController extends Controller
         $iid = $this->instituteId();
         $courses = CourseDetail::where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
         $batches = BatchDetail::where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
-        $plans = PaymentPlanType::where('institute_id', $iid)->where('is_active', true)->orderBy('type')->get();
+        $plans = $this->activePaymentPlans($iid);
         $currentPlanId = $courseBook->paymentPlan?->payment_plan_type_id;
 
         return view('institute.students.enrollment-edit', compact('student', 'courseBook', 'courses', 'batches', 'plans', 'currentPlanId'));
@@ -158,7 +179,7 @@ class EnrollmentController extends Controller
                 Rule::exists('batch_details', 'id')->where(fn ($query) => $query->where('institute_id', $iid)),
             ],
             'payment_plan_type_id' => [
-                'required',
+                'nullable',
                 Rule::exists('payment_plan_types', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('is_active', true)),
             ],
         ]);
@@ -191,6 +212,7 @@ class EnrollmentController extends Controller
             $courseBook->update([
                 'course_id' => $course->id,
                 'batch_id' => $data['batch_id'] ?? null,
+                'fee' => $newFee,
                 'final_fee' => $newFee,
             ]);
 
@@ -252,39 +274,11 @@ class EnrollmentController extends Controller
             ->where('institute_id', $iid)
             ->where('id', $data['course_id'])
             ->firstOrFail();
-        $plan = PaymentPlanType::where('institute_id', $iid)
-            ->where('is_active', true)
-            ->findOrFail($data['payment_plan_type_id']);
-
-        $courseSummary = $this->courseCatalogItem($course);
-        $firstPayment = round((float) ($data['first_payment_amount'] ?? 0), 2);
-
-        if ($firstPayment > 0 && empty($data['payment_mode'])) {
-            return back()->withErrors(['payment_mode' => 'Payment mode is required when first payment is entered.'])->withInput();
-        }
-
-        if ($firstPayment > 0 && empty($data['payment_date'])) {
-            return back()->withErrors(['payment_date' => 'Payment date is required when first payment is entered.'])->withInput();
-        }
-
-        $totalFee = (float) $courseSummary['total_fee'];
-        $remainingFee = round($totalFee - $firstPayment, 2);
-        $monthlyAmount = $plan->type === 'MONTHLY'
-            ? round($totalFee / max(1, (int) ($course->duration ?: 1)), 2)
-            : null;
-        $nextDueDate = $plan->type === 'MONTHLY' ? now()->addMonth()->toDateString() : null;
-
-        $courseBook = DB::transaction(function () use (
+        $result = DB::transaction(function () use (
             $data,
             $iid,
             $sessionId,
-            $course,
-            $courseSummary,
-            $plan,
-            $firstPayment,
-            $remainingFee,
-            $monthlyAmount,
-            $nextDueDate
+            $course
         ) {
             $userId = $this->generateUserId($iid);
             $user = User::create([
@@ -295,6 +289,8 @@ class EnrollmentController extends Controller
                 'password' => Hash::make(Str::random(10)),
                 'role' => 'student',
                 'user_type' => 'student',
+                'franchise_id' => null,
+                'channel_partner_id' => $data['channel_partner_id'] ?? null,
                 'owner_type' => 'institute',
                 'status' => 'active',
             ]);
@@ -333,20 +329,14 @@ class EnrollmentController extends Controller
                 'permanent_district' => $data['permanent_district'] ?? null,
                 'permanent_city' => $data['permanent_city'] ?? null,
                 'permanent_pin_code' => $data['permanent_pin_code'] ?? null,
-                'fee_collect_type' => $plan->type,
-                'monthly_fee' => $monthlyAmount ?? 0,
-                'daily_late_fee' => $plan->late_fee_per_day,
-                'late_fee_count_after' => $plan->grace_days,
-                'next_fee_date' => $nextDueDate,
+                'fee_collect_type' => null,
+                'monthly_fee' => 0,
+                'daily_late_fee' => 0,
+                'late_fee_count_after' => 0,
+                'next_fee_date' => null,
                 'issue_date' => now()->toDateString(),
                 'r_date' => now()->toDateString(),
             ]);
-
-            if ($requestPhoto = request()->file('photo')) {
-                $path = $requestPhoto->store('student-photos', 'public');
-                $profile->photo = 'storage/' . $path;
-            }
-
             $profile->save();
 
             foreach ($data['education'] ?? [] as $education) {
@@ -370,12 +360,15 @@ class EnrollmentController extends Controller
             $courseBook = CourseBook::create([
                 'institute_id' => $iid,
                 'franchise_id' => null,
+                'channel_partner_id' => $data['channel_partner_id'] ?? null,
                 'session_id' => $sessionId,
                 'user_id' => $user->id,
                 'course_id' => $course->id,
                 'batch_id' => $data['batch_id'] ?? null,
                 'enrollment_no' => null,
-                'final_fee' => $courseSummary['total_fee'],
+                'fee' => 0,
+                'final_fee' => 0,
+                'book_date' => now()->toDateString(),
                 'start_date' => null,
                 'status' => 'OPEN',
                 'booking_mode' => 'full',
@@ -383,56 +376,18 @@ class EnrollmentController extends Controller
                 'admission_by' => Auth::guard('institute')->id(),
             ]);
 
-            foreach ($courseSummary['fee_items'] as $item) {
-                EnrollmentFeeSnapshot::create([
-                    'institute_id' => $iid,
-                    'course_book_id' => $courseBook->id,
-                    'fee_type_id' => $item['fee_type_id'],
-                    'fee_type_name' => $item['fee_type_name'],
-                    'original_amount' => $item['amount'],
-                    'discount_percent' => 0,
-                    'discount_amount' => 0,
-                    'final_amount' => $item['amount'],
-                ]);
-            }
+            $this->ensureStudentWallet($user);
 
-            EnrollmentPaymentPlan::create([
-                'institute_id' => $iid,
-                'course_book_id' => $courseBook->id,
-                'payment_plan_type_id' => $plan->id,
-                'plan_type' => $plan->type,
-                'total_fee' => $courseSummary['total_fee'],
-                'required_fee' => $courseSummary['required_fee'],
-                'first_payment_amount' => $firstPayment,
-                'remaining_fee' => $remainingFee,
-                'monthly_amount' => $monthlyAmount,
-                'grace_days' => $plan->grace_days,
-                'late_fee_per_day' => $plan->late_fee_per_day,
-                'next_due_date' => $nextDueDate,
-            ]);
-
-            if ($firstPayment > 0) {
-                $this->recordPayment(
-                    $user,
-                    $courseBook,
-                    $firstPayment,
-                    $data['payment_mode'],
-                    $data['payment_date'],
-                    $data['utr'] ?? null,
-                    $data['payment_note'] ?? null
-                );
-            }
-            return $courseBook->fresh(['student.profile', 'paymentPlan']);
+            return [
+                'courseBook' => $courseBook->fresh(['student.profile', 'course']),
+                'user' => $user->fresh(['profile']),
+            ];
         });
 
-        if ($firstPayment > 0) {
-            $this->finalizeAdmissionIfEligible($courseBook);
-        }
+        $this->sendSeatBookingEmail($result['user'], $result['courseBook']);
 
         return redirect()->route('institute.enrollment.pending')
-            ->with('success', $courseBook->status === 'RUN'
-                ? 'Admission completed successfully.'
-                : 'Seat booked successfully. Admission will complete after required payment.');
+            ->with('success', 'Seat booked successfully. Admission will complete after profile and payment are finished.');
     }
 
     public function storeQuick(Request $request)
@@ -447,16 +402,9 @@ class EnrollmentController extends Controller
             ->where('institute_id', $iid)
             ->where('id', $data['course_id'])
             ->firstOrFail();
-        $plan = PaymentPlanType::where('institute_id', $iid)
-            ->where('is_active', true)
-            ->findOrFail($data['payment_plan_type_id']);
         $courseSummary = $this->courseCatalogItem($course);
-        $monthlyAmount = $plan->type === 'MONTHLY'
-            ? round((float) $courseSummary['total_fee'] / max(1, (int) ($course->duration ?: 1)), 2)
-            : null;
-        $nextDueDate = $plan->type === 'MONTHLY' ? now()->addMonth()->toDateString() : null;
 
-        DB::transaction(function () use ($data, $iid, $sessionId, $course, $plan, $courseSummary, $monthlyAmount, $nextDueDate, $fields) {
+        $result = DB::transaction(function () use ($data, $iid, $sessionId, $course, $courseSummary, $fields) {
             $userId = $this->generateUserId($iid);
             $user = User::create([
                 'institute_id' => $iid,
@@ -466,9 +414,13 @@ class EnrollmentController extends Controller
                 'password' => Hash::make(Str::random(10)),
                 'role' => 'student',
                 'user_type' => 'student',
+                'franchise_id' => null,
+                'channel_partner_id' => $data['channel_partner_id'] ?? null,
                 'owner_type' => 'institute',
                 'status' => 'active',
             ]);
+
+            $this->ensureStudentWallet($user);
 
             $profileData = [
                 'user_id' => $user->id,
@@ -495,47 +447,30 @@ class EnrollmentController extends Controller
             $courseBook = CourseBook::create([
                 'institute_id' => $iid,
                 'franchise_id' => null,
+                'channel_partner_id' => $data['channel_partner_id'] ?? null,
                 'session_id' => $sessionId,
                 'user_id' => $user->id,
                 'course_id' => $course->id,
                 'batch_id' => $data['batch_id'] ?? null,
                 'enrollment_no' => null,
+                'fee' => $courseSummary['total_fee'],
                 'final_fee' => $courseSummary['total_fee'],
+                'book_date' => now()->toDateString(),
                 'status' => 'OPEN',
                 'booking_mode' => 'quick',
                 'profile_completed_at' => null,
                 'admission_by' => Auth::guard('institute')->id(),
             ]);
 
-            foreach ($courseSummary['fee_items'] as $item) {
-                EnrollmentFeeSnapshot::create([
-                    'institute_id' => $iid,
-                    'course_book_id' => $courseBook->id,
-                    'fee_type_id' => $item['fee_type_id'],
-                    'fee_type_name' => $item['fee_type_name'],
-                    'original_amount' => $item['amount'],
-                    'discount_percent' => 0,
-                    'discount_amount' => 0,
-                    'final_amount' => $item['amount'],
-                ]);
-            }
+            $user = $user->fresh(['profile']);
 
-            EnrollmentPaymentPlan::create([
-                'institute_id' => $iid,
-                'course_book_id' => $courseBook->id,
-                'payment_plan_type_id' => $plan->id,
-                'plan_type' => $plan->type,
-                'total_fee' => $courseSummary['total_fee'],
-                'required_fee' => $courseSummary['required_fee'],
-                'first_payment_amount' => 0,
-                'remaining_fee' => $courseSummary['total_fee'],
-                'monthly_amount' => $monthlyAmount,
-                'grace_days' => $plan->grace_days,
-                'late_fee_per_day' => $plan->late_fee_per_day,
-                'next_due_date' => $nextDueDate,
-            ]);
-
+            return [
+                'courseBook' => $courseBook->fresh(['student.profile', 'course']),
+                'user' => $user,
+            ];
         });
+
+        $this->sendSeatBookingEmail($result['user'], $result['courseBook']);
 
         return redirect()->route('institute.enrollment.pending')
             ->with('success', 'Quick seat booking saved. Complete the remaining details before final admission.');
@@ -638,8 +573,15 @@ class EnrollmentController extends Controller
     {
         $this->authorizeCourseBook($courseBook);
         $iid = $this->instituteId();
-        $feeStructure = $courseBook->course->feeStructures ?? collect();
-        $plans = PaymentPlanType::where('institute_id', $iid)->where('is_active', true)->get();
+        $courseBook->loadMissing(['course.feeStructures.feeType']);
+        $courseSummary = $this->courseCatalogItem($courseBook->course);
+        $feeStructure = collect($courseSummary['fee_items'])->map(fn ($item) => (object) [
+            'fee_type_id' => $item['fee_type_id'],
+            'fee_type_name' => $item['fee_type_name'],
+            'amount' => $item['amount'],
+            'is_mandatory' => $item['is_mandatory'],
+        ]);
+        $plans = $this->activePaymentPlans($iid);
 
         return view('institute.enrollment.fee', compact('courseBook', 'feeStructure', 'plans'));
     }
@@ -648,25 +590,30 @@ class EnrollmentController extends Controller
     {
         $this->authorizeCourseBook($courseBook);
         $request->validate([
-            'payment_plan_type_id' => 'required|exists:payment_plan_types,id',
+            'payment_plan_type_id' => [
+                'required',
+                Rule::exists('payment_plan_types', 'id')
+                    ->where(fn ($query) => $query->where('institute_id', $this->instituteId())->where('is_active', true)),
+            ],
             'fee_items' => 'required|array',
-            'fee_items.*.fee_type_id' => 'nullable',
-            'fee_items.*.fee_type_name' => 'required|string',
-            'fee_items.*.original_amount' => 'required|numeric|min:0',
             'fee_items.*.discount_percent' => 'nullable|numeric|min:0|max:100',
-            'fee_items.*.discount_amount' => 'nullable|numeric|min:0',
-            'fee_items.*.final_amount' => 'required|numeric|min:0',
+            'first_payment_amount' => 'required|numeric|min:0',
+            'payment_mode' => 'required|in:CASH,UPI,NEFT,IMPS,CHEQUE',
+            'payment_date' => 'required|date',
+            'utr' => 'nullable|string|max:80',
+            'payment_note' => 'nullable|string|max:255',
         ]);
 
-        $plan = PaymentPlanType::findOrFail($request->payment_plan_type_id);
-        $totalFee = collect($request->fee_items)->sum('final_amount');
+        $plan = PaymentPlanType::where('institute_id', $this->instituteId())->findOrFail($request->payment_plan_type_id);
+        $courseBook->loadMissing(['course.feeStructures.feeType', 'paymentPlan']);
+        $feeQuote = $this->buildFeeQuote($courseBook, $request->input('fee_items', []));
+        $terms = $this->paymentTerms($plan, $courseBook, $feeQuote, $courseBook->paymentPlan);
 
-        DB::transaction(function () use ($request, $courseBook, $plan, $totalFee) {
-            $existingPlan = $courseBook->paymentPlan;
+        DB::transaction(function () use ($courseBook, $plan, $feeQuote, $terms) {
             $courseBook->feeSnapshots()->delete();
             $courseBook->paymentPlan()->delete();
 
-            foreach ($request->fee_items as $item) {
+            foreach ($feeQuote['items'] as $item) {
                 EnrollmentFeeSnapshot::create([
                     'institute_id' => $courseBook->institute_id,
                     'course_book_id' => $courseBook->id,
@@ -679,33 +626,76 @@ class EnrollmentController extends Controller
                 ]);
             }
 
-            $monthly = $plan->type === 'MONTHLY'
-                ? round($totalFee / max(1, (int) ($courseBook->course->duration ?: 1)), 2)
-                : null;
-            $nextDue = $plan->type === 'MONTHLY' ? now()->addMonth()->toDateString() : null;
-
             EnrollmentPaymentPlan::create([
                 'institute_id' => $courseBook->institute_id,
                 'course_book_id' => $courseBook->id,
                 'payment_plan_type_id' => $plan->id,
                 'plan_type' => $plan->type,
-                'total_fee' => $totalFee,
-                'required_fee' => $existingPlan?->required_fee ?? 0,
-                'first_payment_amount' => $existingPlan?->first_payment_amount ?? 0,
-                'remaining_fee' => $totalFee,
-                'monthly_amount' => $monthly,
+                'total_fee' => $feeQuote['total_fee'],
+                'required_fee' => $terms['required_fee'],
+                'first_payment_amount' => $terms['first_payment_amount'],
+                'remaining_fee' => $terms['remaining_fee'],
+                'monthly_amount' => $terms['monthly_amount'],
                 'grace_days' => $plan->grace_days,
                 'late_fee_per_day' => $plan->late_fee_per_day,
-                'next_due_date' => $nextDue,
+                'next_due_date' => $terms['next_due_date'],
             ]);
 
             $courseBook->update([
-                'final_fee' => $totalFee,
+                'fee' => $feeQuote['total_fee'],
+                'final_fee' => $feeQuote['total_fee'],
                 'profile_completed_at' => $courseBook->profile_completed_at ?? now(),
             ]);
         });
 
-        return redirect()->route('institute.enrollment.preview', $courseBook);
+        $firstPayment = (float) $request->first_payment_amount;
+        if ($firstPayment > 0) {
+            $courseBook->loadMissing('student');
+            $this->recordPayment(
+                $courseBook->student,
+                $courseBook,
+                $firstPayment,
+                $request->payment_mode,
+                $request->payment_date,
+                $request->utr ?? null,
+                $request->payment_note ?? null
+            );
+            $this->finalizeAdmissionIfEligible($courseBook->fresh(['student.profile', 'paymentPlan', 'course']));
+        }
+
+        return redirect()->route('institute.enrollment.payment-complete', $courseBook);
+    }
+
+    public function paymentComplete(CourseBook $courseBook)
+    {
+        $this->authorizeCourseBook($courseBook);
+        $courseBook->loadMissing(['student.profile', 'course', 'batch', 'paymentPlan', 'feeSnapshots']);
+        $amountColumn = FeeCollectDetail::amountColumn();
+        $paidTotal = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)->sum($amountColumn);
+        $latestFee = FeeCollectDetail::where('course_book_id', $courseBook->id)->latest('id')->first();
+        $fees = FeeCollectDetail::where('course_book_id', $courseBook->id)->orderByDesc('id')->paginate(10);
+
+        return view('institute.enrollment.payment-complete', compact('courseBook', 'fees', 'latestFee', 'paidTotal'));
+    }
+
+    public function receiptA4(CourseBook $courseBook, FeeCollectDetail $fee)
+    {
+        $this->authorizeCourseBook($courseBook);
+        abort_unless($fee->user_id === $courseBook->user_id, 403);
+        $courseBook->loadMissing(['student.profile', 'course', 'batch']);
+        $institute = Auth::guard('institute')->user()->institute;
+
+        return view('institute.enrollment.receipt-a4', compact('courseBook', 'fee', 'institute'));
+    }
+
+    public function receiptThermal(CourseBook $courseBook, FeeCollectDetail $fee)
+    {
+        $this->authorizeCourseBook($courseBook);
+        abort_unless($fee->user_id === $courseBook->user_id, 403);
+        $courseBook->loadMissing(['student.profile', 'course', 'batch']);
+        $institute = Auth::guard('institute')->user()->institute;
+
+        return view('institute.enrollment.receipt-thermal', compact('courseBook', 'fee', 'institute'));
     }
 
     public function preview(CourseBook $courseBook)
@@ -716,13 +706,44 @@ class EnrollmentController extends Controller
         $profile = $courseBook->student->profile;
         $education = $courseBook->student->education;
         $snapshots = $courseBook->feeSnapshots;
+        if (! $snapshots->contains(fn ($snapshot) => $snapshot->fee_type_id === null && $snapshot->fee_type_name === 'Course Fee')) {
+            $courseFeeSnapshot = EnrollmentFeeSnapshot::create([
+                'institute_id' => $courseBook->institute_id,
+                'course_book_id' => $courseBook->id,
+                'fee_type_id' => null,
+                'fee_type_name' => 'Course Fee',
+                'original_amount' => $courseBook->course?->fee ?? 0,
+                'discount_percent' => 0,
+                'discount_amount' => 0,
+                'final_amount' => $courseBook->course?->fee ?? 0,
+            ]);
+            $snapshots = collect([$courseFeeSnapshot])->merge($snapshots);
+        }
+        $displayTotalFee = round((float) $snapshots->sum('final_amount'), 2);
+        if (abs((float) $courseBook->final_fee - $displayTotalFee) >= 0.01) {
+            $paidAmount = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)
+                ->sum(FeeCollectDetail::amountColumn());
+            $courseBook->update([
+                'fee' => $displayTotalFee,
+                'final_fee' => $displayTotalFee,
+            ]);
+            if ($courseBook->paymentPlan) {
+                $courseBook->paymentPlan->update([
+                    'total_fee' => $displayTotalFee,
+                    'remaining_fee' => max(round($displayTotalFee - $paidAmount, 2), 0),
+                    'monthly_amount' => $courseBook->paymentPlan->plan_type === 'MONTHLY'
+                        ? round($displayTotalFee / max(1, (int) ($courseBook->course->duration ?: 1)), 2)
+                        : $courseBook->paymentPlan->monthly_amount,
+                ]);
+            }
+        }
         $plan = $courseBook->paymentPlan;
         $educationField = AdmissionFormField::where('institute_id', $iid)
             ->where('field_key', 'education_details')
             ->first();
         $educationEnabled = ! $educationField || $educationField->is_active;
 
-        return view('institute.enrollment.preview', compact('courseBook', 'fields', 'profile', 'education', 'snapshots', 'plan', 'educationEnabled'));
+        return view('institute.enrollment.preview', compact('courseBook', 'fields', 'profile', 'education', 'snapshots', 'plan', 'educationEnabled', 'displayTotalFee'));
     }
 
     public function confirm(Request $request, CourseBook $courseBook)
@@ -733,10 +754,10 @@ class EnrollmentController extends Controller
             'profile_completed_at' => $courseBook->profile_completed_at ?? now(),
         ]);
 
-        $this->finalizeAdmissionIfEligible($courseBook->fresh(['student.profile', 'paymentPlan']));
+        $this->forceFinalizeAdmission($courseBook->fresh(['student.profile', 'paymentPlan', 'course']));
 
-        return redirect()->route('institute.fee-collect.show', $courseBook->user_id)
-            ->with('success', 'Seat booking saved. Collect required payment to complete admission.');
+        return redirect()->route('institute.enrollment.pending', ['filter' => 'all'])
+            ->with('success', 'Admission completed successfully. You can review all booked and admitted students here.');
     }
 
     public function addEducation(Request $request)
@@ -744,11 +765,14 @@ class EnrollmentController extends Controller
         $data = $request->validate([
             'user_id' => 'required|exists:users,id',
             'examination' => 'required|string|max:80',
+            'institute_name' => 'nullable|string|max:150',
             'board_university' => 'nullable|string|max:150',
             'passing_year' => 'nullable|string|max:10',
+            'division' => 'nullable|string|max:50',
             'marks_percentage' => 'nullable|string|max:10',
         ]);
         $user = User::findOrFail($data['user_id']);
+        abort_unless($user->institute_id === $this->instituteId(), 403);
         $data['institute_id'] = $user->institute_id;
         $data['franchise_id'] = $user->franchise_id;
         $edu = UserEducation::create($data);
@@ -758,6 +782,7 @@ class EnrollmentController extends Controller
 
     public function removeEducation(UserEducation $education)
     {
+        abort_unless($education->institute_id === $this->instituteId(), 403);
         $education->delete();
 
         return response()->json(['success' => true]);
@@ -784,6 +809,7 @@ class EnrollmentController extends Controller
             'enrollment_no' => null,
             'status' => 'OPEN',
             'booking_mode' => 'existing',
+            'book_date' => now()->toDateString(),
             'profile_completed_at' => $user->profile ? now() : null,
         ];
 
@@ -793,11 +819,16 @@ class EnrollmentController extends Controller
         if (Schema::hasColumn('course_books', 'final_fee')) {
             $courseBookData['final_fee'] = 0;
         }
+        if (Schema::hasColumn('course_books', 'fee')) {
+            $courseBookData['fee'] = 0;
+        }
         if (Schema::hasColumn('course_books', 'admission_by')) {
             $courseBookData['admission_by'] = Auth::guard('institute')->id();
         }
 
         $courseBook = CourseBook::create($courseBookData);
+        $this->ensureStudentWallet($user);
+        $this->sendSeatBookingEmail($user, $courseBook->fresh(['student.profile', 'course', 'batch']));
 
         return redirect()->route('institute.enrollment.profile', $courseBook);
     }
@@ -819,13 +850,14 @@ class EnrollmentController extends Controller
             ->where('status', 'active')
             ->orderBy('name')
             ->get();
+        $channelPartners = ChannelPartner::where('institute_id', $iid)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'mobile']);
         $savedFields = AdmissionFormField::where('institute_id', $iid)
             ->get()
             ->keyBy('field_key');
-        $plans = PaymentPlanType::where('institute_id', $iid)
-            ->where('is_active', true)
-            ->orderBy('type')
-            ->get();
+        $plans = $this->activePaymentPlans($iid);
         $states = State::orderBy('name')->pluck('name');
         $districtsByState = Schema::hasTable('districts')
             ? District::query()
@@ -840,8 +872,35 @@ class EnrollmentController extends Controller
             : [];
         $courseCatalog = $courses->map(fn (CourseDetail $course) => $this->courseCatalogItem($course))->values();
 
-        return compact('courses', 'courseTypes', 'batches', 'savedFields', 'plans', 'states', 'districtsByState', 'courseCatalog')
+        return compact('courses', 'courseTypes', 'batches', 'channelPartners', 'savedFields', 'plans', 'states', 'districtsByState', 'courseCatalog')
             + ['defaultPhotoPath' => $this->defaultPhotoPath()];
+    }
+
+    private function activePaymentPlans(int $iid)
+    {
+        $defaults = [
+            'OTP' => 'One Time Payment',
+            'PART' => 'Partial Payment',
+            'MONTHLY' => 'Monthly Payment',
+        ];
+
+        foreach ($defaults as $type => $name) {
+            PaymentPlanType::firstOrCreate(
+                ['institute_id' => $iid, 'type' => $type],
+                [
+                    'name' => $name,
+                    'grace_days' => 0,
+                    'late_fee_per_day' => 0,
+                    'is_active' => true,
+                ]
+            );
+        }
+
+        return PaymentPlanType::where('institute_id', $iid)
+            ->where('is_active', true)
+            ->orderByRaw("CASE type WHEN 'OTP' THEN 1 WHEN 'PART' THEN 2 WHEN 'MONTHLY' THEN 3 ELSE 4 END")
+            ->orderBy('name')
+            ->get();
     }
 
     private function wizardRules(int $iid, $fields): array
@@ -857,8 +916,14 @@ class EnrollmentController extends Controller
                 'nullable',
                 Rule::exists('batch_details', 'id')->where(fn ($query) => $query->where('institute_id', $iid)),
             ],
+            'admission_source' => 'required|in:direct,channel_partner',
+            'channel_partner_id' => [
+                'nullable',
+                'required_if:admission_source,channel_partner',
+                Rule::exists('channel_partners', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('status', 'active')),
+            ],
             'payment_plan_type_id' => [
-                'required',
+                'nullable',
                 Rule::exists('payment_plan_types', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('is_active', true)),
             ],
             'name' => 'required|string|max:100',
@@ -911,7 +976,7 @@ class EnrollmentController extends Controller
             'education.*.passing_year' => 'nullable|string|max:10',
             'education.*.division' => 'nullable|string|max:50',
             'education.*.marks_percentage' => 'nullable|string|max:10',
-            'first_payment_amount' => 'required|numeric|min:0',
+            'first_payment_amount' => 'nullable|numeric|min:0',
             'payment_mode' => 'nullable|in:CASH,UPI,NEFT,IMPS,CHEQUE',
             'payment_date' => 'nullable|date',
             'utr' => 'nullable|string|max:80',
@@ -930,8 +995,14 @@ class EnrollmentController extends Controller
                 'nullable',
                 Rule::exists('batch_details', 'id')->where(fn ($query) => $query->where('institute_id', $iid)),
             ],
+            'admission_source' => 'required|in:direct,channel_partner',
+            'channel_partner_id' => [
+                'nullable',
+                'required_if:admission_source,channel_partner',
+                Rule::exists('channel_partners', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('status', 'active')),
+            ],
             'payment_plan_type_id' => [
-                'required',
+                'nullable',
                 Rule::exists('payment_plan_types', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('is_active', true)),
             ],
             'name' => 'required|string|max:100',
@@ -987,13 +1058,13 @@ class EnrollmentController extends Controller
             })
             ->values();
 
-        $requiredFee = round($boundItems->where('is_mandatory', true)->sum('amount'), 2);
+        $requiredFee = round($baseFee + $boundItems->where('is_mandatory', true)->sum('amount'), 2);
         $boundFeeTotal = round($boundItems->sum('amount'), 2);
         $items = collect([[
             'fee_type_id' => null,
             'fee_type_name' => 'Course Fee',
             'amount' => $baseFee,
-            'is_mandatory' => false,
+            'is_mandatory' => true,
         ]])->merge($boundItems)->values()->all();
 
         return [
@@ -1010,6 +1081,67 @@ class EnrollmentController extends Controller
         ];
     }
 
+    private function buildFeeQuote(CourseBook $courseBook, array $submittedItems = []): array
+    {
+        $courseBook->loadMissing(['course.feeStructures.feeType']);
+        $catalog = collect($this->courseCatalogItem($courseBook->course)['fee_items'])->values();
+        $submittedItems = collect($submittedItems)->values();
+
+        $items = $catalog->map(function (array $catalogItem, int $index) use ($submittedItems) {
+            $submitted = $submittedItems->get($index, []);
+            $originalAmount = round((float) $catalogItem['amount'], 2);
+            $discountPercent = round((float) ($submitted['discount_percent'] ?? 0), 2);
+            $discountPercent = min(max($discountPercent, 0), 100);
+            $discountAmount = round(($originalAmount * $discountPercent) / 100, 2);
+            $finalAmount = max(round($originalAmount - $discountAmount, 2), 0);
+
+            return [
+                'fee_type_id' => $catalogItem['fee_type_id'],
+                'fee_type_name' => $catalogItem['fee_type_name'],
+                'original_amount' => $originalAmount,
+                'discount_percent' => $discountPercent,
+                'discount_amount' => $discountAmount,
+                'final_amount' => $finalAmount,
+                'is_mandatory' => (bool) ($catalogItem['is_mandatory'] ?? false),
+            ];
+        })->values();
+
+        return [
+            'items' => $items->all(),
+            'total_fee' => round($items->sum('final_amount'), 2),
+            'total_discount' => round($items->sum('discount_amount'), 2),
+            'required_fee' => round($items->where('is_mandatory', true)->sum('final_amount'), 2),
+        ];
+    }
+
+    private function paymentTerms(
+        PaymentPlanType $plan,
+        CourseBook $courseBook,
+        array $feeQuote,
+        ?EnrollmentPaymentPlan $existingPlan = null
+    ): array {
+        $totalFee = round((float) $feeQuote['total_fee'], 2);
+        $requiredFee = match ($plan->type) {
+            'OTP' => $totalFee,
+            default => min($totalFee, round((float) ($feeQuote['required_fee'] ?: $totalFee), 2)),
+        };
+
+        $firstPaymentAmount = match ($plan->type) {
+            'OTP' => $totalFee,
+            default => min($totalFee, max($requiredFee, round((float) ($existingPlan?->first_payment_amount ?? 0), 2))),
+        };
+
+        $duration = max(1, (int) ($courseBook->course->duration ?: 1));
+
+        return [
+            'required_fee' => $requiredFee,
+            'first_payment_amount' => $firstPaymentAmount,
+            'remaining_fee' => $totalFee,
+            'monthly_amount' => $plan->type === 'MONTHLY' ? round($totalFee / $duration, 2) : null,
+            'next_due_date' => $plan->type === 'MONTHLY' ? now()->addMonth()->toDateString() : null,
+        ];
+    }
+
     private function recordPayment(
         User $user,
         CourseBook $courseBook,
@@ -1022,6 +1154,7 @@ class EnrollmentController extends Controller
         $iid = $this->instituteId();
         $invoiceNo = 'INV' . now()->format('Ymd') . strtoupper(substr(uniqid(), -5));
 
+        $byUser = Auth::guard('institute')->id();
         $feePayload = [
             'institute_id' => $iid,
             'franchise_id' => $user->franchise_id,
@@ -1032,9 +1165,11 @@ class EnrollmentController extends Controller
             'utr' => $utr,
             'date' => $paymentDate,
             'note' => $note,
-            'received_by' => Auth::guard('institute')->id(),
+            'received_by' => $byUser,
+            'by_rcv' => $byUser,
         ];
-        $feePayload[FeeCollectDetail::amountColumn()] = $amount;
+        $feePayload['amount'] = $amount;
+        $feePayload['amt'] = $amount;
         $fee = FeeCollectDetail::create($feePayload);
 
         $instituteWallet = InstituteStudentWallet::firstOrCreate(
@@ -1088,6 +1223,10 @@ class EnrollmentController extends Controller
             return;
         }
 
+        if (! $courseBook->paymentPlan && (float) $courseBook->final_fee <= 0) {
+            return;
+        }
+
         $paidAmount = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)
             ->sum(FeeCollectDetail::amountColumn());
         $requiredAmount = $this->requiredAdmissionAmount($courseBook);
@@ -1099,10 +1238,29 @@ class EnrollmentController extends Controller
         $this->createStudentAdmissionLedger($courseBook);
         $this->syncStudentPaymentTransactionsForCourseBook($courseBook);
 
-        if (! $courseBook->student->enrollment_no) {
+        if (! $courseBook->enrollment_no) {
             $enrollmentNo = $this->generateEnrollmentNo($courseBook->institute_id);
-            $courseBook->student->update(['enrollment_no' => $enrollmentNo]);
-            $courseBook->student->profile?->update(['admission_no' => $enrollmentNo]);
+            $courseBook->update(['enrollment_no' => $enrollmentNo]);
+        }
+
+        $courseBook->update([
+            'status' => 'RUN',
+            'start_date' => $courseBook->start_date ?? now()->toDateString(),
+        ]);
+    }
+
+    private function forceFinalizeAdmission(CourseBook $courseBook): void
+    {
+        $courseBook->loadMissing(['student.profile', 'paymentPlan', 'course']);
+
+        if ($courseBook->status === 'RUN' || ! $courseBook->profile_completed_at) {
+            return;
+        }
+
+        $this->ensureBookingDebit($courseBook);
+
+        if (! $courseBook->enrollment_no) {
+            $enrollmentNo = $this->generateEnrollmentNo($courseBook->institute_id);
             $courseBook->update(['enrollment_no' => $enrollmentNo]);
         }
 
@@ -1115,6 +1273,10 @@ class EnrollmentController extends Controller
     private function syncAdmissionStatus(CourseBook $courseBook): void
     {
         $courseBook->loadMissing(['student.profile', 'paymentPlan']);
+        if ($courseBook->status === 'RUN') {
+            return;
+        }
+
         $paidAmount = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)
             ->sum(FeeCollectDetail::amountColumn());
         $requiredAmount = $this->requiredAdmissionAmount($courseBook);
@@ -1150,8 +1312,8 @@ class EnrollmentController extends Controller
             ['user_id' => $courseBook->user_id],
             [
                 'institute_id' => $courseBook->institute_id,
-                'franchise_id' => null,
-                'owner_type' => 'institute',
+                'franchise_id' => $courseBook->franchise_id,
+                'owner_type' => $courseBook->franchise_id ? 'franchise' : 'institute',
                 'balance' => 0,
             ]
         );
@@ -1163,8 +1325,8 @@ class EnrollmentController extends Controller
         StudentTransaction::create([
             'user_id' => $courseBook->user_id,
             'institute_id' => $courseBook->institute_id,
-            'franchise_id' => null,
-            'owner_type' => 'institute',
+            'franchise_id' => $courseBook->franchise_id,
+            'owner_type' => $courseBook->franchise_id ? 'franchise' : 'institute',
             'description' => 'Course change adjustment: ' . $courseName,
             'credit' => $feeDiff < 0 ? abs($feeDiff) : 0,
             'debit' => $feeDiff > 0 ? $feeDiff : 0,
@@ -1194,8 +1356,8 @@ class EnrollmentController extends Controller
             ['user_id' => $courseBook->user_id],
             [
                 'institute_id' => $courseBook->institute_id,
-                'franchise_id' => null,
-                'owner_type' => 'institute',
+                'franchise_id' => $courseBook->franchise_id,
+                'owner_type' => $courseBook->franchise_id ? 'franchise' : 'institute',
                 'balance' => 0,
             ]
         );
@@ -1207,8 +1369,8 @@ class EnrollmentController extends Controller
         StudentTransaction::create([
             'user_id' => $courseBook->user_id,
             'institute_id' => $courseBook->institute_id,
-            'franchise_id' => null,
-            'owner_type' => 'institute',
+            'franchise_id' => $courseBook->franchise_id,
+            'owner_type' => $courseBook->franchise_id ? 'franchise' : 'institute',
             'description' => 'Course admission debit: ' . $courseBook->course->name,
             'credit' => 0,
             'debit' => $courseBook->final_fee,
@@ -1247,7 +1409,15 @@ class EnrollmentController extends Controller
             return;
         }
 
-        $wallet = StudentWallet::where('user_id', $user->id)->lockForUpdate()->firstOrFail();
+        $wallet = StudentWallet::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'institute_id' => $fee->institute_id,
+                'franchise_id' => $fee->franchise_id,
+                'owner_type' => $user->franchise_id ? 'franchise' : 'institute',
+                'balance' => 0,
+            ]
+        );
         $amountColumn = FeeCollectDetail::amountColumn();
         $amount = (float) $fee->{$amountColumn};
         $opBal = (float) $wallet->balance;
@@ -1317,9 +1487,33 @@ class EnrollmentController extends Controller
 
     private function generateUserId(int $iid): string
     {
-        $code = Auth::guard('institute')->user()->institute?->unique_id ?? 'INST';
+        for ($attempt = 0; $attempt < 10; $attempt++) {
+            $candidate = 'S' . $iid . now()->format('ymdHis') . strtoupper(Str::random(4));
+            if (! User::where('user_id', $candidate)->exists()) {
+                return $candidate;
+            }
+        }
 
-        return $code . '/STU/' . now()->format('ymdHis') . strtoupper(Str::random(4));
+        return 'S' . $iid . now()->format('ymdHis') . strtoupper(Str::random(2));
+    }
+
+    private function sendSeatBookingEmail(?User $user, CourseBook $courseBook): void
+    {
+        if (! $user?->email) {
+            return;
+        }
+
+        try {
+            Mail::to($user->email)->send(new SeatBookingConfirmationMail(
+                $user->fresh(['profile']),
+                $courseBook->fresh(['course', 'batch', 'student.profile'])
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Seat booking email failed: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'course_book_id' => $courseBook->id ?? null,
+            ]);
+        }
     }
 
     private function generateEnrollmentNo(int $iid): string
@@ -1344,6 +1538,19 @@ class EnrollmentController extends Controller
         $code = Auth::guard('institute')->user()->institute?->unique_id ?? 'INST';
 
         return $code . '/ENR/' . str_pad((string) $counter->last_enrollment_no, 4, '0', STR_PAD_LEFT);
+    }
+
+    private function ensureStudentWallet(User $user): StudentWallet
+    {
+        return StudentWallet::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'institute_id' => $user->institute_id,
+                'franchise_id' => $user->franchise_id,
+                'owner_type' => $user->franchise_id ? 'franchise' : 'institute',
+                'balance' => 0,
+            ]
+        );
     }
 
     private function authorizeCourseBook(CourseBook $courseBook): void

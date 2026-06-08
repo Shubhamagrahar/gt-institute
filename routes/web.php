@@ -24,6 +24,7 @@ use App\Http\Controllers\Institute\EnrollmentController;
 use App\Http\Controllers\Institute\FeeCollectController;
 use App\Http\Controllers\Institute\FranchiseController;
 use App\Http\Controllers\Institute\FranchiseLevelController;
+use App\Http\Controllers\Institute\ChannelPartnerController;
 use App\Http\Controllers\Institute\AccountController;
 use App\Http\Controllers\Franchise\DashboardController as FranchiseDashboard;
 
@@ -122,6 +123,8 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
         Route::resource('payment-plans', PaymentPlanController::class)->except(['show']);
         Route::resource('franchise-levels', FranchiseLevelController::class)->only(['index', 'create', 'store', 'edit', 'update']);
         Route::resource('franchises', FranchiseController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
+        Route::resource('channel-partners', ChannelPartnerController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+        Route::patch('channel-partners/{channelPartner}/toggle', [ChannelPartnerController::class, 'toggle'])->name('channel-partners.toggle');
         Route::get('franchises/{franchise}/transactions', [FranchiseController::class, 'transactions'])->name('franchises.transactions');
         Route::patch('franchises/{franchise}/toggle', [FranchiseController::class, 'toggle'])->name('franchises.toggle');
         Route::post('franchises/{franchise}/recharge', [FranchiseController::class, 'recharge'])->name('franchises.recharge');
@@ -131,6 +134,7 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
 Route::get('enrollment/choose', [EnrollmentController::class, 'choose'])->name('enrollment.choose');
 Route::get('enrollment/pending', [EnrollmentController::class, 'pending'])->name('enrollment.pending');
 Route::post('enrollment/find-student', [EnrollmentController::class, 'findStudent'])->name('enrollment.find-student');
+Route::get('enrollment/validate-field', [EnrollmentController::class, 'validateField'])->name('enrollment.validate-field');
 Route::get('enrollment/new', [EnrollmentController::class, 'newStudent'])->name('enrollment.new');
 Route::post('enrollment/new', [EnrollmentController::class, 'storeNew'])->name('enrollment.store-new');
 Route::get('enrollment/quick', [EnrollmentController::class, 'quickStudent'])->name('enrollment.quick');
@@ -141,6 +145,9 @@ Route::get('enrollment/{courseBook}/fee', [EnrollmentController::class, 'feeForm
 Route::post('enrollment/{courseBook}/fee', [EnrollmentController::class, 'saveFee'])->name('enrollment.save-fee');
 Route::get('enrollment/{courseBook}/preview', [EnrollmentController::class, 'preview'])->name('enrollment.preview');
 Route::post('enrollment/{courseBook}/confirm', [EnrollmentController::class, 'confirm'])->name('enrollment.confirm');
+Route::get('enrollment/{courseBook}/payment-complete', [EnrollmentController::class, 'paymentComplete'])->name('enrollment.payment-complete');
+Route::get('enrollment/{courseBook}/receipt/{fee}/a4', [EnrollmentController::class, 'receiptA4'])->name('enrollment.receipt.a4');
+Route::get('enrollment/{courseBook}/receipt/{fee}/thermal', [EnrollmentController::class, 'receiptThermal'])->name('enrollment.receipt.thermal');
 
 // Education (AJAX)
 Route::post('enrollment/education/add', [EnrollmentController::class, 'addEducation'])->name('enrollment.education.add');

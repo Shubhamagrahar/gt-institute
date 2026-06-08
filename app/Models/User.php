@@ -12,8 +12,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'user_id', 'enrollment_no', 'mobile', 'email', 'password',
-        'role', 'user_type', 'institute_id', 'franchise_id', 'owner_type', 'status',
+        'user_id', 'mobile', 'email', 'password',
+        'role', 'user_type', 'institute_id', 'franchise_id', 'channel_partner_id', 'owner_type', 'status',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -49,6 +49,11 @@ class User extends Authenticatable
         return $this->belongsTo(Franchise::class);
     }
 
+    public function channelPartner()
+    {
+        return $this->belongsTo(ChannelPartner::class);
+    }
+
     // NEW — unified profile (sabke liye ek hi table)
     public function profile()
     {
@@ -65,6 +70,16 @@ class User extends Authenticatable
     public function studentWallet()
     {
         return $this->hasOne(StudentWallet::class);
+    }
+
+    public function latestEnrollmentBook()
+    {
+        return $this->hasOne(CourseBook::class)->latestOfMany();
+    }
+
+    public function getCurrentEnrollmentNoAttribute(): ?string
+    {
+        return $this->latestEnrollmentBook?->enrollment_no;
     }
 
     public function transactions()

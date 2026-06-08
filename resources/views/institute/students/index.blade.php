@@ -38,7 +38,7 @@
               <div class="text-xs text-muted">{{ $profile?->gender }}{{ $profile?->dob ? ' · '.$profile->dob->format('d M Y') : '' }}</div>
             </td>
             <td class="mono text-sm">{{ $s->mobile }}</td>
-            <td class="mono text-sm">{{ $s->enrollment_no ?? 'Pending' }}</td>
+            <td class="mono text-sm">{{ $s->current_enrollment_no ?? 'Pending' }}</td>
             <td class="mono">
               <span class="{{ $bal >= 0 ? 'amount-pos' : 'amount-neg' }}">₹{{ number_format(abs($bal),2) }}</span>
             </td>

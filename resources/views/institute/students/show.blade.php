@@ -25,7 +25,7 @@
     <table class="gt-table">
       <tr><td class="text-muted" style="width:160px;">Mobile</td><td class="mono">{{ $student->mobile }}</td></tr>
       <tr><td class="text-muted">Email</td><td>{{ $student->email ?? '—' }}</td></tr>
-      <tr><td class="text-muted">Enrollment No</td><td class="mono">{{ $student->enrollment_no ?? 'Pending' }}</td></tr>
+      <tr><td class="text-muted">Current Enrollment No</td><td class="mono">{{ $student->current_enrollment_no ?? 'Pending' }}</td></tr>
       <tr><td class="text-muted">Father</td><td>{{ $profile?->father_name ?? '—' }}</td></tr>
       <tr><td class="text-muted">Mother</td><td>{{ $profile?->mother_name ?? '—' }}</td></tr>
       <tr><td class="text-muted">Guardian</td><td>{{ $profile?->guardian_name ?? '—' }}{{ $profile?->guardian_mobile ? ' · '.$profile->guardian_mobile : '' }}</td></tr>
