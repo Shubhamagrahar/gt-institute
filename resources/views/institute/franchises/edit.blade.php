@@ -13,7 +13,7 @@
   <div class="gt-card">
     <div class="gt-card-header">
       <div class="gt-card-title">Update Franchise</div>
-      <span class="text-xs text-muted">Level ke hisaab se commission field auto-sync hoti hai.</span>
+      <span class="text-xs text-muted">Commission auto-fills based on the selected level.</span>
     </div>
 
     @include('institute.franchises._form')

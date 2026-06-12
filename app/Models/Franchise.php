@@ -29,6 +29,11 @@ class Franchise extends Model
         'wallet_enabled',
         'low_wallet_alert',
         'has_sub_franchise',
+        'management_type',
+        'onboarding_fee',
+        'admission_charge',
+        'certificate_charge',
+        'fee_total',
         'status',
         'slug',
     ];
@@ -61,5 +66,20 @@ class Franchise extends Model
     public function transactions()
     {
         return $this->hasMany(FranchiseTransaction::class)->orderByDesc('id');
+    }
+
+    public function feeCollections()
+    {
+        return $this->hasMany(FranchiseFeeCollection::class)->orderByDesc('id');
+    }
+
+    public function feePaid(): float
+    {
+        return (float) $this->feeCollections()->whereNull('cancelled_at')->sum('amount');
+    }
+
+    public function feeOutstanding(): float
+    {
+        return max(0, (float) $this->fee_total - $this->feePaid());
     }
 }

@@ -125,13 +125,17 @@
     </a>
 
     <div class="gt-sidebar-section">Admissions & Fees</div>
-    <a href="{{ route('institute.enrollment.choose') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.*') ? 'active' : '' }}">
+    <a href="{{ route('institute.enrollment.choose') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.*') && !request()->routeIs('institute.enrollment.pending') && !request()->routeIs('institute.enrollment.monthly-fees') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
       New Admission
     </a>
     <a href="{{ route('institute.enrollment.pending') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.pending') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
       Pending Admission
+    </a>
+    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard','institute.fees-search') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h.01"/><path d="M12 8h5"/><path d="M7 12h.01"/><path d="M12 12h5"/></svg>
+      Fees Dashboard
     </a>
     <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -201,6 +205,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V8a5 5 0 0 1 10 0v3"/><circle cx="12" cy="16" r="1"/></svg>
       Change Password
     </a>
+    @if(auth()->guard('institute')->user()?->role === 'institute_head')
+    <a href="{{ route('institute.accounts.security') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.security') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Security
+    </a>
+    @endif
 
     {{-- Footer --}}
     <div class="gt-sidebar-footer">

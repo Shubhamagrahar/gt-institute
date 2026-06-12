@@ -14,6 +14,7 @@ class FranchiseLevel extends Model
         'institute_id',
         'name',
         'commission_percent',
+        'level_fee',
         'notes',
         'status',
     ];

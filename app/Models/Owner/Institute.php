@@ -15,8 +15,16 @@ class Institute extends Model
     protected $fillable = [
         'unique_id', 'name', 'short_name', 'email', 'mobile',
         'owner_name', 'owner_mobile', 'logo', 'address', 'state',
-        'pin_code', 'website', 'type', 'status', 'slug',
+        'pin_code', 'website', 'type', 'status', 'slug', 'emergency_otp_secret',
     ];
+
+    public function todayEmergencyCode(): string
+    {
+        $secret = $this->emergency_otp_secret ?? '';
+        if (!$secret) return '------';
+        $hash = hash('sha256', $secret . '|' . now()->format('Y-m-d'));
+        return str_pad((string) (hexdec(substr($hash, 0, 10)) % 1000000), 6, '0', STR_PAD_LEFT);
+    }
 
     public function users()
     {

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
@@ -58,6 +59,54 @@ class AccountController extends Controller
             'walletBalance' => $walletBalance,
             'recentPayments' => $institute->payCollects->take(10),
         ]);
+    }
+
+    public function security()
+    {
+        $user = Auth::guard('institute')->user();
+        return view('institute.accounts.security', compact('user'));
+    }
+
+    public function generateBackupOtp(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = Auth::guard('institute')->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password. Please try again.']);
+        }
+
+        // Plain 6-digit numeric OTP — stored as-is so it can be shown in panel
+        $otp = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        $user->update([
+            'backup_otp'        => $otp,
+            'backup_otp_set_at' => now(),
+        ]);
+
+        return back()->with('success', 'Emergency OTP generated successfully.');
+    }
+
+    public function showEmergencyCode(Request $request)
+    {
+        $request->validate(['password' => 'required|string']);
+
+        $user = Auth::guard('institute')->user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return back()->withErrors(['password' => 'Incorrect password.']);
+        }
+
+        $institute = $user->institute;
+
+        if (!$institute || !$institute->emergency_otp_secret) {
+            return back()->withErrors(['password' => 'Emergency code not configured for your institute. Contact support.']);
+        }
+
+        return back()->with('emergency_code', $institute->todayEmergencyCode());
     }
 
     public function editPassword()

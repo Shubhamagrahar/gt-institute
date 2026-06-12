@@ -1,118 +1,163 @@
 @extends('layouts.institute')
-@section('title', 'Payment Complete')
-@section('page-title', 'Payment & Admission')
+@section('title', 'Fee Collection')
+@section('page-title', 'Fee Collection')
+
+@push('styles')
+<style>
+.fc-hero{background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;border-radius:20px;padding:22px 26px;margin-bottom:20px}
+.fc-hero-admitted{background:linear-gradient(135deg,#064e3b,#047857)}
+.fc-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.15);font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.fc-hero-name{font-size:26px;font-weight:900;line-height:1.2}
+.fc-hero-sub{opacity:.8;margin-top:4px;font-size:13px}
+.fc-paid-big{font-size:34px;font-weight:900}
+.fc-paid-label{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em}
+
+.fc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+@media(max-width:768px){.fc-grid{grid-template-columns:1fr}}
+
+.fc-info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.fc-info-row:last-child{border-bottom:none}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-2);white-space:nowrap}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr.cancelled-row td:not(.no-strike){text-decoration:line-through;opacity:.5}
+
+.badge-mode{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--bg-3);color:var(--text-1)}
+.badge-cancelled{background:#fef2f2;color:#b91c1c;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.badge-active{background:#f0fdf4;color:#15803d;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.btn-xs{padding:3px 10px;font-size:11px;border-radius:6px}
+
+/* Ledger colors */
+.dr{color:#dc2626;font-weight:700}
+.cr{color:#16a34a;font-weight:700}
+
+/* Modals */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--bg-1);border-radius:18px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:4px}
+.modal-sub{font-size:13px;color:var(--text-2);margin-bottom:20px}
+</style>
+@endpush
 
 @section('content')
 @php
   $amountColumn = \App\Models\FeeCollectDetail::amountColumn();
-  $isAdmitted = $courseBook->status === 'RUN';
+  $isAdmitted   = $courseBook->status === 'RUN';
+  $plan         = $courseBook->paymentPlan;
 @endphp
 
-{{-- Status Hero --}}
-<div style="background:linear-gradient(135deg,{{ $isAdmitted ? '#064e3b,#059669' : '#1e3a5f,#2563eb' }});color:#fff;border-radius:20px;padding:24px 28px;margin-bottom:18px;">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+{{-- Hero --}}
+<div class="fc-hero {{ $isAdmitted ? 'fc-hero-admitted' : '' }}">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
     <div>
-      <div style="display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.18);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;">
-        {{ $isAdmitted ? 'Admission Confirmed' : 'Seat Booked — Payment Received' }}
-      </div>
-      <div style="font-size:26px;font-weight:900;line-height:1.2;">
-        {{ $isAdmitted ? ($courseBook->enrollment_no ?? 'Enrollment Generated') : ($courseBook->student->profile?->name ?? $courseBook->student->user_id) }}
+      <div class="fc-badge">{{ $isAdmitted ? '✓ Admitted' : '◉ Seat Booked' }}</div>
+      <div class="fc-hero-name">
+        {{ $isAdmitted ? ($courseBook->enrollment_no ?? '—') : ($courseBook->student->profile?->name ?? $courseBook->student->user_id) }}
       </div>
       @if($isAdmitted)
-        <div style="opacity:.85;margin-top:4px;">{{ $courseBook->student->profile?->name ?? $courseBook->student->user_id }}</div>
+        <div class="fc-hero-sub">{{ $courseBook->student->profile?->name ?? $courseBook->student->user_id }}</div>
       @endif
-      <div style="opacity:.85;margin-top:4px;">{{ $courseBook->course->name }}@if($courseBook->batch) &middot; {{ $courseBook->batch->name }}@endif</div>
-    </div>
-    <div style="text-align:right;">
-      <div style="font-size:11px;opacity:.75;text-transform:uppercase;letter-spacing:.08em;">Total Paid</div>
-      <div style="font-size:32px;font-weight:900;">₹{{ number_format($paidTotal, 2) }}</div>
-      <div style="font-size:12px;opacity:.75;">of ₹{{ number_format($courseBook->final_fee, 2) }} total fee</div>
-    </div>
-  </div>
-</div>
-
-{{-- Info grid --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;">
-  <div class="gt-card">
-    <div class="gt-card-header" style="padding-bottom:0;">
-      <div class="gt-card-title">Student Info</div>
-    </div>
-    <div class="gt-card-body" style="padding:14px 18px;">
-      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Name</span><strong>{{ $courseBook->student->profile?->name ?? 'N/A' }}</strong></div>
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Mobile</span><strong>{{ $courseBook->student->mobile }}</strong></div>
-        @if($courseBook->student->email)
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Email</span><strong>{{ $courseBook->student->email }}</strong></div>
-        @endif
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Enrollment No.</span>
-          <strong class="mono">{{ $courseBook->enrollment_no ?? 'Pending payment completion' }}</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Course</span><strong>{{ $courseBook->course->name }}</strong></div>
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Status</span>
-          <span class="badge {{ $isAdmitted ? 'badge-success' : 'badge-warning' }}">{{ $isAdmitted ? 'ADMITTED' : 'SEAT BOOKED' }}</span>
-        </div>
+      <div class="fc-hero-sub" style="margin-top:6px">
+        {{ $courseBook->course->name }}
+        @if($courseBook->batch) &middot; {{ $courseBook->batch->name }}@endif
+        &middot; <strong>{{ $plan?->plan_type ?? 'No Plan' }}</strong>
       </div>
     </div>
-  </div>
-
-  <div class="gt-card">
-    <div class="gt-card-header" style="padding-bottom:0;">
-      <div class="gt-card-title">Payment Summary</div>
-    </div>
-    <div class="gt-card-body" style="padding:14px 18px;">
-      @php $due = max($courseBook->final_fee - $paidTotal, 0); @endphp
-      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Plan Type</span><strong>{{ $courseBook->paymentPlan?->plan_type ?? 'N/A' }}</strong></div>
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Total Course Fee</span><strong class="mono">₹{{ number_format($courseBook->final_fee, 2) }}</strong></div>
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Total Paid</span><strong class="mono" style="color:#16a34a;">₹{{ number_format($paidTotal, 2) }}</strong></div>
-        <div style="display:flex;justify-content:space-between;"><span class="text-muted">Balance Due</span>
-          <strong class="mono" style="color:{{ $due > 0 ? '#dc2626' : '#16a34a' }};">₹{{ number_format($due, 2) }}</strong>
+    <div style="text-align:right">
+      <div class="fc-paid-label">Collected</div>
+      <div class="fc-paid-big">₹{{ number_format($paidTotal, 2) }}</div>
+      <div style="font-size:12px;opacity:.7">of ₹{{ number_format($courseBook->final_fee, 2) }}</div>
+      @if($due > 0)
+        <div style="margin-top:6px;background:rgba(239,68,68,.25);padding:3px 12px;border-radius:8px;font-size:12px">
+          ₹{{ number_format($due, 2) }} due
+          @if($lateFee > 0) + ₹{{ number_format($lateFee, 2) }} late fee@endif
         </div>
-      </div>
-      @if(!$isAdmitted && $due > 0)
-        <div class="gt-alert gt-alert-warning" style="margin-top:12px;font-size:12px;">
-          Remaining ₹{{ number_format($due, 2) }} due. Collect balance payment to finalize admission.
-        </div>
+      @else
+        <div style="margin-top:6px;background:rgba(16,185,129,.25);padding:3px 12px;border-radius:8px;font-size:12px">Fully Paid</div>
       @endif
     </div>
   </div>
 </div>
 
-{{-- Latest Receipt --}}
-@if($latestFee)
-<div class="gt-card" style="margin-bottom:18px;">
-  <div class="gt-card-header">
-    <div>
-      <div class="gt-card-title">Latest Receipt</div>
-      <div class="text-xs text-muted">Invoice: {{ $latestFee->invoice_no }} &middot; {{ $latestFee->payment_mode }} &middot; {{ $latestFee->date->format('d M Y') }}</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <a href="{{ route('institute.enrollment.receipt.a4', [$courseBook, $latestFee]) }}" target="_blank" class="btn btn-outline btn-sm">
-        A4 Receipt
-      </a>
-      <a href="{{ route('institute.enrollment.receipt.thermal', [$courseBook, $latestFee]) }}" target="_blank" class="btn btn-outline btn-sm">
-        Thermal Receipt
-      </a>
-    </div>
-  </div>
-  <div style="padding:14px 18px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;font-size:13px;">
-    <div><div class="text-xs text-muted" style="margin-bottom:2px;">Amount</div><div class="fw-600 mono" style="font-size:16px;">₹{{ number_format($latestFee->{$amountColumn}, 2) }}</div></div>
-    <div><div class="text-xs text-muted" style="margin-bottom:2px;">Mode</div><div class="fw-600">{{ $latestFee->payment_mode }}</div></div>
-    <div><div class="text-xs text-muted" style="margin-bottom:2px;">Date</div><div class="fw-600">{{ $latestFee->date->format('d M Y') }}</div></div>
-    @if($latestFee->utr)
-    <div><div class="text-xs text-muted" style="margin-bottom:2px;">UTR/Ref</div><div class="fw-600 mono">{{ $latestFee->utr }}</div></div>
-    @endif
-  </div>
-</div>
+@if(session('success'))
+  <div class="gt-alert gt-alert-success" style="margin-bottom:16px">{{ session('success') }}</div>
 @endif
 
-{{-- All Payments Table --}}
-<div class="gt-card">
-  <div class="gt-card-header">
-    <div class="gt-card-title">All Payments</div>
+{{-- Info Grid --}}
+<div class="fc-grid">
+  <div class="gt-card">
+    <div class="gt-card-header"><div class="gt-card-title">Student Info</div></div>
+    <div class="gt-card-body" style="padding:14px 18px">
+      <div class="fc-info-row"><span class="text-muted">Name</span><strong>{{ $courseBook->student->profile?->name ?? 'N/A' }}</strong></div>
+      <div class="fc-info-row"><span class="text-muted">Mobile</span><strong>{{ $courseBook->student->mobile }}</strong></div>
+      <div class="fc-info-row"><span class="text-muted">Enrollment No.</span>
+        <strong class="mono">{{ $courseBook->enrollment_no ?? '— pending' }}</strong>
+      </div>
+      <div class="fc-info-row"><span class="text-muted">Status</span>
+        <span class="badge {{ $isAdmitted ? 'badge-success' : 'badge-warning' }}">
+          {{ $isAdmitted ? 'ADMITTED' : 'SEAT BOOKED' }}
+        </span>
+      </div>
+    </div>
   </div>
-  <div class="gt-table-wrap">
-    <table class="gt-table">
+
+  <div class="gt-card">
+    <div class="gt-card-header"><div class="gt-card-title">Payment Summary</div></div>
+    <div class="gt-card-body" style="padding:14px 18px">
+      <div class="fc-info-row"><span class="text-muted">Plan</span><strong>{{ $plan?->plan_type ?? 'N/A' }}</strong></div>
+      <div class="fc-info-row"><span class="text-muted">Total Fee</span><strong class="mono">₹{{ number_format($courseBook->final_fee, 2) }}</strong></div>
+      @if($plan?->plan_type === 'MONTHLY' && $plan->monthly_amount)
+      <div class="fc-info-row"><span class="text-muted">Monthly Amount</span><strong class="mono">₹{{ number_format($plan->monthly_amount, 2) }}</strong></div>
+      @endif
+      <div class="fc-info-row"><span class="text-muted">Collected</span>
+        <strong class="mono" style="color:#16a34a">₹{{ number_format($paidTotal, 2) }}</strong>
+      </div>
+      <div class="fc-info-row"><span class="text-muted">Balance Due</span>
+        <strong class="mono" style="color:{{ $due > 0 ? '#dc2626' : '#16a34a' }}">₹{{ number_format($due, 2) }}</strong>
+      </div>
+      @if($lateFee > 0)
+      <div class="fc-info-row"><span class="text-muted" style="color:#dc2626">Late Fee</span>
+        <strong class="mono dr">+₹{{ number_format($lateFee, 2) }}</strong>
+      </div>
+      @endif
+      @if($plan?->next_due_date)
+      <div class="fc-info-row"><span class="text-muted">Next Due</span>
+        <strong>{{ \Carbon\Carbon::parse($plan->next_due_date)->format('d M Y') }}</strong>
+      </div>
+      @endif
+    </div>
+  </div>
+</div>
+
+{{-- Actions --}}
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+  @if($plan)
+    <button type="button" class="btn btn-primary" onclick="openPayModal()">
+      + Collect Payment
+    </button>
+  @else
+    <a href="{{ route('institute.enrollment.fee', $courseBook) }}" class="btn btn-primary">
+      Setup Payment Plan
+    </a>
+  @endif
+  <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline">Edit Profile</a>
+  <a href="{{ route('institute.students.show', $courseBook->student) }}" class="btn btn-outline">Student Profile</a>
+  <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline">← Back</a>
+</div>
+
+{{-- Receipts Table --}}
+<div class="gt-card" style="margin-bottom:20px">
+  <div class="gt-card-header">
+    <div>
+      <div class="gt-card-title">Payment Receipts</div>
+      <div class="text-xs text-muted">Cancelled entries shown in strikethrough</div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
       <thead>
         <tr>
           <th>#</th>
@@ -121,42 +166,224 @@
           <th>Mode</th>
           <th>Amount</th>
           <th>UTR / Ref</th>
-          <th>Receipt</th>
+          <th>Status</th>
+          <th style="text-align:right">Actions</th>
         </tr>
       </thead>
       <tbody>
         @forelse($fees as $f)
-          <tr>
-            <td class="text-muted">{{ $fees->firstItem() + $loop->index }}</td>
-            <td class="mono">{{ $f->invoice_no }}</td>
-            <td>{{ $f->date->format('d M Y') }}</td>
-            <td><span class="badge">{{ $f->payment_mode }}</span></td>
-            <td class="mono fw-600">₹{{ number_format($f->{$amountColumn}, 2) }}</td>
-            <td class="mono text-muted">{{ $f->utr ?: '-' }}</td>
-            <td>
-              <div style="display:flex;gap:6px;">
-                <a href="{{ route('institute.enrollment.receipt.a4', [$courseBook, $f]) }}" target="_blank" class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:11px;">A4</a>
-                <a href="{{ route('institute.enrollment.receipt.thermal', [$courseBook, $f]) }}" target="_blank" class="btn btn-outline btn-sm" style="padding:3px 10px;font-size:11px;">Thermal</a>
-              </div>
-            </td>
-          </tr>
+        <tr class="{{ $f->isCancelled() ? 'cancelled-row' : '' }}">
+          <td class="text-muted">{{ $fees->firstItem() + $loop->index }}</td>
+          <td class="mono">{{ $f->invoice_no }}</td>
+          <td style="white-space:nowrap">{{ $f->date->format('d M Y') }}</td>
+          <td><span class="badge-mode">{{ $f->payment_mode }}</span></td>
+          <td class="mono fw-600">₹{{ number_format($f->{$amountColumn}, 2) }}</td>
+          <td class="mono text-muted">{{ $f->utr ?: '—' }}</td>
+          <td class="no-strike">
+            @if($f->isCancelled())
+              <span class="badge-cancelled">CANCELLED</span>
+            @else
+              <span class="badge-active">ACTIVE</span>
+            @endif
+          </td>
+          <td class="no-strike" style="text-align:right">
+            <div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">
+              @if(!$f->isCancelled())
+                <a href="{{ route('institute.enrollment.receipt.a4', [$courseBook, $f]) }}" target="_blank"
+                   class="btn btn-outline btn-xs">A4</a>
+                <a href="{{ route('institute.enrollment.receipt.thermal', [$courseBook, $f]) }}" target="_blank"
+                   class="btn btn-outline btn-xs">Thermal</a>
+                <button type="button" class="btn btn-xs"
+                  style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5"
+                  onclick="openCancelModal('{{ $f->id }}','{{ $f->invoice_no }}','{{ number_format($f->{$amountColumn},2) }}')">
+                  Cancel
+                </button>
+              @else
+                <span class="text-muted" style="font-size:11px;max-width:120px;display:block;word-break:break-word">
+                  {{ \Illuminate\Support\Str::limit($f->cancel_reason, 30) }}
+                </span>
+              @endif
+            </div>
+          </td>
+        </tr>
         @empty
-          <tr>
-            <td colspan="7" style="text-align:center;color:var(--text-2);padding:24px;">No payments recorded yet.</td>
-          </tr>
+        <tr>
+          <td colspan="8" style="text-align:center;color:var(--text-2);padding:28px">No payments recorded yet.</td>
+        </tr>
         @endforelse
       </tbody>
     </table>
   </div>
   @if($fees->hasPages())
-    <div style="padding:12px 18px;">{{ $fees->links() }}</div>
+    <div style="padding:12px 18px">{{ $fees->links() }}</div>
   @endif
 </div>
 
-{{-- Actions --}}
-<div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap;">
-  <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline">Back to Pending</a>
-  <a href="{{ route('institute.enrollment.fee', $courseBook) }}" class="btn btn-outline">Collect More Payment</a>
-  <a href="{{ route('institute.students.show', $courseBook->student) }}" class="btn btn-primary">View Student Profile</a>
+{{-- Transaction Ledger --}}
+@if($transactions->count())
+<div class="gt-card">
+  <div class="gt-card-header">
+    <div>
+      <div class="gt-card-title">Transaction Ledger</div>
+      <div class="text-xs text-muted">Complete debit / credit history</div>
+    </div>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Date</th>
+          <th>Description</th>
+          <th style="text-align:right">Debit (Dr)</th>
+          <th style="text-align:right">Credit (Cr)</th>
+          <th style="text-align:right">Opening Bal</th>
+          <th style="text-align:right">Closing Bal</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($transactions as $txn)
+        <tr>
+          <td class="text-muted">{{ $loop->iteration }}</td>
+          <td style="white-space:nowrap">{{ \Carbon\Carbon::parse($txn->date)->format('d M Y') }}</td>
+          <td style="max-width:260px;word-break:break-word;font-size:12px">{{ $txn->description }}</td>
+          <td style="text-align:right" class="mono {{ $txn->debit > 0 ? 'dr' : 'text-muted' }}">
+            {{ $txn->debit > 0 ? '₹'.number_format($txn->debit, 2) : '—' }}
+          </td>
+          <td style="text-align:right" class="mono {{ $txn->credit > 0 ? 'cr' : 'text-muted' }}">
+            {{ $txn->credit > 0 ? '₹'.number_format($txn->credit, 2) : '—' }}
+          </td>
+          <td style="text-align:right" class="mono text-muted" style="font-size:12px">
+            ₹{{ number_format($txn->op_bal, 2) }}
+          </td>
+          <td style="text-align:right" class="mono fw-600"
+              style="{{ (float)$txn->cl_bal < 0 ? 'color:#dc2626' : '' }}">
+            ₹{{ number_format($txn->cl_bal, 2) }}
+          </td>
+        </tr>
+        @endforeach
+      </tbody>
+      <tfoot>
+        <tr style="background:var(--bg-3)">
+          <td colspan="3" style="padding:10px 12px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2)">Totals</td>
+          <td style="text-align:right;padding:10px 12px" class="mono dr">₹{{ number_format($transactions->sum('debit'), 2) }}</td>
+          <td style="text-align:right;padding:10px 12px" class="mono cr">₹{{ number_format($transactions->sum('credit'), 2) }}</td>
+          <td></td>
+          <td style="text-align:right;padding:10px 12px" class="mono fw-600">
+            ₹{{ number_format($transactions->last()->cl_bal ?? 0, 2) }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+@endif
+
+{{-- Pay Modal --}}
+<div class="modal-bg" id="pay-modal">
+  <div class="modal-box">
+    <div class="modal-title">Collect Payment</div>
+    <div class="modal-sub">
+      {{ $courseBook->student->profile?->name ?? $courseBook->student->user_id }}
+      &middot; {{ $plan?->plan_type }}
+      @if($due > 0) &middot; Due: ₹{{ number_format($due + $lateFee, 2) }} @endif
+    </div>
+    <form method="POST" action="{{ route('institute.enrollment.add-payment', $courseBook) }}">
+      @csrf
+      <div class="gt-form-group">
+        <label class="gt-label">Amount (₹) <span style="color:var(--danger)">*</span></label>
+        <input type="number" name="amount" id="pay-amount-input" class="gt-input"
+               step="0.01" min="0.01"
+               value="{{ $modalDefaultAmount ?? '' }}"
+               placeholder="{{ $plan?->plan_type === 'PART' ? 'Enter amount' : number_format($modalDefaultAmount ?? 0, 2) }}"
+               required>
+        @if($lateFee > 0)
+          <div class="text-xs" style="margin-top:4px;color:#dc2626">
+            Includes ₹{{ number_format($lateFee, 2) }} late fee
+          </div>
+        @endif
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Payment Mode <span style="color:var(--danger)">*</span></label>
+        <select name="payment_mode" class="gt-select" required>
+          <option value="">Select Mode</option>
+          <option value="CASH">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="NEFT">NEFT</option>
+          <option value="IMPS">IMPS</option>
+          <option value="CHEQUE">Cheque</option>
+        </select>
+      </div>
+      <div class="gt-form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="gt-form-group">
+          <label class="gt-label">Payment Date <span style="color:var(--danger)">*</span></label>
+          <input type="date" name="payment_date" class="gt-input" value="{{ now()->toDateString() }}" required>
+        </div>
+        <div class="gt-form-group">
+          <label class="gt-label">UTR / Reference</label>
+          <input type="text" name="utr" class="gt-input" placeholder="Optional">
+        </div>
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Note</label>
+        <input type="text" name="payment_note" class="gt-input" placeholder="Optional note">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center">Record Payment</button>
+        <button type="button" class="btn btn-outline" onclick="closePayModal()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{-- Cancel Modal --}}
+<div class="modal-bg" id="cancel-modal">
+  <div class="modal-box">
+    <div class="modal-title" style="color:#b91c1c">Cancel Payment</div>
+    <div class="modal-sub" id="cancel-modal-sub"></div>
+    <form method="POST" id="cancel-form">
+      @csrf
+      <div class="gt-form-group">
+        <label class="gt-label">Reason <span style="color:var(--danger)">*</span></label>
+        <textarea name="reason" class="gt-input" rows="3" required
+                  placeholder="Describe why this payment is being cancelled..."></textarea>
+      </div>
+      <div class="gt-form-group">
+        <label class="gt-label">Type <strong>CANCEL</strong> to confirm <span style="color:var(--danger)">*</span></label>
+        <input type="text" name="confirm" class="gt-input" placeholder="CANCEL"
+               autocomplete="off" required style="font-family:monospace;font-weight:700;letter-spacing:.12em">
+      </div>
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button type="submit" class="btn" style="background:#dc2626;color:#fff;flex:1;justify-content:center">
+          Confirm Cancel
+        </button>
+        <button type="button" class="btn btn-outline" onclick="closeCancelModal()">Back</button>
+      </div>
+    </form>
+  </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Pay modal
+function openPayModal()  { document.getElementById('pay-modal').classList.add('open'); }
+function closePayModal() { document.getElementById('pay-modal').classList.remove('open'); }
+
+// Cancel modal
+const _cancelBase = '{{ route("institute.enrollment.receipt.cancel", [$courseBook, "__ID__"]) }}';
+function openCancelModal(feeId, invoiceNo, amount) {
+  document.getElementById('cancel-form').action = _cancelBase.replace('__ID__', feeId);
+  document.getElementById('cancel-modal-sub').textContent = 'Invoice: ' + invoiceNo + ' — ₹' + amount;
+  document.getElementById('cancel-modal').classList.add('open');
+}
+function closeCancelModal() { document.getElementById('cancel-modal').classList.remove('open'); }
+
+// Close on backdrop click
+['pay-modal','cancel-modal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+</script>
+@endpush

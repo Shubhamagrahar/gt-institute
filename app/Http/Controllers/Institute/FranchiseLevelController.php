@@ -33,6 +33,7 @@ class FranchiseLevelController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'commission_percent' => 'required|numeric|min:0|max:100',
+            'level_fee' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ]);
@@ -57,6 +58,7 @@ class FranchiseLevelController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100',
             'commission_percent' => 'required|numeric|min:0|max:100',
+            'level_fee' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
             'status' => 'required|in:active,inactive',
         ]);

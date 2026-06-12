@@ -7,6 +7,7 @@ use App\Http\Controllers\Owner\DashboardController as OwnerDashboard;
 use App\Http\Controllers\Owner\FeatureController;
 use App\Http\Controllers\Owner\PlanController;
 use App\Http\Controllers\Owner\InstituteController;
+use App\Http\Controllers\Owner\SettingsController;
 use App\Http\Controllers\Institute\DashboardController as InstituteDashboard;
 use App\Http\Controllers\Institute\StudentController;
 use App\Http\Controllers\Institute\StaffController;
@@ -23,9 +24,11 @@ use App\Http\Controllers\Institute\PaymentPlanController;
 use App\Http\Controllers\Institute\EnrollmentController;
 use App\Http\Controllers\Institute\FeeCollectController;
 use App\Http\Controllers\Institute\FranchiseController;
+use App\Http\Controllers\Institute\FranchiseFeeController;
 use App\Http\Controllers\Institute\FranchiseLevelController;
 use App\Http\Controllers\Institute\ChannelPartnerController;
 use App\Http\Controllers\Institute\AccountController;
+use App\Http\Controllers\Institute\FeesDashboardController;
 use App\Http\Controllers\Franchise\DashboardController as FranchiseDashboard;
 
 // Root redirect
@@ -35,6 +38,9 @@ Route::get('/', fn() => redirect()->route('login'));
 Route::middleware('guest:web,institute')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::get('/login/otp', [LoginController::class, 'showOtpVerify'])->name('login.otp.show');
+    Route::post('/login/otp', [LoginController::class, 'verifyOtp'])->name('login.otp.verify');
+    Route::post('/login/otp/resend', [LoginController::class, 'resendOtp'])->name('login.otp.resend');
     Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
     Route::get('/forgot-password/sent', [PasswordResetController::class, 'showSentPage'])->name('password.sent');
@@ -59,6 +65,8 @@ Route::prefix('owner')
         Route::post('institutes/{institute}/payment', [InstituteController::class, 'recordPayment'])->name('institutes.payment');
         Route::patch('institutes/{institute}/toggle', [InstituteController::class, 'toggle'])->name('institutes.toggle');
         Route::post('institutes/{institute}/resend-credentials', [InstituteController::class, 'resendCredentials'])->name('institutes.resend-credentials');
+        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::patch('/settings', [SettingsController::class, 'update'])->name('settings.update');
     });
 
 // Institute Panel — guard: institute
@@ -76,6 +84,9 @@ Route::prefix('dashboard')
         Route::get('/accounts/billing-subscription', [AccountController::class, 'billing'])->name('accounts.billing')->withoutMiddleware('check.session');
         Route::get('/accounts/change-password', [AccountController::class, 'editPassword'])->name('accounts.password.edit')->withoutMiddleware('check.session');
         Route::post('/accounts/change-password', [AccountController::class, 'updatePassword'])->name('accounts.password.update')->withoutMiddleware('check.session');
+        Route::get('/accounts/security', [AccountController::class, 'security'])->name('accounts.security')->withoutMiddleware('check.session');
+        Route::post('/accounts/security/backup-otp', [AccountController::class, 'generateBackupOtp'])->name('accounts.backup-otp.generate')->withoutMiddleware('check.session');
+        Route::post('/accounts/emergency-code', [AccountController::class, 'showEmergencyCode'])->name('accounts.emergency-code')->withoutMiddleware('check.session');
         
         Route::get('/', [InstituteDashboard::class, 'index'])->name('dashboard');
         Route::resource('students', StudentController::class);
@@ -122,15 +133,30 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
 // Payment Plans
         Route::resource('payment-plans', PaymentPlanController::class)->except(['show']);
         Route::resource('franchise-levels', FranchiseLevelController::class)->only(['index', 'create', 'store', 'edit', 'update']);
+        // Multi-step create preview/confirm must come BEFORE the resource to avoid {franchise} binding on "create"
+        Route::get('franchises/create/preview', [FranchiseController::class, 'preview'])->name('franchises.preview');
+        Route::post('franchises/create/confirm', [FranchiseController::class, 'confirmCreate'])->name('franchises.confirm');
         Route::resource('franchises', FranchiseController::class)->only(['index', 'create', 'store', 'show', 'edit', 'update']);
         Route::resource('channel-partners', ChannelPartnerController::class)->only(['index', 'create', 'store', 'edit', 'update']);
         Route::patch('channel-partners/{channelPartner}/toggle', [ChannelPartnerController::class, 'toggle'])->name('channel-partners.toggle');
         Route::get('franchises/{franchise}/transactions', [FranchiseController::class, 'transactions'])->name('franchises.transactions');
         Route::patch('franchises/{franchise}/toggle', [FranchiseController::class, 'toggle'])->name('franchises.toggle');
         Route::post('franchises/{franchise}/recharge', [FranchiseController::class, 'recharge'])->name('franchises.recharge');
+        Route::post('franchises/{franchise}/recharge-bonus', [FranchiseController::class, 'rechargeBonus'])->name('franchises.recharge-bonus');
+        Route::get('franchises/{franchise}/certificate', [FranchiseController::class, 'certificate'])->name('franchises.certificate');
         Route::get('franchise-wallets', [FranchiseController::class, 'walletIndex'])->name('franchises.wallets');
+        // Franchise onboarding fee collection (institute ↔ franchise, completely separate from wallet)
+        Route::get('franchises/{franchise}/fee', [FranchiseFeeController::class, 'index'])->name('franchises.fee.index');
+        Route::post('franchises/{franchise}/fee/collect', [FranchiseFeeController::class, 'collect'])->name('franchises.fee.collect');
+        Route::get('franchises/{franchise}/fee/{collection}/receipt', [FranchiseFeeController::class, 'receipt'])->name('franchises.fee.receipt');
+        Route::patch('franchises/{franchise}/fee/{collection}/cancel', [FranchiseFeeController::class, 'cancel'])->name('franchises.fee.cancel');
+
+// Fees Dashboard
+Route::get('fees-dashboard', [FeesDashboardController::class, 'index'])->name('fees-dashboard');
+Route::get('fees-search', [FeesDashboardController::class, 'search'])->name('fees-search');
 
 // Enrollment
+Route::get('enrollment/monthly-fees', [EnrollmentController::class, 'monthlyFees'])->name('enrollment.monthly-fees');
 Route::get('enrollment/choose', [EnrollmentController::class, 'choose'])->name('enrollment.choose');
 Route::get('enrollment/pending', [EnrollmentController::class, 'pending'])->name('enrollment.pending');
 Route::post('enrollment/find-student', [EnrollmentController::class, 'findStudent'])->name('enrollment.find-student');
@@ -148,6 +174,8 @@ Route::post('enrollment/{courseBook}/confirm', [EnrollmentController::class, 'co
 Route::get('enrollment/{courseBook}/payment-complete', [EnrollmentController::class, 'paymentComplete'])->name('enrollment.payment-complete');
 Route::get('enrollment/{courseBook}/receipt/{fee}/a4', [EnrollmentController::class, 'receiptA4'])->name('enrollment.receipt.a4');
 Route::get('enrollment/{courseBook}/receipt/{fee}/thermal', [EnrollmentController::class, 'receiptThermal'])->name('enrollment.receipt.thermal');
+Route::post('enrollment/{courseBook}/receipt/{fee}/cancel', [EnrollmentController::class, 'cancelFee'])->name('enrollment.receipt.cancel');
+Route::post('enrollment/{courseBook}/payment', [EnrollmentController::class, 'addPayment'])->name('enrollment.add-payment');
 
 // Education (AJAX)
 Route::post('enrollment/education/add', [EnrollmentController::class, 'addEducation'])->name('enrollment.education.add');

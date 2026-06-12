@@ -176,4 +176,59 @@
   </div>
 </div>
 
+{{-- ── Emergency Login Code (institute_head only) ─────────────────────── --}}
+@if(auth()->user()->role === 'institute_head')
+<div class="gt-card" style="margin-top:20px;border-color:rgba(251,191,36,.2);">
+  <div class="gt-card-header" style="display:flex;align-items:center;gap:10px;">
+    <div style="width:34px;height:34px;border-radius:10px;background:rgba(251,191,36,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div class="flex-1">
+      <div class="gt-card-title" style="color:#fbbf24;">Emergency Login Code</div>
+      <div class="text-xs text-muted">For staff / franchise / students when OTP email is not received</div>
+    </div>
+  </div>
+
+  @if(session('emergency_code'))
+    {{-- Show today's code --}}
+    <div style="background:rgba(251,191,36,.07);border:1.5px dashed rgba(251,191,36,.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;">
+      <div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px;">Today's Emergency Code — {{ now()->format('d M Y') }}</div>
+      <div style="font-family:'Courier New',monospace;font-size:34px;font-weight:800;letter-spacing:10px;color:#fbbf24;">
+        {{ session('emergency_code') }}
+      </div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:8px;">Rotates daily at midnight · Share verbally only</div>
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;padding:0 4px;">
+      Tell this code to your staff or student over the phone. They enter it in the OTP field on the login page.
+      Do <strong style="color:#f87171;">not</strong> share it via chat or email.
+    </div>
+  @else
+    {{-- Password gate --}}
+    <form method="POST" action="{{ route('institute.accounts.emergency-code') }}">
+      @csrf
+      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:14px;line-height:1.7;">
+        Enter your password to reveal today's 6-digit emergency code for your staff and students.
+      </div>
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="flex:1;">
+          <input
+            type="password" name="password"
+            class="gt-input @error('password') is-invalid @enderror"
+            placeholder="Your account password"
+            autocomplete="current-password"
+          >
+          @error('password')
+            <div class="gt-error" style="margin-top:6px;">{{ $message }}</div>
+          @enderror
+        </div>
+        <button type="submit" class="btn" style="background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);white-space:nowrap;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Show Code
+        </button>
+      </div>
+    </form>
+  @endif
+</div>
+@endif
+
 @endsection

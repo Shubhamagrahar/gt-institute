@@ -18,11 +18,14 @@ class FranchiseOnboardingService
         protected InvoiceService $invoiceService,
     ) {}
 
-    public function create(array $data, int $instituteId, int $createdBy): Franchise
+    public function create(array $data, int $instituteId, int $createdBy, float $levelFee = 0): Franchise
     {
-        return DB::transaction(function () use ($data, $instituteId, $createdBy) {
+        return DB::transaction(function () use ($data, $instituteId, $createdBy, $levelFee) {
             $plainPassword = $this->generatePassword();
             $openingBalance = (float) ($data['opening_balance'] ?? 0);
+
+            $mgmtType = $data['management_type'] ?? 'wallet';
+            $isWalletMode = $mgmtType === 'wallet';
 
             $franchise = Franchise::create([
                 'institute_id' => $instituteId,
@@ -40,8 +43,13 @@ class FranchiseOnboardingService
                 'pin_code' => $data['pin_code'] ?? null,
                 'website' => $data['website'] ?? null,
                 'commission_percent' => $data['commission_percent'] ?? 0,
-                'wallet_enabled' => (bool) ($data['wallet_enabled'] ?? true),
-                'low_wallet_alert' => $data['low_wallet_alert'] ?? 1000,
+                'management_type' => $mgmtType,
+                'wallet_enabled' => $isWalletMode ? ((int) ($data['wallet_enabled'] ?? 1) !== 0) : false,
+                'low_wallet_alert' => $isWalletMode ? ($data['low_wallet_alert'] ?? 1000) : 0,
+                'admission_charge' => $isWalletMode ? ($data['admission_charge'] ?? 0) : 0,
+                'certificate_charge' => $isWalletMode ? ($data['certificate_charge'] ?? 0) : 0,
+                'onboarding_fee' => ! $isWalletMode ? ($data['onboarding_fee'] ?? 0) : 0,
+                'fee_total' => ! $isWalletMode ? $levelFee : 0,
                 'has_sub_franchise' => (bool) ($data['has_sub_franchise'] ?? false),
                 'status' => 'active',
                 'slug' => $this->makeSlug($data['name']),
@@ -73,10 +81,10 @@ class FranchiseOnboardingService
             FranchiseWallet::create([
                 'franchise_id' => $franchise->id,
                 'institute_id' => $instituteId,
-                'balance' => $franchise->wallet_enabled ? $openingBalance : 0,
+                'balance' => $isWalletMode ? $openingBalance : 0,
             ]);
 
-            if ($franchise->wallet_enabled && $openingBalance > 0) {
+            if ($isWalletMode && $openingBalance > 0) {
                 FranchiseTransaction::create([
                     'franchise_id' => $franchise->id,
                     'institute_id' => $instituteId,

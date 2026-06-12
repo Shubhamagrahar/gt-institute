@@ -16,6 +16,8 @@
         <tr>
           <th>Name</th>
           <th>Commission</th>
+          <th>Onboarding Fee</th>
+          <th>Franchises</th>
           <th>Status</th>
           <th>Notes</th>
           <th>Action</th>
@@ -26,13 +28,21 @@
           <tr>
             <td class="fw-600">{{ $level->name }}</td>
             <td class="mono">{{ number_format($level->commission_percent, 2) }}%</td>
+            <td>
+              @if(($level->level_fee ?? 0) > 0)
+                <span class="mono" style="color:var(--accent);">₹{{ number_format($level->level_fee, 2) }}</span>
+              @else
+                <span class="text-muted">—</span>
+              @endif
+            </td>
+            <td><span class="badge badge-info">{{ $level->franchises()->count() }}</span></td>
             <td><span class="badge {{ $level->status === 'active' ? 'badge-success' : 'badge-warning' }}">{{ ucfirst($level->status) }}</span></td>
-            <td>{{ $level->notes ?: 'NA' }}</td>
+            <td class="text-muted">{{ $level->notes ?: '—' }}</td>
             <td><a href="{{ route('institute.franchise-levels.edit', $level) }}" class="btn btn-outline btn-xs">Edit</a></td>
           </tr>
         @empty
           <tr>
-            <td colspan="5">
+            <td colspan="7">
               <div class="gt-empty">
                 <div class="gt-empty-title">No levels added yet</div>
                 <a href="{{ route('institute.franchise-levels.create') }}" class="btn btn-primary btn-sm">Add First Level</a>
