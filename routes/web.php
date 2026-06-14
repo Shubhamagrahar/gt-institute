@@ -30,6 +30,10 @@ use App\Http\Controllers\Institute\ChannelPartnerController;
 use App\Http\Controllers\Institute\AccountController;
 use App\Http\Controllers\Institute\FeesDashboardController;
 use App\Http\Controllers\Franchise\DashboardController as FranchiseDashboard;
+use App\Http\Controllers\Franchise\EnrollmentController as FranchiseEnrollment;
+use App\Http\Controllers\Franchise\WalletController as FranchiseWallet;
+use App\Http\Controllers\Franchise\StudentController as FranchiseStudent;
+use App\Http\Controllers\Franchise\CertificateController as FranchiseCertificate;
 
 // Root redirect
 Route::get('/', fn() => redirect()->route('login'));
@@ -159,7 +163,7 @@ Route::get('fees-search', [FeesDashboardController::class, 'search'])->name('fee
 Route::get('enrollment/monthly-fees', [EnrollmentController::class, 'monthlyFees'])->name('enrollment.monthly-fees');
 Route::get('enrollment/choose', [EnrollmentController::class, 'choose'])->name('enrollment.choose');
 Route::get('enrollment/pending', [EnrollmentController::class, 'pending'])->name('enrollment.pending');
-Route::post('enrollment/find-student', [EnrollmentController::class, 'findStudent'])->name('enrollment.find-student');
+Route::match(['GET','POST'], 'enrollment/find-student', [EnrollmentController::class, 'findStudent'])->name('enrollment.find-student');
 Route::get('enrollment/validate-field', [EnrollmentController::class, 'validateField'])->name('enrollment.validate-field');
 Route::get('enrollment/new', [EnrollmentController::class, 'newStudent'])->name('enrollment.new');
 Route::post('enrollment/new', [EnrollmentController::class, 'storeNew'])->name('enrollment.store-new');
@@ -192,5 +196,37 @@ Route::prefix('franchise')
     ->name('franchise.')
     ->middleware(['auth:institute', 'role:franchise_head,franchise_staff,franchise_student'])
     ->group(function () {
+
+        // ── Dashboard ───────────────────────────────────────────────────────
         Route::get('/dashboard', [FranchiseDashboard::class, 'index'])->name('dashboard');
+
+        // ── Enrollment ──────────────────────────────────────────────────────
+        Route::prefix('enrollment')->name('enrollment.')->group(function () {
+            Route::get('/pending',           [FranchiseEnrollment::class, 'pending'])->name('pending');
+            Route::get('/new',               [FranchiseEnrollment::class, 'newStudent'])->name('new');
+            Route::post('/new',              [FranchiseEnrollment::class, 'storeNew'])->name('store-new');
+
+            Route::get('/{courseBook}/profile',  [FranchiseEnrollment::class, 'profileForm'])->name('profile');
+            Route::post('/{courseBook}/profile', [FranchiseEnrollment::class, 'saveProfile'])->name('save-profile');
+
+            Route::get('/{courseBook}/fee',  [FranchiseEnrollment::class, 'feeForm'])->name('fee');
+            Route::post('/{courseBook}/fee', [FranchiseEnrollment::class, 'saveFee'])->name('save-fee');
+
+            Route::get('/{courseBook}/payment-complete',   [FranchiseEnrollment::class, 'paymentComplete'])->name('payment-complete');
+            Route::post('/{courseBook}/add-payment',       [FranchiseEnrollment::class, 'addPayment'])->name('add-payment');
+
+            Route::get('/{courseBook}/receipt/{fee}/a4',      [FranchiseEnrollment::class, 'receiptA4'])->name('receipt.a4');
+            Route::get('/{courseBook}/receipt/{fee}/thermal',  [FranchiseEnrollment::class, 'receiptThermal'])->name('receipt.thermal');
+            Route::post('/{courseBook}/receipt/{fee}/cancel',  [FranchiseEnrollment::class, 'cancelFee'])->name('receipt.cancel');
+        });
+
+        // ── Students ────────────────────────────────────────────────────────
+        Route::get('/students',             [FranchiseStudent::class, 'index'])->name('students.index');
+
+        // ── Wallet ──────────────────────────────────────────────────────────
+        Route::get('/wallet',               [FranchiseWallet::class, 'index'])->name('wallet');
+
+        // ── Certificate ─────────────────────────────────────────────────────
+        Route::get('/certificate',          [FranchiseCertificate::class, 'index'])->name('certificate.index');
+        Route::get('/certificate/view',     [FranchiseCertificate::class, 'view'])->name('certificate.view');
     });

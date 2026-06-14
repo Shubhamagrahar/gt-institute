@@ -91,7 +91,22 @@
       &middot; Booked {{ $courseBook->book_date?->format('d M Y') }}
     </div>
   </div>
-  <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline btn-sm">← Back</a>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline btn-sm">← Back</a>
+    <form method="POST" action="{{ route('institute.enrollment.pending') }}" style="display:inline"
+          onsubmit="return confirm('Are you sure you want to reject this admission?')">
+      @csrf @method('DELETE')
+      {{-- Reject just sends back with a flag; actual cancel route may vary --}}
+    </form>
+    <a href="{{ route('institute.enrollment.preview', $courseBook) }}"
+       class="btn btn-outline btn-sm" style="border-color:#f59e0b;color:#d97706">
+      👁 Preview Form
+    </a>
+    <a href="{{ route('institute.enrollment.fee', $courseBook) }}"
+       class="btn btn-primary btn-sm" style="background:#16a34a;border-color:#16a34a">
+      💳 Proceed to Payment →
+    </a>
+  </div>
 </div>
 
 <div class="adm-wrap">

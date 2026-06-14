@@ -1,4 +1,4 @@
-@extends('layouts.institute')
+@extends('layouts.franchise')
 @section('title', 'Fee Collection')
 @section('page-title', 'Fee Collection')
 
@@ -11,29 +11,21 @@
 .fc-hero-sub{opacity:.8;margin-top:4px;font-size:13px}
 .fc-paid-big{font-size:34px;font-weight:900}
 .fc-paid-label{font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em}
-
 .fc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
 @media(max-width:768px){.fc-grid{grid-template-columns:1fr}}
-
 .fc-info-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
 .fc-info-row:last-child{border-bottom:none}
-
 .tbl{width:100%;border-collapse:collapse;font-size:13px}
 .tbl th{background:var(--bg-3);padding:10px 12px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text-2);white-space:nowrap}
 .tbl td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
 .tbl tbody tr.cancelled-row td:not(.no-strike){text-decoration:line-through;opacity:.5}
-
 .badge-mode{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--bg-3);color:var(--text-1)}
 .badge-cancelled{background:#fef2f2;color:#b91c1c;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .badge-active{background:#f0fdf4;color:#15803d;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .btn-xs{padding:3px 10px;font-size:11px;border-radius:6px}
-
-/* Ledger colors */
 .dr{color:#dc2626;font-weight:700}
 .cr{color:#16a34a;font-weight:700}
-
-/* Modals */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
 .modal-box{background:var(--bg-1);border-radius:18px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25)}
@@ -82,10 +74,6 @@
   </div>
 </div>
 
-@if(session('success'))
-  <div class="gt-alert gt-alert-success" style="margin-bottom:16px">{{ session('success') }}</div>
-@endif
-
 {{-- Info Grid --}}
 <div class="fc-grid">
   <div class="gt-card">
@@ -118,11 +106,6 @@
       <div class="fc-info-row"><span class="text-muted">Balance Due</span>
         <strong class="mono" style="color:{{ $due > 0 ? '#dc2626' : '#16a34a' }}">₹{{ number_format($due, 2) }}</strong>
       </div>
-      @if($lateFee > 0)
-      <div class="fc-info-row"><span class="text-muted" style="color:#dc2626">Late Fee</span>
-        <strong class="mono dr">+₹{{ number_format($lateFee, 2) }}</strong>
-      </div>
-      @endif
       @if($plan?->next_due_date)
       <div class="fc-info-row"><span class="text-muted">Next Due</span>
         <strong>{{ \Carbon\Carbon::parse($plan->next_due_date)->format('d M Y') }}</strong>
@@ -139,13 +122,12 @@
       + Collect Payment
     </button>
   @else
-    <a href="{{ route('institute.enrollment.fee', $courseBook) }}" class="btn btn-primary">
+    <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-primary">
       Setup Payment Plan
     </a>
   @endif
-  <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline">Edit Profile</a>
-  <a href="{{ route('institute.students.show', $courseBook->student) }}" class="btn btn-outline">Student Profile</a>
-  <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline">← Back</a>
+  <a href="{{ route('franchise.enrollment.profile', $courseBook) }}" class="btn btn-outline">Edit Profile</a>
+  <a href="{{ route('franchise.enrollment.pending') }}" class="btn btn-outline">← Back</a>
 </div>
 
 {{-- Receipts Table --}}
@@ -189,9 +171,9 @@
           <td class="no-strike" style="text-align:right">
             <div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">
               @if(!$f->isCancelled())
-                <a href="{{ route('institute.enrollment.receipt.a4', [$courseBook, $f]) }}" target="_blank"
+                <a href="{{ route('franchise.enrollment.receipt.a4', [$courseBook, $f]) }}" target="_blank"
                    class="btn btn-outline btn-xs">A4</a>
-                <a href="{{ route('institute.enrollment.receipt.thermal', [$courseBook, $f]) }}" target="_blank"
+                <a href="{{ route('franchise.enrollment.receipt.thermal', [$courseBook, $f]) }}" target="_blank"
                    class="btn btn-outline btn-xs">Thermal</a>
                 <button type="button" class="btn btn-xs"
                   style="background:#fef2f2;color:#b91c1c;border:1px solid #fca5a5"
@@ -199,9 +181,7 @@
                   Cancel
                 </button>
               @else
-                <span class="text-muted" style="font-size:11px;max-width:120px;display:block;word-break:break-word">
-                  {{ \Illuminate\Support\Str::limit($f->cancel_reason, 30) }}
-                </span>
+                <span class="text-muted" style="font-size:11px">{{ \Illuminate\Support\Str::limit($f->cancel_reason, 30) }}</span>
               @endif
             </div>
           </td>
@@ -288,7 +268,7 @@
       &middot; {{ $plan?->plan_type }}
       @if($due > 0) &middot; Due: ₹{{ number_format($due + $lateFee, 2) }} @endif
     </div>
-    <form method="POST" action="{{ route('institute.enrollment.add-payment', $courseBook) }}">
+    <form method="POST" action="{{ route('franchise.enrollment.add-payment', $courseBook) }}">
       @csrf
       <div class="gt-form-group">
         <label class="gt-label">Amount (₹) <span style="color:var(--danger)">*</span></label>
@@ -314,7 +294,7 @@
           <option value="CHEQUE">Cheque</option>
         </select>
       </div>
-      <div class="gt-form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div class="gt-form-group">
           <label class="gt-label">Payment Date <span style="color:var(--danger)">*</span></label>
           <input type="date" name="payment_date" class="gt-input" value="{{ now()->toDateString() }}" required>
@@ -329,7 +309,7 @@
         <input type="text" name="payment_note" class="gt-input" placeholder="Optional note">
       </div>
       <div style="display:flex;gap:10px;margin-top:8px">
-        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center">Record Payment</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;background:#16a34a;border-color:#16a34a">Record Payment</button>
         <button type="button" class="btn btn-outline" onclick="closePayModal()">Cancel</button>
       </div>
     </form>
@@ -366,12 +346,10 @@
 
 @push('scripts')
 <script>
-// Pay modal
 function openPayModal()  { document.getElementById('pay-modal').classList.add('open'); }
 function closePayModal() { document.getElementById('pay-modal').classList.remove('open'); }
 
-// Cancel modal
-const _cancelBase = '{{ route("institute.enrollment.receipt.cancel", [$courseBook, "__ID__"]) }}';
+const _cancelBase = '{{ route("franchise.enrollment.receipt.cancel", [$courseBook, "__ID__"]) }}';
 function openCancelModal(feeId, invoiceNo, amount) {
   document.getElementById('cancel-form').action = _cancelBase.replace('__ID__', feeId);
   document.getElementById('cancel-modal-sub').textContent = 'Invoice: ' + invoiceNo + ' — ₹' + amount;
@@ -379,7 +357,6 @@ function openCancelModal(feeId, invoiceNo, amount) {
 }
 function closeCancelModal() { document.getElementById('cancel-modal').classList.remove('open'); }
 
-// Close on backdrop click
 ['pay-modal','cancel-modal'].forEach(id => {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target === this) this.classList.remove('open');

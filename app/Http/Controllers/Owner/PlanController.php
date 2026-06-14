@@ -43,7 +43,9 @@ class PlanController extends Controller
     public function show(Plan $plan)
     {
         $plan->load('features');
-        return view('owner.plans.show', compact('plan'));
+        $features = Feature::where('status', 'active')->get();
+        $planFeatures = $plan->features->pluck('id')->toArray();
+        return view('owner.plans.show', compact('plan', 'features', 'planFeatures'));
     }
 
     public function edit(Plan $plan)

@@ -120,13 +120,16 @@ class EnrollmentController extends Controller
 
     public function findStudent(Request $request)
     {
+        if ($request->isMethod('GET')) {
+            return redirect()->route('institute.enrollment.choose');
+        }
         $request->validate(['search' => 'required|string']);
         $search = trim($request->search);
         $iid = $this->instituteId();
 
         $user = User::where('institute_id', $iid)
             ->where('role', 'student')
-            ->where(function ($query) use ($search) {
+            ->where(function ($query) use ($search, $iid) {
                 $query->where('mobile', $search)
                     ->orWhere('user_id', $search)
                     ->orWhereHas('enrollments', function ($enrollments) use ($search, $iid) {
@@ -618,6 +621,14 @@ class EnrollmentController extends Controller
             'amount' => $item['amount'],
             'is_mandatory' => $item['is_mandatory'],
         ]);
+
+        // Zero-fee course — skip payment setup, go directly to preview/confirm
+        $totalFee = $feeStructure->sum('amount');
+        if ($totalFee <= 0) {
+            $courseBook->update(['fee' => 0, 'final_fee' => 0]);
+            return redirect()->route('institute.enrollment.preview', $courseBook);
+        }
+
         $plans = $this->activePaymentPlans($iid);
 
         return view('institute.enrollment.fee', compact('courseBook', 'feeStructure', 'plans'));
@@ -648,9 +659,11 @@ class EnrollmentController extends Controller
 
         $firstPayment = (float) $request->first_payment_amount;
         if (! $this->isPaymentSelectionValid($plan->type, $firstPayment, $terms['required_fee'], $feeQuote['total_fee'])) {
-            $msg = $plan->type === 'OTP'
-                ? 'OTP plan mein poori fee (₹' . number_format($feeQuote['total_fee'], 2) . ') pay karni hogi.'
-                : 'Admission ke liye kam se kam required fees (₹' . number_format($terms['required_fee'], 2) . ') deni padegi.';
+            $msg = match ($plan->type) {
+                'OTP'     => 'OTP plan mein poori fee (₹' . number_format($feeQuote['total_fee'], 2) . ') ek saath pay karni hogi.',
+                'MONTHLY' => 'Monthly plan mein kam se kam pehli installment (₹' . number_format($terms['required_fee'], 2) . ') deni padegi.',
+                default   => 'Koi bhi positive amount enter karo (minimum ₹0.01).',
+            };
 
             return back()->withErrors(['first_payment_amount' => $msg])->withInput();
         }
@@ -1368,25 +1381,32 @@ class EnrollmentController extends Controller
         array $feeQuote,
         ?EnrollmentPaymentPlan $existingPlan = null
     ): array {
-        $totalFee = round((float) $feeQuote['total_fee'], 2);
+        $totalFee    = round((float) $feeQuote['total_fee'], 2);
+        $duration    = max(1, (int) ($courseBook->course->duration ?: 1));
+        $monthlyAmt  = $plan->type === 'MONTHLY' ? round($totalFee / $duration, 2) : null;
+
+        // required_fee = minimum first payment needed to proceed:
+        //   OTP    → full amount
+        //   MONTHLY → at least one installment
+        //   PART   → 0 (admin decides any positive amount)
         $requiredFee = match ($plan->type) {
-            'OTP' => $totalFee,
-            default => min($totalFee, round((float) ($feeQuote['required_fee'] ?: $totalFee), 2)),
+            'OTP'     => $totalFee,
+            'MONTHLY' => $monthlyAmt,
+            default   => 0,
         };
 
         $firstPaymentAmount = match ($plan->type) {
-            'OTP' => $totalFee,
-            default => min($totalFee, max($requiredFee, round((float) ($existingPlan?->first_payment_amount ?? 0), 2))),
+            'OTP'     => $totalFee,
+            'MONTHLY' => $monthlyAmt,
+            default   => round((float) ($existingPlan?->first_payment_amount ?? 0), 2),
         };
 
-        $duration = max(1, (int) ($courseBook->course->duration ?: 1));
-
         return [
-            'required_fee' => $requiredFee,
+            'required_fee'         => $requiredFee,
             'first_payment_amount' => $firstPaymentAmount,
-            'remaining_fee' => $totalFee,
-            'monthly_amount' => $plan->type === 'MONTHLY' ? round($totalFee / $duration, 2) : null,
-            'next_due_date' => $plan->type === 'MONTHLY' ? now()->addMonth()->toDateString() : null,
+            'remaining_fee'        => $totalFee,
+            'monthly_amount'       => $monthlyAmt,
+            'next_due_date'        => $plan->type === 'MONTHLY' ? now()->addMonth()->toDateString() : null,
         ];
     }
 
@@ -1471,7 +1491,13 @@ class EnrollmentController extends Controller
             return;
         }
 
+        // Zero-fee course with no payment plan — eligible for auto-finalize
         if (! $courseBook->paymentPlan && (float) $courseBook->final_fee <= 0) {
+            $this->createStudentAdmissionLedger($courseBook);
+            if (! $courseBook->enrollment_no) {
+                $courseBook->update(['enrollment_no' => $this->generateEnrollmentNo($courseBook->institute_id)]);
+            }
+            $courseBook->update(['status' => 'RUN', 'start_date' => $courseBook->start_date ?? now()->toDateString()]);
             return;
         }
 
@@ -1756,15 +1782,22 @@ class EnrollmentController extends Controller
             ->when($ignoreCourseBookId, fn ($query) => $query->where('id', '!=', $ignoreCourseBookId))
             ->get(['id', 'course_id', 'batch_id', 'status']);
 
-        if ($activeEnrollments->contains(fn ($enrollment) => (int) $enrollment->course_id === $courseId)) {
-            throw \Illuminate\Validation\ValidationException::withMessages([
-                'course_id' => 'Same student ka yeh course already active/seat-booked hai current session me.',
-            ]);
-        }
+        // Block only exact duplicate: same course + same batch
+        $duplicate = $activeEnrollments->first(function ($enrollment) use ($courseId, $batchId) {
+            if ((int) $enrollment->course_id !== $courseId) {
+                return false;
+            }
+            // Both have same batch (including both null = no batch assigned)
+            return (int) ($enrollment->batch_id ?? 0) === (int) ($batchId ?? 0);
+        });
 
-        if ($batchId && $activeEnrollments->contains(fn ($enrollment) => (int) $enrollment->batch_id === $batchId)) {
+        if ($duplicate) {
+            $msg = $batchId
+                ? 'Is student ka yeh course + batch combination already active/booked hai. Koi aur batch ya course select karo.'
+                : 'Is student ka yeh course already bina batch ke active/booked hai. Alag batch select karo ya naya course choose karo.';
+
             throw \Illuminate\Validation\ValidationException::withMessages([
-                'batch_id' => 'Student ka koi aur active/seat-booked course already isi batch me hai. Same batch duplicate allowed nahi hai.',
+                'course_id' => $msg,
             ]);
         }
     }
@@ -1781,11 +1814,12 @@ class EnrollmentController extends Controller
             return false;
         }
 
-        if ($planType === 'OTP') {
-            return abs($firstPayment - $totalFee) < 0.01;
-        }
-
-        return $firstPayment + 0.01 >= $requiredFee;
+        return match ($planType) {
+            'OTP'     => abs($firstPayment - $totalFee) < 0.01,
+            'PART'    => $firstPayment >= 0.01,
+            'MONTHLY' => $firstPayment + 0.01 >= $requiredFee,
+            default   => $firstPayment >= 0.01,
+        };
     }
 
     private function generateUserId(int $iid): string

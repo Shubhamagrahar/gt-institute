@@ -369,7 +369,7 @@ class FranchiseController extends Controller
         $total     = (float) $data['recharge_amount'];
         $bonusDiff = max(0, $total - (float) $data['paid_amount']);
 
-        DB::transaction(function () use ($franchise, $data, $total) {
+        DB::transaction(function () use ($franchise, $data, $total, $bonusDiff) {
             /** @var FranchiseWallet $wallet */
             $wallet = FranchiseWallet::where('franchise_id', $franchise->id)
                 ->lockForUpdate()

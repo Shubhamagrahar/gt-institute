@@ -87,12 +87,22 @@
 @media print{
   @page{size:A4 portrait;margin:10mm}
   html,body{margin:0;padding:0;background:#fff}
-  body *{visibility:hidden}
-  #review-print-area,#review-print-area *{visibility:visible}
-  #review-print-area{position:absolute;left:0;top:0;width:190mm;padding:0;border:none}
-  .review-toolbar,.adm-steps,.wizard-actions,.adm-header,.adm-section-title,.adm-section-note{display:none !important}
+  .gt-sidebar,.gt-topbar,.gt-overlay,.gt-alert{display:none !important}
+  .gt-layout{display:block !important}
+  .gt-main{display:block !important;margin:0 !important;padding:0 !important}
+  .gt-page{padding:0 !important;margin:0 !important}
+  .adm-header,.adm-steps,.wizard-actions,.review-toolbar,.adm-section-title,.adm-section-note{display:none !important}
+  .wizard-step{display:none !important}
+  #review-wizard-step{display:block !important}
   .review-print-shell{width:190mm;min-height:auto;border:none;padding:0;box-shadow:none;background:#fff;border-radius:0}
-  .review-section-card{margin-top:6px}
+  .review-section-card{margin-top:6px;break-inside:avoid;page-break-inside:avoid}
+  .review-field-grid{display:flex;flex-wrap:wrap;gap:6px}
+  .review-field{width:calc(20% - 6px);flex:0 0 auto;box-sizing:border-box}
+  .review-field-wide{width:100%}
+  .review-top-lines{display:flex;flex-wrap:wrap;gap:6px}
+  .review-top-line{flex:1 1 auto}
+  .review-sign-grid{display:flex;justify-content:space-between;gap:12px;margin-top:24px}
+  .review-sign-block{flex:1;text-align:center}
 }
 @media(max-width:1080px){.basic-layout{grid-template-columns:1fr}}
 @media(max-width:760px){.adm-steps{grid-template-columns:repeat(2,1fr)}.adm-grid,.adm-grid-3,.plan-grid,.edu-row,.basic-fields,.review-field-grid,.review-top-lines,.review-sign-grid{grid-template-columns:1fr}}
@@ -527,7 +537,7 @@
           </div>
           @endif
 
-          <div class="wizard-step" data-step>
+          <div class="wizard-step" data-step id="review-wizard-step">
             <div class="adm-section-title">Confirm and Review</div>
             <div class="adm-section-note">Review the complete admission form in the same structure used by the form preview. You can also print this review directly.</div>
             <div class="review-toolbar">
