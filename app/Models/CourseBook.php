@@ -8,7 +8,7 @@ class CourseBook extends Model
 {
     protected $fillable = [
         'institute_id', 'franchise_id', 'session_id', 'user_id', 'course_id',
-        'batch_id', 'channel_partner_id', 'enrollment_no', 'fee', 'final_fee',
+        'course_code', 'batch_id', 'channel_partner_id', 'enrollment_no', 'fee', 'final_fee',
         'book_date', 'start_date', 'complete_date', 'status', 'booking_mode',
         'profile_completed_at', 'admission_by',
     ];

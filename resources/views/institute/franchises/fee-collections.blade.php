@@ -1,18 +1,41 @@
 @extends('layouts.institute')
 @section('title', 'Franchise Fee — ' . $franchise->name)
-@section('page-title', 'Franchise Onboarding Fee')
+@section('page-title', 'Franchise Joining Fee — ' . $franchise->name)
 @section('topbar-actions')
   <a href="{{ route('institute.franchises.show', $franchise) }}" class="btn btn-outline btn-sm">← Back to Franchise</a>
 @endsection
 
 @section('content')
 
+{{-- Franchise info bar --}}
+<div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:18px;">
+  <div style="display:flex; align-items:center; gap:12px;">
+    <div>
+      <div style="font-size:15px; font-weight:700; color:var(--text-1);">{{ $franchise->name }}</div>
+      <div style="font-size:12px; color:var(--text-3);">
+        {{ $franchise->level?->name ?? '—' }} &nbsp;·&nbsp;
+        <span style="color:{{ $franchise->management_type === 'wallet' ? 'rgba(30,120,200,.9)' : 'rgba(42,138,74,.9)' }}; font-weight:600;">
+          {{ $franchise->management_type === 'wallet' ? 'Wallet System' : 'Independent' }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; align-items:center;">
+    @if($franchise->management_type === 'wallet')
+      <a href="{{ route('institute.franchises.transactions', $franchise) }}" class="btn btn-outline btn-sm">
+        💳 Operational Wallet
+      </a>
+    @endif
+    <a href="{{ route('institute.franchises.show', $franchise) }}" class="btn btn-outline btn-sm">← Franchise Profile</a>
+  </div>
+</div>
+
 {{-- Summary cards --}}
-<div style="display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:20px;">
+<div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;">
   <div class="gt-card" style="padding:16px 20px;">
-    <div class="text-xs text-muted" style="margin-bottom:6px;">Total Due</div>
-    <div style="font-size:22px; font-weight:700; color:var(--accent);">₹{{ number_format($franchise->fee_total, 2) }}</div>
-    <div class="text-xs text-muted" style="margin-top:4px;">{{ $franchise->level?->name ?? 'Standard Level' }}</div>
+    <div class="text-xs text-muted" style="margin-bottom:6px;">Joining Fee (Total Due)</div>
+    <div style="font-size:22px; font-weight:700; color:var(--accent);">₹{{ number_format($totalDue, 2) }}</div>
+    <div class="text-xs text-muted" style="margin-top:4px;">{{ $franchise->level?->name ?? '—' }}</div>
   </div>
   <div class="gt-card" style="padding:16px 20px;">
     <div class="text-xs text-muted" style="margin-bottom:6px;">Total Collected</div>
@@ -21,8 +44,15 @@
   </div>
   <div class="gt-card" style="padding:16px 20px;">
     <div class="text-xs text-muted" style="margin-bottom:6px;">Outstanding</div>
-    <div style="font-size:22px; font-weight:700; color:{{ $outstanding > 0 ? 'var(--danger)' : '#2a7a2a' }};">₹{{ number_format($outstanding, 2) }}</div>
-    <div class="text-xs text-muted" style="margin-top:4px;">{{ $outstanding > 0 ? 'Due from franchise' : 'Fully paid' }}</div>
+    <div style="font-size:22px; font-weight:700; color:{{ $outstanding > 0 ? 'var(--danger)' : '#2a7a2a' }};">
+      ₹{{ number_format($outstanding, 2) }}
+    </div>
+    <div class="text-xs text-muted" style="margin-top:4px;">{{ $outstanding > 0 ? 'Due from franchise' : 'Fully paid ✓' }}</div>
+  </div>
+  <div class="gt-card" style="padding:16px 20px;">
+    <div class="text-xs text-muted" style="margin-bottom:6px;">Cancelled</div>
+    <div style="font-size:22px; font-weight:700; color:var(--text-3);">₹{{ number_format($cancelled, 2) }}</div>
+    <div class="text-xs text-muted" style="margin-top:4px;">{{ $collections->whereNotNull('cancelled_at')->count() }} entry(s)</div>
   </div>
 </div>
 

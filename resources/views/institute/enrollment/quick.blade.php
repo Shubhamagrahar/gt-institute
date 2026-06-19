@@ -17,13 +17,23 @@
     <div class="gt-card-header">
       <div>
         <div class="gt-card-title">Quick Seat Booking</div>
-        <div class="text-xs text-muted" style="margin-top:4px;">Basic details save hongi. Final admission tabhi hoga jab full details complete hongi aur required payment aa jayega.</div>
+        <div class="text-xs text-muted" style="margin-top:4px;">Basic details will be saved. Final admission will be confirmed once complete details and required payment are received.</div>
       </div>
     </div>
   </div>
 
+  @if(isset($enquiryPrefill) && $enquiryPrefill)
+    <div style="background:var(--accent-bg);border:1.5px solid var(--accent);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:13px;">
+      <span style="font-weight:700;color:var(--accent);">&#10003; Converting from Enquiry:</span>
+      <span style="color:var(--text-2);"> {{ $enquiryPrefill['name'] }} &middot; {{ $enquiryPrefill['mobile'] }}</span>
+    </div>
+  @endif
+
   <form method="POST" action="{{ route('institute.enrollment.store-quick') }}" class="gt-card" autocomplete="off">
     @csrf
+    @if(isset($enquiryPrefill) && $enquiryPrefill)
+      <input type="hidden" name="enquiry_id" value="{{ $enquiryPrefill['enquiry_id'] }}">
+    @endif
     <input type="text" name="fake_username" value="" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
     <input type="password" name="fake_password" value="" autocomplete="new-password" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
     <div class="gt-card-body" style="padding:22px;">
@@ -47,9 +57,15 @@
 
         <div class="gt-form-group">
           <label class="gt-label">Course <span style="color:var(--danger)">*</span></label>
-          <select name="course_id" id="course_id" class="gt-select" required>
+          <select name="course_id" id="course_id" class="gt-select" required style="display:none;">
             <option value="">Select Course</option>
           </select>
+          <div style="position:relative;">
+            <input type="text" id="course_search_display" class="gt-select"
+                   placeholder="Search & select course…" autocomplete="off" required
+                   style="width:100%;cursor:pointer;">
+            <div id="course_search_dropdown" style="display:none;position:absolute;z-index:200;width:100%;top:calc(100% + 3px);background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;"></div>
+          </div>
           @error('course_id')<div class="gt-error">{{ $message }}</div>@enderror
         </div>
 
@@ -85,16 +101,30 @@
 
       </div>
 
+      {{-- Fee Breakdown (shown after course selected) --}}
+      <div id="fee-breakdown-box" style="display:none;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:700;color:var(--text-2);letter-spacing:.4px;margin-bottom:10px;">FEE BREAKDOWN</div>
+        <div id="fee-breakdown-rows"></div>
+        <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:13px;font-weight:700;">Total Payable</span>
+          <span id="fee-breakdown-total" style="font-size:18px;font-weight:900;color:var(--accent);">₹0</span>
+        </div>
+      </div>
+
       <div class="gt-form-grid-3">
         <div class="gt-form-group">
           <label class="gt-label">Student Name <span style="color:var(--danger)">*</span></label>
-          <input type="text" name="name" class="gt-input" value="{{ old('name') }}" autocomplete="off" required>
+          <input type="text" name="name" class="gt-input" value="{{ old('name', $enquiryPrefill['name'] ?? '') }}" autocomplete="off" required>
           @error('name')<div class="gt-error">{{ $message }}</div>@enderror
         </div>
 
         <div class="gt-form-group">
           <label class="gt-label">Mobile <span style="color:var(--danger)">*</span></label>
-          <input type="text" name="mobile" class="gt-input" value="{{ old('mobile') }}" autocomplete="off" required>
+          <input type="tel" name="mobile" id="mobile" class="gt-input"
+            value="{{ old('mobile', $enquiryPrefill['mobile'] ?? '') }}" autocomplete="off" required
+            maxlength="10" inputmode="numeric" pattern="[0-9]{10}"
+            oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
+          <div class="gt-field-error" id="mobile-error" style="display:none;color:var(--danger);font-size:12px;margin-top:3px;"></div>
           @error('mobile')<div class="gt-error">{{ $message }}</div>@enderror
         </div>
 
@@ -199,6 +229,49 @@
     }
   }
 
+  // ── Searchable course dropdown ────────────────────────────────────
+  const courseSearchDisplay  = document.getElementById('course_search_display');
+  const courseSearchDropdown = document.getElementById('course_search_dropdown');
+  let coursePool = [];
+
+  function renderCourseDropdownOptions(query='') {
+    const q = query.trim().toLowerCase();
+    const filtered = coursePool.filter(c => !q || c.name.toLowerCase().includes(q));
+    courseSearchDropdown.innerHTML = '';
+    if (filtered.length === 0) {
+      courseSearchDropdown.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-2);font-style:italic;">No courses found</div>';
+    } else {
+      filtered.forEach(c => {
+        const d = document.createElement('div');
+        d.style.cssText = 'padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);';
+        d.textContent = `${c.name} (${c.duration}m)`;
+        d.addEventListener('mouseover', () => d.style.background = 'var(--accent-bg)');
+        d.addEventListener('mouseout',  () => d.style.background = '');
+        d.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          courseSelect.value = c.id;
+          courseSearchDisplay.value = c.name;
+          courseSearchDropdown.style.display = 'none';
+          renderFeeBreakdown(c.id);
+        });
+        courseSearchDropdown.appendChild(d);
+      });
+    }
+    courseSearchDropdown.style.display = 'block';
+  }
+
+  courseSearchDisplay.addEventListener('focus', () => renderCourseDropdownOptions(courseSearchDisplay.value));
+  courseSearchDisplay.addEventListener('input', () => {
+    courseSelect.value = '';
+    renderCourseDropdownOptions(courseSearchDisplay.value);
+  });
+  courseSearchDisplay.addEventListener('blur', () => setTimeout(() => courseSearchDropdown.style.display='none', 150));
+  document.addEventListener('click', (e) => {
+    if (!courseSearchDropdown.contains(e.target) && e.target !== courseSearchDisplay) {
+      courseSearchDropdown.style.display = 'none';
+    }
+  });
+
   function renderCourseOptions() {
     const selectedTypeId = courseTypeSelect.value;
     const selectedDuration = durationSelect.value;
@@ -211,12 +284,17 @@
         && String(course.duration || '') === String(selectedDuration);
     });
 
+    coursePool = filteredCourses;
     courseSelect.innerHTML = '<option value="">Select Course</option>' + filteredCourses.map((course) =>
       `<option value="${course.id}">${course.name} (${course.duration} month${course.duration === 1 ? '' : 's'})</option>`
     ).join('');
+    courseSearchDisplay.value = '';
+    courseSearchDropdown.style.display = 'none';
 
     if (filteredCourses.some((course) => String(course.id) === String(oldCourseId))) {
       courseSelect.value = String(oldCourseId);
+      const found = filteredCourses.find(c => String(c.id) === String(oldCourseId));
+      if (found) courseSearchDisplay.value = found.name;
     }
   }
 
@@ -282,35 +360,105 @@
     renderCourseOptions();
   });
   durationSelect.addEventListener('change', renderCourseOptions);
+
   admissionSourceSelect?.addEventListener('change', syncAdmissionSource);
-  mobileInput?.addEventListener('blur', () => validateUniqueField(mobileInput, 'mobile'));
-  emailInput?.addEventListener('blur', () => validateUniqueField(emailInput, 'email'));
-  mobileInput?.addEventListener('input', () => {
-    mobileInput.setCustomValidity('');
-    debounceUniqueField(mobileInput, 'mobile');
+
+  // ── Field format validators ──────────────────────────────────────
+  function showFieldError(input, msg) {
+    input.style.borderColor = 'var(--danger)';
+    const errEl = document.getElementById(input.name + '-error');
+    if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; }
+    input.setCustomValidity(msg);
+  }
+  function clearFieldError(input) {
+    input.style.borderColor = '';
+    const errEl = document.getElementById(input.name + '-error');
+    if (errEl) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    input.setCustomValidity('');
+  }
+  function validateMobileField(input) {
+    const v = input.value.replace(/\D/g, '');
+    if (v.length === 0) { clearFieldError(input); return true; }
+    if (v.length !== 10) { showFieldError(input, 'Mobile number must be exactly 10 digits.'); return false; }
+    clearFieldError(input); return true;
+  }
+  function validateEmailField(input) {
+    const v = input.value.trim();
+    if (v.length === 0) { clearFieldError(input); return true; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { showFieldError(input, 'Please enter a valid email address.'); return false; }
+    clearFieldError(input); return true;
+  }
+  function validateAadharField(input) {
+    const v = input.value.replace(/\D/g, '');
+    if (v.length === 0) { clearFieldError(input); return true; }
+    if (v.length !== 12) { showFieldError(input, 'Aadhar number must be exactly 12 digits.'); return false; }
+    clearFieldError(input); return true;
+  }
+
+  if (mobileInput) {
+    mobileInput.addEventListener('input', () => {
+      mobileInput.value = mobileInput.value.replace(/\D/g, '').slice(0, 10);
+      validateMobileField(mobileInput);
+      mobileInput.setCustomValidity(''); debounceUniqueField(mobileInput, 'mobile');
+    });
+    mobileInput.addEventListener('blur', () => { validateMobileField(mobileInput); validateUniqueField(mobileInput, 'mobile'); });
+  }
+  if (emailInput) {
+    emailInput.addEventListener('input', () => { validateEmailField(emailInput); emailInput.setCustomValidity(''); debounceUniqueField(emailInput, 'email'); });
+    emailInput.addEventListener('blur', () => { validateEmailField(emailInput); validateUniqueField(emailInput, 'email'); });
+  }
+  document.querySelectorAll('input[name="guardian_mobile"], input[name="whatsapp_no"], input[name="alternate_mobile"]').forEach(inp => {
+    inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 10); validateMobileField(inp); });
+    inp.addEventListener('blur', () => validateMobileField(inp));
   });
-  emailInput?.addEventListener('input', () => {
-    emailInput.setCustomValidity('');
-    debounceUniqueField(emailInput, 'email');
+  document.querySelectorAll('input[name="aadhar_no"]').forEach(inp => {
+    inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 12); validateAadharField(inp); });
+    inp.addEventListener('blur', () => validateAadharField(inp));
   });
+  // ── Fee Breakdown ────────────────────────────────────────────────
+  const feeBox   = document.getElementById('fee-breakdown-box');
+  const feeRows  = document.getElementById('fee-breakdown-rows');
+  const feeTotal = document.getElementById('fee-breakdown-total');
+
+  function renderFeeBreakdown(courseId) {
+    const course = courseCatalog.find(c => String(c.id) === String(courseId));
+    if (!course || !course.fee_items || course.fee_items.length === 0) {
+      feeBox.style.display = 'none'; return;
+    }
+    feeRows.innerHTML = course.fee_items.map(item => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px;">
+        <span style="color:var(--text-2);">${item.fee_type_name}</span>
+        <span style="font-weight:600;">₹${item.amount.toLocaleString('en-IN')}</span>
+      </div>`).join('');
+    feeTotal.textContent = '₹' + Number(course.total_fee).toLocaleString('en-IN');
+    feeBox.style.display = 'block';
+  }
+
+  const courseSelect = document.getElementById('course_id');
+  courseSelect.addEventListener('change', () => renderFeeBreakdown(courseSelect.value));
+
   renderDurationOptions();
   if (oldCourse?.duration) {
     durationSelect.value = String(oldCourse.duration);
   }
   renderCourseOptions();
+  if (oldCourseId) renderFeeBreakdown(oldCourseId);
   syncAdmissionSource();
 
   const quickForm = document.querySelector('form');
   quickForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
+    const mobileFormatOk = validateMobileField(mobileInput);
+    const emailFormatOk  = validateEmailField(emailInput);
+    if (!mobileFormatOk || !emailFormatOk) {
+      if (!mobileFormatOk) mobileInput?.reportValidity();
+      else emailInput?.reportValidity();
+      return;
+    }
     const mobileOk = await validateUniqueField(mobileInput, 'mobile');
-    const emailOk = await validateUniqueField(emailInput, 'email');
-    if (!mobileOk || !emailOk) {
-      return;
-    }
-    if (!quickForm.reportValidity()) {
-      return;
-    }
+    const emailOk  = await validateUniqueField(emailInput, 'email');
+    if (!mobileOk || !emailOk) return;
+    if (!quickForm.reportValidity()) return;
     quickForm.submit();
   });
 })();

@@ -51,31 +51,51 @@
 .edu-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .edu-row{display:grid;grid-template-columns:repeat(6,minmax(0,1fr)) 44px;gap:10px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--bg-3);margin-bottom:10px}
 .review-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
-.review-print-shell{width:210mm;max-width:100%;min-height:297mm;margin:0 auto;border:1px solid #dbe7ff;background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);padding:16px;box-sizing:border-box;color:#0f172a;border-radius:24px;box-shadow:0 18px 38px rgba(15,23,42,.08)}
-.review-print-header{display:flex;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid #dbe7ff}
-.review-print-title{font-size:20px;font-weight:800;color:#0f172a}
-.review-print-subtitle{font-size:11px;color:#334155;margin-top:2px}
-.review-print-address{font-size:9px;color:#475569;margin-top:4px;max-width:560px;line-height:1.3}
-.review-photo-slot{width:30mm;height:38mm;border:1px solid #dbe7ff;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;font-size:10px;color:#0f172a;text-align:center;flex-shrink:0;border-radius:14px;box-shadow:0 8px 20px rgba(15,23,42,.06)}
-.review-photo-slot img{width:100%;height:100%;object-fit:cover}
-.review-top-grid{display:block;margin-top:12px}
-.review-section-card{border:1px solid #dbe7ff;padding:12px 14px;background:#fff;break-inside:avoid;margin-top:8px;border-radius:18px;box-shadow:0 10px 22px rgba(15,23,42,.05)}
-.review-section-card:first-child{margin-top:0}
-.review-section-heading{font-size:12px;font-weight:800;color:#0f172a;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
-.review-field-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
-.review-field{border:1px solid #dbe7ff;padding:5px 6px;background:#fff;border-radius:12px}
-.review-field-wide{grid-column:1/-1}
-.review-field label{display:block;font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#64748b;margin-bottom:3px}
-.review-field-value{font-size:10px;color:#0f172a;line-height:1.25;min-height:14px;word-break:break-word}
-.review-top-lines{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.review-top-line{border:1px solid #dbe7ff;padding:5px 6px;background:#fff;border-radius:12px}
-.review-top-line label{display:block;font-size:8px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#64748b;margin-bottom:3px}
+/* ── Admission Form — No Color, Professional A4 ── */
+.review-print-shell{width:210mm;max-width:100%;min-height:277mm;margin:0 auto;background:#fff;color:#000;padding:8mm 10mm;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;font-size:10px;display:flex;flex-direction:column}
+.review-print-shell *{color:#000 !important;text-decoration:none !important}
+/* Institute header */
+.rf-inst-header{display:flex;align-items:flex-start;gap:12px;padding-bottom:8px;border-bottom:2.5px solid #000}
+.rf-inst-logo img{height:62px;width:62px;object-fit:contain;display:block}
+.rf-inst-name{font-size:22px;font-weight:900;line-height:1.15}
+.rf-inst-contact{font-size:9.5px;margin-top:4px;line-height:1.5}
+.rf-inst-addr{font-size:8.5px;margin-top:2px;line-height:1.4}
+/* Form title */
+.rf-form-title{text-align:center;font-size:13px;font-weight:900;text-transform:uppercase;letter-spacing:.16em;border-bottom:2px solid #000;padding:7px 0;margin:0}
+/* Photo + info row */
+.rf-top-row{display:flex;border:1.5px solid #000;margin-top:0;flex-shrink:0}
+.rf-photo-cell{width:32mm;min-width:32mm;flex-shrink:0;border-right:1.5px solid #000;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:10px 5px 8px}
+.rf-photo-box{width:27mm;height:35mm;border:1.5px solid #000;overflow:hidden;background:#fff;flex-shrink:0;display:flex;align-items:stretch}
+.rf-photo-box img{width:100%;height:100%;object-fit:cover;display:block}
+.rf-photo-lbl{font-size:7.5px;text-align:center;margin-top:5px;line-height:1.3}
+/* Top info table — seamless inside rf-top-row border */
+.rf-top-table{width:100%;border-collapse:collapse}
+.rf-top-table td{border:1px solid #ccc;padding:5px 7px;vertical-align:middle}
+.rf-top-table tr:first-child td{border-top:none}
+.rf-top-table tr:last-child td{border-bottom:none}
+.rf-top-table td:first-child{border-left:none}
+.rf-top-table td:last-child{border-right:none}
+.rf-top-table td.rf-lbl{font-size:8px;font-weight:700;text-transform:uppercase;white-space:nowrap;width:20%;background:#fafafa}
+.rf-top-table td.rf-val{font-size:10.5px;font-weight:600;width:30%}
+/* Section headings — NO background, just bold text with rule */
+.rf-section-head{font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;padding:5px 0 3px;border-top:2px solid #000;border-bottom:1px solid #bbb;margin-top:10px}
+/* Field tables */
+.rf-table{width:100%;border-collapse:collapse}
+.rf-table td{border:1px solid #ccc;padding:4px 7px;vertical-align:top}
+.rf-table td.rf-lbl{font-size:8px;font-weight:700;text-transform:uppercase;width:22%;white-space:nowrap;background:#fafafa}
+.rf-table td.rf-val{font-size:10px;width:28%}
+/* Education */
 .review-edu-table{width:100%;border-collapse:collapse}
-.review-edu-table th,.review-edu-table td{border:1px solid #dbe7ff;padding:4px 5px;font-size:9px;text-align:left;color:#0f172a}
-.review-edu-table th{background:#f8fbff;font-weight:800;color:#334155}
-.review-sign-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.review-sign-block{padding-top:14px;text-align:center;font-size:9px;color:#475569}
-.review-sign-line{border-top:1px solid #cbd5e1;margin-bottom:6px}
+.review-edu-table th,.review-edu-table td{border:1px solid #ccc;padding:4px 7px;font-size:9px;text-align:left}
+.review-edu-table th{font-weight:700;font-size:8.5px;text-transform:uppercase;background:#fafafa}
+/* Footer block */
+.rf-footer{margin-top:auto;padding-top:10px}
+.rf-declaration{padding:6px 9px;border:1px solid #bbb;font-size:8.5px;line-height:1.6;margin-bottom:0}
+/* Auth signature block */
+.rf-auth-sign{width:200px;text-align:center}
+.rf-auth-line{border-top:1.5px solid #000;margin:6px 0 4px}
+.rf-auth-label{font-size:10px;font-weight:700}
+.rf-auth-sub{font-size:9px}
 .plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
 .plan-card{border:1px solid var(--border);border-radius:16px;padding:16px;background:var(--bg-3);cursor:pointer}
 .plan-card.active{border-color:#1746a2;background:#eef4ff;box-shadow:0 0 0 2px rgba(23,70,162,.12)}
@@ -85,24 +105,35 @@
 .pay-note{margin-top:12px;padding:14px;border-radius:14px;background:#eef4ff;color:#3f587c;font-size:13px;line-height:1.5}
 .hidden-input{display:none}
 @media print{
-  @page{size:A4 portrait;margin:10mm}
+  @page{size:A4 portrait;margin:7mm}
   html,body{margin:0;padding:0;background:#fff}
   .gt-sidebar,.gt-topbar,.gt-overlay,.gt-alert{display:none !important}
   .gt-layout{display:block !important}
   .gt-main{display:block !important;margin:0 !important;padding:0 !important}
   .gt-page{padding:0 !important;margin:0 !important}
-  .adm-header,.adm-steps,.wizard-actions,.review-toolbar,.adm-section-title,.adm-section-note{display:none !important}
+  .adm-header,.adm-steps,.wizard-actions,.review-toolbar,.adm-section-title,.adm-section-note,.adm-enq-banner{display:none !important}
   .wizard-step{display:none !important}
   #review-wizard-step{display:block !important}
-  .review-print-shell{width:190mm;min-height:auto;border:none;padding:0;box-shadow:none;background:#fff;border-radius:0}
-  .review-section-card{margin-top:6px;break-inside:avoid;page-break-inside:avoid}
-  .review-field-grid{display:flex;flex-wrap:wrap;gap:6px}
-  .review-field{width:calc(20% - 6px);flex:0 0 auto;box-sizing:border-box}
-  .review-field-wide{width:100%}
-  .review-top-lines{display:flex;flex-wrap:wrap;gap:6px}
-  .review-top-line{flex:1 1 auto}
-  .review-sign-grid{display:flex;justify-content:space-between;gap:12px;margin-top:24px}
-  .review-sign-block{flex:1;text-align:center}
+  .review-print-shell{width:auto;min-height:auto;padding:0;box-shadow:none;font-size:9px}
+  .rf-inst-header{padding-bottom:5px}
+  .rf-inst-name{font-size:16px}
+  .rf-inst-contact{font-size:8.5px;margin-top:2px}
+  .rf-inst-addr{font-size:7.5px;margin-top:2px}
+  .rf-inst-logo img{height:48px;width:48px}
+  .rf-form-title{font-size:11px;padding:4px 0}
+  .rf-photo-box{width:25mm;height:31mm}
+  .rf-photo-cell{width:29mm;min-width:29mm;padding:7px 4px 5px}
+  .rf-section-head{margin-top:5px;padding:3px 0 2px;font-size:10.5px}
+  .rf-table td{padding:2px 5px;font-size:8.5px}
+  .rf-table td.rf-lbl{font-size:7.5px}
+  .rf-top-table td{padding:3px 5px;font-size:9px}
+  .rf-top-table td.rf-lbl{font-size:7.5px}
+  .review-edu-table th,.review-edu-table td{padding:2px 4px;font-size:8px}
+  .rf-footer{padding-top:6px}
+  .rf-declaration{font-size:7.5px;padding:4px 6px;line-height:1.5}
+  .rf-auth-sign{width:180px}
+  .rf-auth-label{font-size:9px}
+  .rf-auth-sub{font-size:8.5px}
 }
 @media(max-width:1080px){.basic-layout{grid-template-columns:1fr}}
 @media(max-width:760px){.adm-steps{grid-template-columns:repeat(2,1fr)}.adm-grid,.adm-grid-3,.plan-grid,.edu-row,.basic-fields,.review-field-grid,.review-top-lines,.review-sign-grid{grid-template-columns:1fr}}
@@ -177,8 +208,18 @@
     <p>This flow saves the seat booking first. Final admission becomes active only after the required payment and complete details are received.</p>
   </div>
 
+  @if(isset($enquiryPrefill) && $enquiryPrefill)
+    <div class="adm-enq-banner" style="background:var(--accent-bg);border:1.5px solid var(--accent);border-radius:10px;padding:10px 16px;margin-bottom:14px;font-size:13px;">
+      <span style="font-weight:700;color:var(--accent);">✓ Enquiry se convert:</span>
+      <span style="color:var(--text-2);"> {{ $enquiryPrefill['name'] }} · {{ $enquiryPrefill['mobile'] }}</span>
+    </div>
+  @endif
+
   <form method="POST" action="{{ route('institute.enrollment.store-new') }}" enctype="multipart/form-data" id="admission-form" autocomplete="off">
     @csrf
+    @if(isset($enquiryPrefill) && $enquiryPrefill)
+      <input type="hidden" name="enquiry_id" value="{{ $enquiryPrefill['enquiry_id'] }}">
+    @endif
     <input type="text" name="fake_username" value="" autocomplete="username" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
     <input type="password" name="fake_password" value="" autocomplete="new-password" tabindex="-1" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;">
     <div class="adm-wrap">
@@ -213,11 +254,17 @@
 
               <div class="gt-form-group">
                 <label class="gt-label">Course <span style="color:var(--danger)">*</span></label>
-                <select name="course_id" id="course_id" class="gt-select" required>
+                <select name="course_id" id="course_id" class="gt-select" required style="display:none;">
                   <option value="">Select Course</option>
                 </select>
+                <div style="position:relative;">
+                  <input type="text" id="course_search_display" class="gt-select"
+                         placeholder="Search & select course…" autocomplete="off"
+                         style="width:100%;cursor:pointer;">
+                  <div id="course_search_dropdown" style="display:none;position:absolute;z-index:200;width:100%;top:calc(100% + 3px);background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:220px;overflow-y:auto;"></div>
+                </div>
                 @error('course_id')<div class="gt-error">{{ $message }}</div>@enderror
-              </div>
+        </div>
 
               <div class="gt-form-group">
                 <label class="gt-label">Batch</label>
@@ -291,13 +338,17 @@
               <div class="basic-fields">
                 <div class="gt-form-group">
                   <label class="gt-label">Student Name <span style="color:var(--danger)">*</span></label>
-                  <input type="text" name="name" class="gt-input" value="{{ old('name') }}" autocomplete="off" required>
+                  <input type="text" name="name" class="gt-input" value="{{ old('name', $enquiryPrefill['name'] ?? '') }}" autocomplete="off" required>
                   @error('name')<div class="gt-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="gt-form-group">
                   <label class="gt-label">Mobile <span style="color:var(--danger)">*</span></label>
-                  <input type="text" name="mobile" class="gt-input" value="{{ old('mobile') }}" autocomplete="off" required>
+                  <input type="tel" name="mobile" id="mobile" class="gt-input"
+                    value="{{ old('mobile', $enquiryPrefill['mobile'] ?? '') }}" autocomplete="off" required
+                    maxlength="10" inputmode="numeric" pattern="[0-9]{10}"
+                    oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
+                  <div class="gt-field-error" id="mobile-error" style="display:none;color:var(--danger);font-size:12px;margin-top:3px;"></div>
                   @error('mobile')<div class="gt-error">{{ $message }}</div>@enderror
                 </div>
 
@@ -539,110 +590,209 @@
 
           <div class="wizard-step" data-step id="review-wizard-step">
             <div class="adm-section-title">Confirm and Review</div>
-            <div class="adm-section-note">Review the complete admission form in the same structure used by the form preview. You can also print this review directly.</div>
+            <div class="adm-section-note">Review the complete admission form before printing or saving.</div>
             <div class="review-toolbar">
-              <div class="text-sm text-muted">This preview follows the same section layout as the Form Builder print view.</div>
+              <div class="text-sm text-muted">This is the printable A4 admission form.</div>
               <button type="button" class="btn btn-outline" id="print-review">Print Form</button>
             </div>
+
             <div class="review-print-shell" id="review-print-area">
-              <div class="review-print-header">
-                <div>
-                  <div class="review-print-title">{{ $institute?->name ?? 'Institute Name' }}</div>
-                  <div class="review-print-subtitle">Admission Application Form</div>
-                  <div class="review-print-address">{{ $institute?->address ?? 'Institute address will appear here.' }}</div>
-                </div>
-                <div class="review-photo-slot">
-                  <img src="{{ asset(old('photo_preview', $defaultPhotoPath)) }}" id="review_photo_preview" alt="Student photo">
+
+              {{-- ① Institute Header ──────────────────────────────── --}}
+              <div class="rf-inst-header">
+                @if($institute?->logo && !in_array(trim($institute->logo ?? ''), ['images/default-institute.png','']))
+                  <div class="rf-inst-logo">
+                    <img src="{{ asset($institute->logo) }}" alt="logo">
+                  </div>
+                @endif
+                <div style="flex:1;">
+                  <div class="rf-inst-name">{{ $institute?->name ?? 'Institute Name' }}</div>
+                  <div class="rf-inst-contact">
+                    @if($institute?->mobile)Ph: {{ $institute->mobile }}@endif
+                    @if($institute?->email)&nbsp;&nbsp;|&nbsp;&nbsp;{{ $institute->email }}@endif
+                    @if($institute?->website)&nbsp;&nbsp;|&nbsp;&nbsp;{{ $institute->website }}@endif
+                  </div>
+                  <div class="rf-inst-addr">{{ $institute?->address ?? '' }}</div>
                 </div>
               </div>
 
-              <div class="review-top-grid">
-                <div class="review-section-card">
-                  <div class="review-section-heading">Basic Information</div>
-                  <div class="review-top-lines">
-                    <div class="review-top-line">
-                      <label>Student Name</label>
-                      <div class="review-field-value" data-review-field="name">-</div>
-                    </div>
-                    <div class="review-top-line">
-                      <label>Mobile</label>
-                      <div class="review-field-value" data-review-field="mobile">-</div>
-                    </div>
-                    <div class="review-top-line">
-                      <label>Course</label>
-                      <div class="review-field-value" data-review-meta="course">-</div>
-                    </div>
-                    <div class="review-top-line">
-                      <label>Batch</label>
-                      <div class="review-field-value" data-review-meta="batch">-</div>
+              {{-- ② Form Title ─────────────────────────────────────── --}}
+              <div class="rf-form-title">Admission Application Form</div>
+
+              {{-- ③ Photo  LEFT   +   Personal Info  RIGHT ────────── --}}
+              <div class="rf-top-row">
+                <div class="rf-photo-cell">
+                  <div class="rf-photo-box">
+                    {{-- Real photo (hidden until uploaded) --}}
+                    <img id="review_photo_preview" alt="Photo"
+                         style="width:100%;height:100%;object-fit:cover;display:none;">
+                    {{-- Placeholder shown when no photo --}}
+                    <div id="review-photo-placeholder"
+                         style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#999;">
+                      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      <span style="font-size:7px;text-align:center;color:#bbb;line-height:1.3;">Affix Passport<br>Size Photo</span>
                     </div>
                   </div>
+                  <div class="rf-photo-lbl">Passport Size<br>Photograph</div>
+                </div>
+
+                <div style="flex:1;">
+                  <table class="rf-top-table">
+                    <tr>
+                      <td class="rf-lbl">Full Name</td>
+                      <td class="rf-val" data-review-field="name">-</td>
+                      <td class="rf-lbl">Date of Birth</td>
+                      <td class="rf-val" data-review-field="dob">-</td>
+                    </tr>
+                    <tr>
+                      <td class="rf-lbl">Mobile</td>
+                      <td class="rf-val" data-review-field="mobile">-</td>
+                      <td class="rf-lbl">Gender</td>
+                      <td class="rf-val" data-review-field="gender">-</td>
+                    </tr>
+                    <tr>
+                      <td class="rf-lbl">Email</td>
+                      <td class="rf-val" data-review-field="email">-</td>
+                      <td class="rf-lbl">Category</td>
+                      <td class="rf-val" data-review-field="category">-</td>
+                    </tr>
+                    <tr>
+                      <td class="rf-lbl">Course</td>
+                      <td class="rf-val" colspan="3" data-review-meta="course">-</td>
+                    </tr>
+                    <tr>
+                      <td class="rf-lbl">Batch</td>
+                      <td class="rf-val" data-review-meta="batch">-</td>
+                      <td class="rf-lbl">Enrolment No.</td>
+                      <td class="rf-val" style="font-style:italic;font-size:9px;">Issued after admission</td>
+                    </tr>
+                  </table>
                 </div>
               </div>
 
+              {{-- ④ Dynamic Sections ───────────────────────────────── --}}
               @foreach($reviewSections as $section)
                 @if($section['title'] === 'Education Details' && ! $educationEnabled)
                   @continue
                 @endif
-                <div class="review-section-card" style="margin-top:18px;">
-                  <div class="review-section-heading">{{ $section['title'] }}</div>
-                  <div class="review-field-grid">
-                    @foreach($section['keys'] as $key)
-                      @if($key === 'education_details')
-                        <div class="review-field review-field-wide">
-                          <label>Education Details</label>
-                          <div class="review-field-value" data-review-education>
-                            <table class="review-edu-table">
-                              <thead>
-                                <tr>
-                                  <th>Examination</th>
-                                  <th>Institute</th>
-                                  <th>Board / University</th>
-                                  <th>Year</th>
-                                  <th>Division</th>
-                                  <th>Percentage</th>
-                                </tr>
-                              </thead>
-                              <tbody id="review-education-body">
-                                <tr>
-                                  <td colspan="6">No education details added.</td>
-                                </tr>
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                        @continue
-                      @endif
 
-                      @php $field = $resolveField($key); @endphp
-                      @continue(!in_array($key, ['city', 'permanent_state', 'permanent_district', 'permanent_city', 'permanent_pin_code'], true) && !$field?->is_active)
-                      <div class="review-field {{ in_array($key, $reviewWideFields, true) ? 'review-field-wide' : '' }}">
-                        <label>
-                          {{ $field?->field_label ?? \Illuminate\Support\Str::of($key)->replace('_', ' ')->title() }}
-                        </label>
-                        <div class="review-field-value" data-review-field="{{ $key }}">-</div>
-                      </div>
-                    @endforeach
-                  </div>
-                </div>
+                @php
+                  $alwaysShow = ['city','permanent_state','permanent_district','permanent_city','permanent_pin_code'];
+                  $activeKeys = [];
+                  foreach ($section['keys'] as $k) {
+                    if ($k === 'education_details') { $activeKeys[] = $k; continue; }
+                    $f = $resolveField($k);
+                    if (in_array($k, $alwaysShow, true) || $f?->is_active) {
+                      $activeKeys[] = $k;
+                    }
+                  }
+                @endphp
+                @if(empty($activeKeys)) @continue @endif
+
+                <div class="rf-section-head">{{ $section['title'] }}</div>
+                <table class="rf-table">
+                  @php $buf = null; @endphp
+
+                  @foreach($activeKeys as $k)
+
+                    @if($k === 'education_details')
+                      @if($buf !== null)
+                        @php $bF=$resolveField($buf);$bL=$bF?->field_label??\Illuminate\Support\Str::of($buf)->replace('_',' ')->title(); @endphp
+                        <tr><td class="rf-lbl">{{$bL}}</td><td class="rf-val" data-review-field="{{$buf}}" colspan="3">-</td></tr>
+                        @php $buf=null; @endphp
+                      @endif
+                      <tr>
+                        <td colspan="4" style="padding:0;">
+                          <table class="review-edu-table">
+                            <thead>
+                              <tr>
+                                <th>Examination</th><th>Institute / School</th>
+                                <th>Board / University</th><th>Year</th><th>Division</th><th>%</th>
+                              </tr>
+                            </thead>
+                            <tbody id="review-education-body">
+                              <tr><td colspan="6" style="text-align:center;">No education details added.</td></tr>
+                            </tbody>
+                          </table>
+                        </td>
+                      </tr>
+                      @continue
+                    @endif
+
+                    @php
+                      $field  = $resolveField($k);
+                      $isWide = in_array($k, $reviewWideFields, true);
+                      $lbl    = $field?->field_label ?? \Illuminate\Support\Str::of($k)->replace('_',' ')->title();
+                    @endphp
+
+                    @if($isWide)
+                      @if($buf !== null)
+                        @php $bF=$resolveField($buf);$bL=$bF?->field_label??\Illuminate\Support\Str::of($buf)->replace('_',' ')->title(); @endphp
+                        <tr><td class="rf-lbl">{{$bL}}</td><td class="rf-val" data-review-field="{{$buf}}" colspan="3">-</td></tr>
+                        @php $buf=null; @endphp
+                      @endif
+                      <tr>
+                        <td class="rf-lbl">{{ $lbl }}</td>
+                        <td class="rf-val" colspan="3" data-review-field="{{ $k }}">-</td>
+                      </tr>
+                    @elseif($buf === null)
+                      @php $buf = $k; @endphp
+                    @else
+                      @php $bF=$resolveField($buf);$bL=$bF?->field_label??\Illuminate\Support\Str::of($buf)->replace('_',' ')->title(); @endphp
+                      <tr>
+                        <td class="rf-lbl">{{ $bL }}</td>
+                        <td class="rf-val" data-review-field="{{ $buf }}">-</td>
+                        <td class="rf-lbl">{{ $lbl }}</td>
+                        <td class="rf-val" data-review-field="{{ $k }}">-</td>
+                      </tr>
+                      @php $buf = null; @endphp
+                    @endif
+
+                  @endforeach
+
+                  @if($buf !== null)
+                    @php $bF=$resolveField($buf);$bL=$bF?->field_label??\Illuminate\Support\Str::of($buf)->replace('_',' ')->title(); @endphp
+                    <tr><td class="rf-lbl">{{$bL}}</td><td class="rf-val" data-review-field="{{$buf}}" colspan="3">-</td></tr>
+                  @endif
+                </table>
               @endforeach
 
-              <div class="review-sign-grid">
-                <div class="review-sign-block">
-                  <div class="review-sign-line"></div>
-                  Student Signature
+              {{-- ⑤ Footer: Declaration + Signatures ─────────────── --}}
+              <div class="rf-footer">
+                <div class="rf-declaration">
+                  I hereby declare that all the information provided above is true and correct to the best of my knowledge and belief.
+                  I agree to abide by the rules, regulations and fee payment schedule of the institute.
                 </div>
-                <div class="review-sign-block">
-                  <div class="review-sign-line"></div>
-                  Guardian Signature
-                </div>
-                <div class="review-sign-block">
-                  <div class="review-sign-line"></div>
-                  Authorized Signature
+
+                {{-- Only Authorized Signature block, right-aligned --}}
+              <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+                <div class="rf-auth-sign">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:3px;min-height:60px;justify-content:flex-end;">
+                    @if($institute?->use_stamp && $institute?->stamp)
+                      <img src="{{ asset($institute->stamp) }}" alt="stamp"
+                           style="height:58px;width:58px;object-fit:contain;display:block;">
+                    @endif
+                    @if($institute?->use_signature && $institute?->signature)
+                      <img src="{{ asset($institute->signature) }}" alt="signature"
+                           style="height:36px;max-width:130px;object-fit:contain;display:block;">
+                    @else
+                      @if(!($institute?->use_stamp && $institute?->stamp))
+                        <div style="height:60px;"></div>
+                      @endif
+                    @endif
+                  </div>
+                  <div class="rf-auth-line"></div>
+                  <div class="rf-auth-label">For {{ $institute?->name ?? 'Institute' }}</div>
+                  <div class="rf-auth-sub">Auth. Signatory</div>
                 </div>
               </div>
-            </div>
-          </div>
+              </div>
+
+            </div>{{-- /review-print-shell --}}
+          </div>{{-- /wizard-step --}}
 
           <div class="wizard-step" data-step>
             <div class="adm-section-title">Final Confirmation</div>
@@ -764,6 +914,51 @@
     }
   }
 
+  // ── Searchable course dropdown ────────────────────────────────────
+  const courseSearchDisplay  = document.getElementById('course_search_display');
+  const courseSearchDropdown = document.getElementById('course_search_dropdown');
+  let coursePool = [];
+
+  function renderCourseDropdownOptions(query='') {
+    const q = query.trim().toLowerCase();
+    const filtered = coursePool.filter(c => !q || c.name.toLowerCase().includes(q));
+    courseSearchDropdown.innerHTML = '';
+    if (filtered.length === 0) {
+      courseSearchDropdown.innerHTML = '<div style="padding:10px 14px;font-size:12px;color:var(--text-2);font-style:italic;">No courses found</div>';
+    } else {
+      filtered.forEach(c => {
+        const d = document.createElement('div');
+        d.style.cssText = 'padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);';
+        d.textContent = `${c.name} (${c.duration}m)`;
+        d.addEventListener('mouseover', () => d.style.background = 'var(--accent-bg)');
+        d.addEventListener('mouseout',  () => d.style.background = '');
+        d.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          courseSelect.value = c.id;
+          courseSearchDisplay.value = c.name;
+          courseSearchDropdown.style.display = 'none';
+          updateStep1Summary();
+        });
+        courseSearchDropdown.appendChild(d);
+      });
+    }
+    courseSearchDropdown.style.display = 'block';
+  }
+
+  if (courseSearchDisplay) {
+    courseSearchDisplay.addEventListener('focus', () => renderCourseDropdownOptions(courseSearchDisplay.value));
+    courseSearchDisplay.addEventListener('input', () => {
+      courseSelect.value = '';
+      renderCourseDropdownOptions(courseSearchDisplay.value);
+    });
+    courseSearchDisplay.addEventListener('blur', () => setTimeout(() => courseSearchDropdown.style.display='none', 150));
+    document.addEventListener('click', (e) => {
+      if (!courseSearchDropdown.contains(e.target) && e.target !== courseSearchDisplay) {
+        courseSearchDropdown.style.display = 'none';
+      }
+    });
+  }
+
   function renderCourseOptions() {
     const selectedTypeId = selectedCourseTypeId();
     const selectedDurationValue = selectedDuration();
@@ -777,12 +972,16 @@
         && String(course.duration || '') === String(selectedDurationValue);
     });
 
+    coursePool = filteredCourses;
     courseSelect.innerHTML = '<option value="">Select Course</option>' + filteredCourses.map((course) => `
       <option value="${course.id}">${course.name} (${course.duration} month${course.duration === 1 ? '' : 's'})</option>
     `).join('');
+    if (courseSearchDisplay) { courseSearchDisplay.value = ''; courseSearchDropdown.style.display='none'; }
 
     if (filteredCourses.some((course) => String(course.id) === String(oldValue))) {
       courseSelect.value = oldValue;
+      const found = filteredCourses.find(c => String(c.id) === String(oldValue));
+      if (found && courseSearchDisplay) courseSearchDisplay.value = found.name;
     }
   }
 
@@ -977,7 +1176,20 @@
       node.textContent = reviewValues[key] || '-';
     });
 
-    reviewPhotoPreview.src = photoPreview.src;
+    // Show real photo in review if actually uploaded, else show placeholder
+    const _defaultSrc = '{{ asset($defaultPhotoPath) }}';
+    const _realSrc    = photoPreview.src || '';
+    const _isDefault  = !_realSrc || _realSrc === _defaultSrc
+                        || _realSrc.includes('user.svg') || _realSrc.includes('user.png');
+    const _placeholder = document.getElementById('review-photo-placeholder');
+    if (_isDefault) {
+      reviewPhotoPreview.style.display = 'none';
+      if (_placeholder) _placeholder.style.display = 'flex';
+    } else {
+      reviewPhotoPreview.src = _realSrc;
+      reviewPhotoPreview.style.display = 'block';
+      if (_placeholder) _placeholder.style.display = 'none';
+    }
 
     const educationEntries = [...educationRows.querySelectorAll('.edu-row')].map((row) => {
       const inputs = row.querySelectorAll('input');
@@ -1035,17 +1247,70 @@
     renderCourseSummary();
   });
   courseSelect.addEventListener('change', renderCourseSummary);
+
   admissionSourceSelect?.addEventListener('change', syncAdmissionSource);
-  mobileInput?.addEventListener('blur', () => validateUniqueField(mobileInput, 'mobile'));
-  emailInput?.addEventListener('blur', () => validateUniqueField(emailInput, 'email'));
-  mobileInput?.addEventListener('input', () => {
-    mobileInput.setCustomValidity('');
-    debounceUniqueField(mobileInput, 'mobile');
-  });
-  emailInput?.addEventListener('input', () => {
-    emailInput.setCustomValidity('');
-    debounceUniqueField(emailInput, 'email');
-  });
+
+  // ── Field format validators ──────────────────────────────────────
+  function showFieldError(input, msg) {
+    input.style.borderColor = 'var(--danger)';
+    const errEl = document.getElementById(input.name + '-error') || input.nextElementSibling;
+    if (errEl && errEl.classList.contains('gt-field-error')) { errEl.textContent = msg; errEl.style.display = 'block'; }
+    input.setCustomValidity(msg);
+  }
+  function clearFieldError(input) {
+    input.style.borderColor = '';
+    const errEl = document.getElementById(input.name + '-error') || input.nextElementSibling;
+    if (errEl && errEl.classList.contains('gt-field-error')) { errEl.textContent = ''; errEl.style.display = 'none'; }
+    input.setCustomValidity('');
+  }
+
+  function validateMobileField(input) {
+    const v = input.value.replace(/\D/g, '');
+    if (v.length === 0) { clearFieldError(input); return true; }
+    if (v.length !== 10) { showFieldError(input, 'Mobile number must be exactly 10 digits.'); return false; }
+    clearFieldError(input); return true;
+  }
+  function validateEmailField(input) {
+    const v = input.value.trim();
+    if (v.length === 0) { clearFieldError(input); return true; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { showFieldError(input, 'Please enter a valid email address.'); return false; }
+    clearFieldError(input); return true;
+  }
+  function validateAadharField(input) {
+    const v = input.value.replace(/\D/g, '');
+    if (v.length === 0) { clearFieldError(input); return true; }
+    if (v.length !== 12) { showFieldError(input, 'Aadhar number must be exactly 12 digits.'); return false; }
+    clearFieldError(input); return true;
+  }
+
+  // Mobile — only digits, max 10
+  function wireMobileInput(input) {
+    if (!input) return;
+    input.addEventListener('input', () => {
+      input.value = input.value.replace(/\D/g, '').slice(0, 10);
+      validateMobileField(input);
+      input.setCustomValidity(''); debounceUniqueField(input, 'mobile');
+    });
+    input.addEventListener('blur', () => { validateMobileField(input); validateUniqueField(input, 'mobile'); });
+  }
+  // Email
+  function wireEmailInput(input) {
+    if (!input) return;
+    input.addEventListener('input', () => { validateEmailField(input); input.setCustomValidity(''); debounceUniqueField(input, 'email'); });
+    input.addEventListener('blur', () => { validateEmailField(input); validateUniqueField(input, 'email'); });
+  }
+  // Aadhar — only digits, max 12
+  function wireAadharInput(input) {
+    if (!input) return;
+    input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 12); validateAadharField(input); });
+    input.addEventListener('blur', () => validateAadharField(input));
+  }
+
+  wireMobileInput(mobileInput);
+  wireEmailInput(emailInput);
+  // Guardian / alternate mobile fields (rendered dynamically, wire after DOM ready)
+  document.querySelectorAll('input[name="guardian_mobile"], input[name="whatsapp_no"], input[name="alternate_mobile"]').forEach(wireMobileInput);
+  document.querySelectorAll('input[name="aadhar_no"]').forEach(wireAadharInput);
 
   photoInput.addEventListener('change', (event) => {
     const file = event.target.files?.[0];
@@ -1124,6 +1389,38 @@
   syncAdmissionSource();
   renderCourseSummary();
   syncSteps();
+
+  // ── Enquiry pre-fill (auto-select course from enquiry) ────────────
+  @if(isset($enquiryPrefill) && $enquiryPrefill && $enquiryPrefill['course_id'])
+  (function () {
+    const prefillCourseId = @json($enquiryPrefill['course_id']);
+    const prefillCourse   = courseCatalog.find(c => String(c.id) === String(prefillCourseId));
+    if (!prefillCourse) return;
+
+    // Set type + duration + render options
+    if (courseTypeSelect && prefillCourse.course_type_id) {
+      courseTypeSelect.value = String(prefillCourse.course_type_id);
+    }
+    renderDurationOptions();
+    if (durationSelect && prefillCourse.duration) {
+      durationSelect.value = String(prefillCourse.duration);
+    }
+    renderCourseOptions();
+
+    // Set the hidden select + visible search input
+    courseSelect.value = String(prefillCourseId);
+    if (courseSearchDisplay) courseSearchDisplay.value = prefillCourse.name;
+    renderCourseSummary();
+  })();
+  @endif
+
+  // Pre-fill email from enquiry
+  @if(isset($enquiryPrefill) && $enquiryPrefill && $enquiryPrefill['email'])
+  (function () {
+    const emailEl = document.querySelector('input[name="email"]');
+    if (emailEl && !emailEl.value) emailEl.value = @json($enquiryPrefill['email']);
+  })();
+  @endif
 })();
 </script>
 @endpush

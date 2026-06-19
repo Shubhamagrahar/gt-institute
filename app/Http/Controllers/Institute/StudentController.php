@@ -19,15 +19,73 @@ class StudentController extends Controller
         return Auth::guard('institute')->user()->institute_id;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $students = User::with(['profile', 'studentWallet'])
-            ->where('institute_id', $this->instituteId())
-            ->where('role', 'student')
-            ->latest()
-            ->paginate(20);
+        $iid       = $this->instituteId();
+        $sessionId = $request->get('session_id');
+        $courseId  = $request->get('course_id');
+        $batchId   = $request->get('batch_id');
+        $search    = trim($request->get('q', ''));
 
-        return view('institute.students.index', compact('students'));
+        $sessions = \App\Models\InstituteSession::where('institute_id', $iid)
+            ->orderByDesc('is_active')->orderByDesc('start_date')->get();
+
+        $courses = \App\Models\CourseDetail::where('institute_id', $iid)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $batches = \App\Models\BatchDetail::where('institute_id', $iid)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $query = CourseBook::with(['student.profile', 'course', 'batch'])
+            ->where('institute_id', $iid)
+            ->where('status', 'RUN');
+
+        if ($sessionId) $query->where('session_id', $sessionId);
+        if ($courseId)  $query->where('course_id', $courseId);
+        if ($batchId)   $query->where('batch_id', $batchId);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('student', function ($sq) use ($search) {
+                    $sq->where('user_id', 'like', "%{$search}%")
+                       ->orWhere('mobile', 'like', "%{$search}%")
+                       ->orWhereHas('profile', fn ($p) => $p->where('name', 'like', "%{$search}%"));
+                })->orWhere('enrollment_no', 'like', "%{$search}%");
+            });
+        }
+
+        $enrollments = $query->latest()->paginate(25)->withQueryString();
+
+        return view('institute.students.index', compact(
+            'enrollments', 'sessions', 'sessionId', 'search',
+            'courses', 'batches', 'courseId', 'batchId'
+        ));
+    }
+
+    public function expired(Request $request)
+    {
+        $iid    = $this->instituteId();
+        $search = trim($request->get('q', ''));
+
+        $query = CourseBook::with(['student.profile', 'course'])
+            ->where('institute_id', $iid)
+            ->where('status', 'EXPIRED');
+
+        if ($search) {
+            $query->whereHas('student', function ($q) use ($search) {
+                $q->where('user_id', 'like', "%{$search}%")
+                  ->orWhere('mobile', 'like', "%{$search}%")
+                  ->orWhereHas('profile', fn ($p) => $p->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $enrollments = $query->latest()->paginate(25)->withQueryString();
+
+        return view('institute.students.expired', compact('enrollments', 'search'));
     }
 
     public function create()

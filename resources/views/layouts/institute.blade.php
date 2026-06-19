@@ -16,28 +16,22 @@
   {{-- ─── SIDEBAR ─── --}}
   <aside class="gt-sidebar" id="sidebar">
 
-    {{-- Brand --}}
-    <div class="gt-sidebar-brand">
-      <div class="brand-icon">GT</div>
-      <div>
-        <div class="brand-text">Gaurangi</div>
-        <div class="brand-sub">Technologies</div>
-      </div>
-    </div>
-
-    {{-- Institute badge --}}
-    <div class="gt-sidebar-inst" style="margin:10px 12px 6px;">
-      <div class="inst-ava">
-        @php $logo = Auth::guard('institute')->user()->institute?->logo; @endphp
-        @if($logo && $logo !== 'images/default-institute.png')
-          <img src="{{ asset($logo) }}" alt="logo">
-        @else
-          {{ strtoupper(substr(Auth::guard('institute')->user()->institute?->short_name ?? Auth::guard('institute')->user()->institute?->name ?? 'IN', 0, 2)) }}
-        @endif
-      </div>
-      <div>
-        <div class="inst-name">{{ Str::limit(Auth::guard('institute')->user()->institute?->name ?? 'Institute', 20) }}</div>
-        <div class="inst-role">Institute Panel</div>
+    {{-- Brand: Institute logo/name + ID (merged card) --}}
+    <div class="gt-sidebar-brand" style="display:block;padding:10px 12px 8px;">
+      <div class="gt-user-card" style="width:100%;padding:9px 10px;">
+        <div style="width:34px;height:34px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;overflow:hidden;">
+          @php $logo = Auth::guard('institute')->user()->institute?->logo; @endphp
+          @if($logo && $logo !== 'images/default-institute.png')
+            <img src="{{ asset($logo) }}" alt="logo" style="width:100%;height:100%;object-fit:cover;">
+          @else
+            {{ strtoupper(substr(Auth::guard('institute')->user()->institute?->short_name ?? Auth::guard('institute')->user()->institute?->name ?? 'IN', 0, 2)) }}
+          @endif
+        </div>
+        <div class="user-info">
+          <div class="name">{{ Str::limit(Auth::guard('institute')->user()->institute?->name ?? 'Institute', 20) }}</div>
+          <div class="role">Institute Panel</div>
+          <div class="role">{{ Auth::guard('institute')->user()->institute?->unique_id ?? '—' }}</div>
+        </div>
       </div>
     </div>
 
@@ -51,8 +45,8 @@
   $selectedSessId = session('selected_session_id', $activeSession?->id);
 @endphp
 
-<div style="margin:8px 12px 4px;background:rgba(108,93,211,.12);border:1px solid rgba(108,93,211,.25);border-radius:7px;padding:9px 12px;">
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+<div style="margin:6px 12px 4px;background:rgba(108,93,211,.12);border:1px solid rgba(108,93,211,.25);border-radius:7px;padding:6px 10px;">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a89cf5" stroke-width="2" style="flex-shrink:0;">
       <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -87,7 +81,7 @@
 </div>
 
     {{-- Search --}}
-    <div class="gt-sidebar-search-wrap" style="margin:4px 12px 8px;">
+    <div class="gt-sidebar-search-wrap" style="margin:4px 12px 4px;">
       <svg class="search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" placeholder="Search..." id="sidebar-search">
       <button class="search-btn">
@@ -95,19 +89,34 @@
       </button>
     </div>
 
-    {{-- Navigation --}}
+    {{-- Navigation (scrollable) --}}
+    <nav class="gt-sidebar-nav">
+    @php
+      $__sidebarEnqIid = Auth::guard('institute')->user()?->institute_id;
+      $__sidebarEnqOpen = $__sidebarEnqIid
+        ? \App\Models\Enquiry::where('institute_id', $__sidebarEnqIid)->where('status','OPEN')->count()
+        : 0;
+      $__sidebarEnqDue = $__sidebarEnqIid
+        ? \App\Models\Enquiry::where('institute_id', $__sidebarEnqIid)->where('status','OPEN')
+            ->whereDate('next_followup_date','<=',today())->count()
+        : 0;
+    @endphp
     <div class="gt-sidebar-section">Overview</div>
     <a href="{{ route('institute.dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.dashboard') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       Dashboard
     </a>
+
+    <div class="gt-sidebar-section">Master</div>
+    <a href="{{ route('institute.accounts.profile') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.profile') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/><circle cx="12" cy="14" r="2"/></svg>
+      Institute Profile
+    </a>
     <a href="{{ route('institute.sessions.index') }}" class="gt-nav-item {{ request()->routeIs('institute.sessions.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Sessions
     </a>
-
-    <div class="gt-sidebar-section">Academic Setup</div>
-    <a href="{{ route('institute.courses.index') }}" class="gt-nav-item {{ ((request()->routeIs('institute.courses.*') && !request()->routeIs('institute.courses.fee-bindings*')) || request()->routeIs('institute.course-types.*')) ? 'active' : '' }}">
+    <a href="{{ route('institute.courses.index') }}" class="gt-nav-item {{ ((request()->routeIs('institute.courses.*') && !request()->routeIs('institute.courses.fee-bindings*') && !request()->routeIs('institute.courses.enroll*') && !request()->routeIs('institute.courses.enrollments*')) || request()->routeIs('institute.course-types.*')) ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
       Courses
     </a>
@@ -119,28 +128,6 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15h.01"/></svg>
       Batches
     </a>
-    <a href="{{ route('institute.form-builder.index') }}" class="gt-nav-item {{ request()->routeIs('institute.form-builder.*') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-      Form Builder
-    </a>
-
-    <div class="gt-sidebar-section">Admissions & Fees</div>
-    <a href="{{ route('institute.enrollment.choose') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.*') && !request()->routeIs('institute.enrollment.pending') && !request()->routeIs('institute.enrollment.monthly-fees') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      New Admission
-    </a>
-    <a href="{{ route('institute.enrollment.pending') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.pending') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-      Pending Admission
-    </a>
-    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard','institute.fees-search') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h.01"/><path d="M12 8h5"/><path d="M7 12h.01"/><path d="M12 12h5"/></svg>
-      Fees Dashboard
-    </a>
-    <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Fee Collection
-    </a>
     <a href="{{ route('institute.fee-types.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-types.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Fee Types
@@ -149,23 +136,92 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h10"/><path d="M18 16v4"/><path d="M16 18h4"/></svg>
       Course Fee Setup
     </a>
-
-    <div class="gt-sidebar-section">Franchise</div>
     <a href="{{ route('institute.franchise-levels.index') }}" class="gt-nav-item {{ request()->routeIs('institute.franchise-levels.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l4 7h-8l4-7z"/><path d="M5 22h14"/><path d="M7 22V10h10v12"/></svg>
       Franchise Levels
     </a>
-    <a href="{{ route('institute.franchises.create') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.create') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
-      Add Franchise
+    <a href="{{ route('institute.form-builder.index') }}" class="gt-nav-item {{ request()->routeIs('institute.form-builder.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Form Builder
     </a>
-    <a href="{{ route('institute.franchises.index') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.index') || request()->routeIs('institute.franchises.show') || request()->routeIs('institute.franchises.edit') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M9 13h.01"/><path d="M15 13h.01"/><path d="M10 21v-4h4v4"/></svg>
-      Franchise List
+
+    <div class="gt-sidebar-section">Enquiries</div>
+    <a href="{{ route('institute.enquiries.create') }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.create') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="12" y1="8" x2="12" y2="14"/><line x1="9" y1="11" x2="15" y2="11"/></svg>
+      New Enquiry
     </a>
-    <a href="{{ route('institute.franchises.wallets') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.wallets') || request()->routeIs('institute.franchises.transactions') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/></svg>
-      Franchise Wallets
+    <a href="{{ route('institute.enquiries.index', ['tab'=>'open']) }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.index') && request()->get('tab','open')==='open' ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Open Enquiries
+      @if($__sidebarEnqOpen > 0)
+        <span style="margin-left:auto;background:rgba(108,93,211,.2);color:#a89cf5;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">{{ $__sidebarEnqOpen }}</span>
+      @endif
+    </a>
+    <a href="{{ route('institute.enquiries.index', ['tab'=>'due']) }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.index') && request()->get('tab')==='due' ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Today's Follow-ups
+      @if($__sidebarEnqDue > 0)
+        <span style="margin-left:auto;background:rgba(239,68,68,.15);color:#f87171;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">{{ $__sidebarEnqDue }}</span>
+      @endif
+    </a>
+    <a href="{{ route('institute.enquiries.index', ['tab'=>'lost']) }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.index') && request()->get('tab')==='lost' ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+      Lost Enquiries
+    </a>
+    <a href="{{ route('institute.enquiries.index', ['tab'=>'converted']) }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.index') && request()->get('tab')==='converted' ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Converted
+    </a>
+
+    <div class="gt-sidebar-section">Admissions</div>
+    <a href="{{ route('institute.enrollment.choose') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.*') && !request()->routeIs('institute.enrollment.pending') && !request()->routeIs('institute.enrollment.monthly-fees') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      New Admission
+    </a>
+    <a href="{{ route('institute.enrollment.pending') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.pending') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Pending Admission
+    </a>
+
+    <div class="gt-sidebar-section">Students & Enrollment</div>
+    <a href="{{ route('institute.students.index') }}" class="gt-nav-item {{ request()->routeIs('institute.students.index') || request()->routeIs('institute.students.show') || request()->routeIs('institute.students.edit') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Running Students
+    </a>
+    <a href="{{ route('institute.students.expired') }}" class="gt-nav-item {{ request()->routeIs('institute.students.expired') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Expired Bookings
+    </a>
+    <a href="{{ route('institute.courses.enrollments') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.enrollments') || request()->routeIs('institute.courses.enroll') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7"/><line x1="15" y1="19" x2="15" y2="13"/><line x1="18" y1="16" x2="12" y2="16"/></svg>
+      Running Enrollments
+    </a>
+    <div class="gt-sidebar-section">Attendance</div>
+    <a href="{{ route('institute.attendance.students') }}" class="gt-nav-item {{ request()->routeIs('institute.attendance.students') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Mark Attendance
+    </a>
+    <a href="{{ route('institute.attendance.register') }}" class="gt-nav-item {{ request()->routeIs('institute.attendance.register*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><rect x="7" y="14" width="3" height="3" rx=".5"/><rect x="11" y="14" width="3" height="3" rx=".5"/></svg>
+      Attendance Register
+    </a>
+    <a href="{{ route('institute.attendance.student-report') }}" class="gt-nav-item {{ request()->routeIs('institute.attendance.student-report*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/><polyline points="16 12 18 14 22 10"/></svg>
+      Student Report
+    </a>
+
+    <div class="gt-sidebar-section">Fees</div>
+    <a href="{{ route('institute.quick-pay') }}" class="gt-nav-item {{ request()->routeIs('institute.quick-pay*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Quick Pay
+    </a>
+    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard','institute.fees-search') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h.01"/><path d="M12 8h5"/><path d="M7 12h.01"/><path d="M12 12h5"/></svg>
+      Fees Dashboard
+    </a>
+    <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Fee Collection
     </a>
 
     <div class="gt-sidebar-section">Channel Partners</div>
@@ -178,18 +234,18 @@
       Channel Partner List
     </a>
 
-    <div class="gt-sidebar-section">Students</div>
-    <a href="{{ route('institute.students.index') }}" class="gt-nav-item {{ request()->routeIs('institute.students.index') || request()->routeIs('institute.students.show') || request()->routeIs('institute.students.edit') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Student Directory
+    <div class="gt-sidebar-section">Franchise</div>
+    <a href="{{ route('institute.franchises.create') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.create') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
+      Add Franchise
     </a>
-    <a href="{{ route('institute.courses.enrollments') }}" class="gt-nav-item {{ request()->routeIs('institute.courses.enrollments') || request()->routeIs('institute.courses.enroll') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7"/><line x1="15" y1="19" x2="15" y2="13"/><line x1="18" y1="16" x2="12" y2="16"/></svg>
-      Running Enrollments
+    <a href="{{ route('institute.franchises.index') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.index') || request()->routeIs('institute.franchises.show') || request()->routeIs('institute.franchises.edit') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M9 13h.01"/><path d="M15 13h.01"/><path d="M10 21v-4h4v4"/></svg>
+      Franchise List
     </a>
-    <a href="{{ route('institute.attendance.student') }}" class="gt-nav-item {{ request()->routeIs('institute.attendance.student') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Academic History
+    <a href="{{ route('institute.franchises.wallets') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.wallets') || request()->routeIs('institute.franchises.transactions') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/></svg>
+      Franchise Wallets
     </a>
 
     <div class="gt-sidebar-section">Team & Account</div>
@@ -211,23 +267,21 @@
       Security
     </a>
     @endif
+    </nav>
 
-    {{-- Footer --}}
+    {{-- Footer (fixed) --}}
     <div class="gt-sidebar-footer">
-      <div class="gt-user-card">
-        <div class="avatar">{{ strtoupper(substr(Auth::guard('institute')->user()->studentProfile?->name ?? Auth::guard('institute')->user()->staffProfile?->name ?? Auth::guard('institute')->user()->user_id, 0, 1)) }}</div>
-        <div class="user-info">
-          <div class="name">{{ Str::limit(Auth::guard('institute')->user()->studentProfile?->name ?? Auth::guard('institute')->user()->staffProfile?->name ?? Auth::guard('institute')->user()->user_id, 16) }}</div>
-          <div class="role">{{ ucfirst(str_replace('_',' ', Auth::guard('institute')->user()->role)) }}</div>
-        </div>
-      </div>
-      <form action="{{ route('logout') }}" method="POST" style="margin-top:10px;">
+      <form action="{{ route('logout') }}" method="POST">
         @csrf
         <button type="submit" class="btn btn-outline w-full" style="justify-content:center;border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:12px;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           Sign Out
         </button>
       </form>
+      <div class="gt-footer-brand">
+        <img src="{{ asset('images/gt-icon.png') }}" alt="" onerror="this.style.display='none'">
+        <span>Powered by Gaurangi Technologies</span>
+      </div>
     </div>
   </aside>
 

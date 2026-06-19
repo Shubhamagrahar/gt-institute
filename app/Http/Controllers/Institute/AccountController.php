@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use App\Models\State;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,65 @@ use Illuminate\Support\Str;
 
 class AccountController extends Controller
 {
+    public function profile()
+    {
+        $user      = Auth::guard('institute')->user();
+        $institute = $user->institute;
+        $states    = State::orderBy('name')->pluck('name');
+
+        $districtsByState = \App\Models\District::query()
+            ->join('states', 'states.id', '=', 'districts.state_id')
+            ->select('districts.name as district_name', 'states.name as state_name')
+            ->orderBy('districts.name')
+            ->get()
+            ->groupBy('state_name')
+            ->map(fn($rows) => $rows->pluck('district_name')->values());
+
+        return view('institute.accounts.profile', compact('institute', 'states', 'districtsByState'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user      = Auth::guard('institute')->user();
+        $institute = $user->institute;
+
+        $validated = $request->validate([
+            'short_name'   => 'nullable|string|max:50',
+            'mobile'       => 'required|string|max:15',
+            'owner_name'   => 'required|string|max:100',
+            'owner_mobile' => 'required|string|max:15',
+            'address'      => 'nullable|string|max:500',
+            'state'        => 'nullable|string|max:60',
+            'district'     => 'nullable|string|max:60',
+            'pin_code'     => 'nullable|string|max:10',
+            'website'      => 'nullable|url|max:150',
+            'seat_booking_validity_days' => 'nullable|integer|min:1|max:365',
+            'logo'          => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'signature'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
+            'use_signature' => 'nullable|boolean',
+            'stamp'         => 'nullable|image|mimes:jpg,jpeg,png,webp|max:1024',
+            'use_stamp'     => 'nullable|boolean',
+        ]);
+
+        $validated['use_signature'] = $request->boolean('use_signature');
+        $validated['use_stamp']     = $request->boolean('use_stamp');
+
+        foreach (['logo', 'signature', 'stamp'] as $field) {
+            if ($request->hasFile($field)) {
+                $file     = $request->file($field);
+                $filename = 'inst_' . $institute->id . '_' . $field . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->move(public_path('images/institute-logos'), $filename);
+                $validated[$field] = 'images/institute-logos/' . $filename;
+            } else {
+                unset($validated[$field]);
+            }
+        }
+
+        $institute->update($validated);
+
+        return back()->with('success', 'Profile updated successfully.');
+    }
+
     public function billing()
     {
         $user = Auth::guard('institute')->user();

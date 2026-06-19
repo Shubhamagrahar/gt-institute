@@ -16,11 +16,11 @@
         <tr>
           <th>Name</th>
           <th>Commission</th>
-          <th>Onboarding Fee</th>
+          <th>Joining Fee</th>
+          <th>Courses Configured</th>
           <th>Franchises</th>
           <th>Status</th>
-          <th>Notes</th>
-          <th>Action</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -35,10 +35,27 @@
                 <span class="text-muted">—</span>
               @endif
             </td>
+            <td>
+              @if($level->course_charges_count > 0)
+                <a href="{{ route('institute.franchise-levels.charges.edit', $level) }}"
+                   style="color:var(--accent); text-decoration:none; font-size:13px;">
+                  {{ $level->course_charges_count }} course(s) →
+                </a>
+              @else
+                <a href="{{ route('institute.franchise-levels.charges', $level) }}"
+                   style="color:var(--danger); text-decoration:none; font-size:12px;">
+                  Not set — Configure ↗
+                </a>
+              @endif
+            </td>
             <td><span class="badge badge-info">{{ $level->franchises()->count() }}</span></td>
             <td><span class="badge {{ $level->status === 'active' ? 'badge-success' : 'badge-warning' }}">{{ ucfirst($level->status) }}</span></td>
-            <td class="text-muted">{{ $level->notes ?: '—' }}</td>
-            <td><a href="{{ route('institute.franchise-levels.edit', $level) }}" class="btn btn-outline btn-xs">Edit</a></td>
+            <td>
+              <div class="flex gap-2">
+                <a href="{{ route('institute.franchise-levels.edit', $level) }}" class="btn btn-outline btn-xs">Edit</a>
+                <a href="{{ route('institute.franchise-levels.charges', $level) }}" class="btn btn-outline btn-xs">Charges</a>
+              </div>
+            </td>
           </tr>
         @empty
           <tr>

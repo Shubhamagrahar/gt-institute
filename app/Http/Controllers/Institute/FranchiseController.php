@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use App\Models\CourseDetail;
 use App\Models\Franchise;
+use App\Models\FranchiseCourseCharge;
 use App\Models\FranchiseFeeCollection;
 use App\Models\FranchiseLevel;
 use App\Models\FranchiseTransaction;
@@ -48,13 +50,18 @@ class FranchiseController extends Controller
             ->orderBy('name')
             ->get();
 
+        $courses = CourseDetail::where('institute_id', $this->instituteId())
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'course_short_name', 'duration']);
+
         // Restore session data into old() so all form fields repopulate when coming back from preview
         $prefill = session('franchise_create_data');
         if ($prefill) {
             session()->flashInput($prefill);
         }
 
-        return view('institute.franchises.create', compact('levels', 'prefill'));
+        return view('institute.franchises.create', compact('levels', 'courses', 'prefill'));
     }
 
     // ─── Create: Step 1 POST — Validate & Branch ─────────────────────────────
@@ -73,8 +80,6 @@ class FranchiseController extends Controller
             'management_type'    => 'required|in:independent,wallet',
             'wallet_enabled'     => 'required|boolean',
             'low_wallet_alert'   => 'nullable|numeric|min:0',
-            'admission_charge'   => 'nullable|numeric|min:0',
-            'certificate_charge' => 'nullable|numeric|min:0',
             'onboarding_fee'     => 'nullable|numeric|min:0',
             'has_sub_franchise'  => 'required|boolean',
             'address'            => 'nullable|string',
@@ -89,14 +94,12 @@ class FranchiseController extends Controller
             ->where('institute_id', $this->instituteId())
             ->firstOrFail();
 
-        // Store logo to a temp path so it survives the session redirect
         if ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('logos/temp', 'public');
             $data['logo_temp'] = $logoPath;
             $data['logo'] = 'storage/' . $logoPath;
         }
 
-        // Both modes go through preview (step 2)
         $data['_level'] = [
             'name'       => $level->name,
             'level_fee'  => (float) ($level->level_fee ?? 0),
@@ -105,10 +108,72 @@ class FranchiseController extends Controller
 
         session(['franchise_create_data' => $data]);
 
+        // Wallet mode → Step 2: set course charges; Independent → skip to preview
+        if (($data['management_type'] ?? 'wallet') === 'wallet') {
+            return redirect()->route('institute.franchises.charges');
+        }
+
         return redirect()->route('institute.franchises.preview');
     }
 
-    // ─── Create: Step 2 — Preview ────────────────────────────────────────────
+    // ─── Create: Step 2 (wallet only) — Duration Charge Setup ──────────────
+
+    public function chargesStep()
+    {
+        $data = session('franchise_create_data');
+
+        if (! $data || ($data['management_type'] ?? '') !== 'wallet') {
+            return redirect()->route('institute.franchises.create');
+        }
+
+        // Unique durations with course counts
+        $durations = CourseDetail::where('institute_id', $this->instituteId())
+            ->where('status', 'active')
+            ->whereNotNull('duration')
+            ->where('duration', '>', 0)
+            ->selectRaw('duration, count(*) as course_count')
+            ->groupBy('duration')
+            ->orderBy('duration')
+            ->get();
+
+        $existing = $data['_duration_charges'] ?? [];
+
+        return view('institute.franchises.create-charges', compact('data', 'durations', 'existing'));
+    }
+
+    public function storeCharges(Request $request)
+    {
+        $data = session('franchise_create_data');
+
+        if (! $data || ($data['management_type'] ?? '') !== 'wallet') {
+            return redirect()->route('institute.franchises.create');
+        }
+
+        // Build duration-keyed charges array from POST inputs
+        $durations    = $request->input('duration', []);
+        $admissions   = $request->input('admission_charge', []);
+        $certificates = $request->input('certificate_charge', []);
+
+        $charges = [];
+        foreach ($durations as $idx => $dur) {
+            $adm  = (float) ($admissions[$idx]   ?? 0);
+            $cert = (float) ($certificates[$idx] ?? 0);
+            if ($adm > 0 || $cert > 0) {
+                $charges[(int) $dur] = [
+                    'duration'           => (int) $dur,
+                    'admission_charge'   => $adm,
+                    'certificate_charge' => $cert,
+                ];
+            }
+        }
+
+        $data['_duration_charges'] = $charges;
+        session(['franchise_create_data' => $data]);
+
+        return redirect()->route('institute.franchises.preview');
+    }
+
+    // ─── Create: Step 3 — Preview ────────────────────────────────────────────
 
     public function preview()
     {
@@ -119,15 +184,10 @@ class FranchiseController extends Controller
                 ->with('error', 'Session expired. Please fill in the details again.');
         }
 
-        $levels = FranchiseLevel::where('institute_id', $this->instituteId())
-            ->where('status', 'active')
-            ->orderBy('name')
-            ->get();
-
-        return view('institute.franchises.create-preview', compact('data', 'levels'));
+        return view('institute.franchises.create-preview', compact('data'));
     }
 
-    // ─── Create: Step 2 POST — Confirm & Create ──────────────────────────────
+    // ─── Create: Step 3 POST — Confirm & Create ──────────────────────────────
 
     public function confirmCreate()
     {
@@ -157,16 +217,18 @@ class FranchiseController extends Controller
 
             session()->forget('franchise_create_data');
 
-            if (($franchise->management_type ?? 'wallet') === 'independent') {
-                return redirect()
-                    ->route('institute.franchises.fee.index', $franchise)
-                    ->with('success', "Franchise '{$franchise->name}' created successfully. Please collect the onboarding fee.");
-            }
+            $levelFeeMsg = $levelFee > 0
+                ? " Joining fee of ₹" . number_format($levelFee, 2) . " is pending collection."
+                : '';
 
-            // Wallet mode: go to recharge/ledger page to record opening balance
+            $walletMsg = ($franchise->management_type === 'wallet' && ($franchise->wallet?->balance ?? 0) > 0)
+                ? " Opening balance of ₹" . number_format($franchise->wallet->balance, 2) . " credited to operational wallet."
+                : '';
+
+            // Both modes go to joining fee collection page
             return redirect()
-                ->route('institute.franchises.transactions', $franchise)
-                ->with('success', "Franchise '{$franchise->name}' created. Login credentials sent to {$franchise->email}." . (($franchise->wallet?->balance ?? 0) > 0 ? " Opening balance of ₹" . number_format($franchise->wallet->balance, 2) . " has been credited." : " Please recharge the wallet to get started."));
+                ->route('institute.franchises.fee.index', $franchise)
+                ->with('success', "Franchise '{$franchise->name}' created. Login credentials sent to {$franchise->email}.{$walletMsg}{$levelFeeMsg}");
         } catch (\Throwable $e) {
             return back()->with('error', 'Error: ' . $e->getMessage());
         }
@@ -202,7 +264,12 @@ class FranchiseController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('institute.franchises.edit', compact('franchise', 'levels'));
+        $courses = CourseDetail::where('institute_id', $this->instituteId())
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name', 'course_short_name', 'duration']);
+
+        return view('institute.franchises.edit', compact('franchise', 'levels', 'courses'));
     }
 
     public function update(Request $request, Franchise $franchise)
@@ -223,8 +290,6 @@ class FranchiseController extends Controller
             'management_type'    => 'required|in:independent,wallet',
             'wallet_enabled'     => 'required|boolean',
             'low_wallet_alert'   => 'nullable|numeric|min:0',
-            'admission_charge'   => 'nullable|numeric|min:0',
-            'certificate_charge' => 'nullable|numeric|min:0',
             'onboarding_fee'     => 'nullable|numeric|min:0',
             'has_sub_franchise'  => 'required|boolean',
             'address'            => 'nullable|string',
@@ -416,6 +481,20 @@ class FranchiseController extends Controller
         $franchise->load(['institute', 'level']);
 
         return view('institute.franchises.certificate', compact('franchise'));
+    }
+
+    // ─── Course Charges JSON (for franchise list modal) ───────────────────────
+
+    public function courseCharges(Franchise $franchise)
+    {
+        $this->authorizeFranchise($franchise);
+
+        $charges = FranchiseCourseCharge::where('franchise_id', $franchise->id)
+            ->orderBy('duration')
+            ->orderBy('course_name')
+            ->get(['course_name', 'duration', 'admission_charge', 'certificate_charge']);
+
+        return response()->json($charges);
     }
 
     // ─── Auth Helper ──────────────────────────────────────────────────────────

@@ -17,6 +17,49 @@ class FeeCollectController extends Controller
         return Auth::guard('institute')->user()->institute_id;
     }
 
+    // Quick Pay: search page
+    public function quickPay()
+    {
+        return view('institute.fee-collect.quick-pay');
+    }
+
+    // Quick Pay: AJAX student search
+    public function quickPaySearch(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+        if (mb_strlen($q) < 2) {
+            return response()->json([]);
+        }
+
+        $iid = $this->instituteId();
+
+        $students = User::where('institute_id', $iid)
+            ->where('role', 'student')
+            ->with(['profile', 'enrollments' => fn($eq) => $eq->orderByDesc('id')->limit(5)])
+            ->where(function ($query) use ($q) {
+                $query->where('user_id', 'like', "%{$q}%")
+                      ->orWhere('mobile', 'like', "%{$q}%")
+                      ->orWhere('email', 'like', "%{$q}%")
+                      ->orWhereHas('profile', fn($pq) => $pq->where('name', 'like', "%{$q}%"))
+                      ->orWhereHas('enrollments', fn($eq) => $eq->where('enrollment_no', 'like', "%{$q}%"));
+            })
+            ->limit(15)
+            ->get();
+
+        return response()->json($students->map(function ($student) {
+            $enrollment = $student->enrollments->whereNotNull('enrollment_no')->first();
+            return [
+                'id'            => $student->id,
+                'user_id'       => $student->user_id,
+                'name'          => $student->profile?->name ?? $student->user_id,
+                'mobile'        => $student->mobile ?? null,
+                'email'         => $student->email ?? null,
+                'enrollment_no' => $enrollment?->enrollment_no ?? null,
+                'url'           => route('institute.fee-collect.show', $student->id),
+            ];
+        }));
+    }
+
     // List students with dues
     public function index()
     {
@@ -180,11 +223,11 @@ class FeeCollectController extends Controller
             }
 
             if ($courseBook) {
-                $this->finalizeAdmissionIfEligible($courseBook->fresh(['student.profile', 'paymentPlan']));
+                $this->finalizeAdmissionIfEligible($courseBook->fresh(['course']));
             }
         });
 
-        return back()->with('success', 'Fee collected successfully. Pending admission will activate once payment and details are complete.');
+        return back()->with('success', 'Fee collected successfully. Admission activated automatically.');
     }
 
     // Receipt
@@ -195,65 +238,73 @@ class FeeCollectController extends Controller
         return view('institute.fee-collect.receipt', compact('user', 'fee', 'institute'));
     }
 
-    private function generateEnrollmentNo(int $iid): string
+    private function requiredAdmissionAmount(\App\Models\CourseBook $courseBook): float
     {
+        if ($courseBook->paymentPlan) {
+            return (float) ($courseBook->paymentPlan->required_fee
+                         ?? $courseBook->paymentPlan->first_payment_amount
+                         ?? 0);
+        }
+
+        $snapshotTotal = $courseBook->feeSnapshots->sum('final_amount');
+        if ($snapshotTotal > 0) {
+            return (float) $snapshotTotal;
+        }
+
+        return (float) ($courseBook->final_fee ?? 0);
+    }
+
+    private function generateEnrollmentNo(\App\Models\CourseBook $courseBook): string
+    {
+        $iid = $courseBook->institute_id;
+        $institute = Auth::guard('institute')->user()->institute
+            ?? \App\Models\Owner\Institute::find($iid);
+        $short = strtoupper(preg_replace('/[^A-Z0-9]/i', '', $institute?->short_name ?? $institute?->name ?? 'INS'));
+        $short = substr($short, 0, 8) ?: 'INS';
+
+        $courseCode = strtoupper(trim($courseBook->course_code ?? ''));
+        if (! $courseCode) {
+            $courseName = $courseBook->course?->name ?? 'COURSE';
+            $courseCode = implode('', array_map(
+                fn ($w) => strtoupper($w[0] ?? ''),
+                array_filter(explode(' ', $courseName), fn ($w) => strlen($w) > 0)
+            ));
+        }
+        $courseCode = substr($courseCode, 0, 10) ?: 'CRS';
+
+        $year = now()->year;
+
         $counter = InstituteEnrollmentCounter::where('institute_id', $iid)->lockForUpdate()->first();
         if (! $counter) {
             try {
-                InstituteEnrollmentCounter::create([
-                    'institute_id' => $iid,
-                    'last_enrollment_no' => 0,
-                ]);
-            } catch (\Throwable $e) {
-                // Another request may create this row first.
-            }
-
+                InstituteEnrollmentCounter::create(['institute_id' => $iid, 'last_enrollment_no' => 0, 'last_student_no' => 0]);
+            } catch (\Throwable $e) {}
             $counter = InstituteEnrollmentCounter::where('institute_id', $iid)->lockForUpdate()->firstOrFail();
         }
 
-        $counter->last_enrollment_no++;
-        $counter->save();
+        $counter->increment('last_enrollment_no');
 
-        $code = Auth::guard('institute')->user()->institute?->unique_id ?? 'INST';
-
-        return $code . '/ENR/' . str_pad((string) $counter->last_enrollment_no, 4, '0', STR_PAD_LEFT);
+        return $short . '/' . $courseCode . '/' . $year . '/' . str_pad((string) $counter->last_enrollment_no, 4, '0', STR_PAD_LEFT);
     }
 
-    private function requiredAdmissionAmount($courseBook): float
+    private function finalizeAdmissionIfEligible(\App\Models\CourseBook $courseBook): void
     {
-        $plan = $courseBook->paymentPlan;
-        if (! $plan) {
-            return (float) $courseBook->final_fee;
-        }
-
-        if ($plan->plan_type === 'OTP') {
-            return round((float) $plan->total_fee, 2);
-        }
-
-        return round((float) ($plan->required_fee ?: 0), 2);
-    }
-
-    private function finalizeAdmissionIfEligible($courseBook): void
-    {
-        if ($courseBook->status !== 'OPEN' || ! $courseBook->profile_completed_at) {
-            return;
-        }
-
-        if (! $courseBook->paymentPlan && (float) $courseBook->final_fee <= 0) {
+        if ($courseBook->status !== 'OPEN') {
             return;
         }
 
         $paidAmount = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)
+            ->whereNull('cancelled_at')
             ->sum(FeeCollectDetail::amountColumn());
-        $requiredAmount = $this->requiredAdmissionAmount($courseBook);
 
-        if ($paidAmount + 0.01 < $requiredAmount) {
+        if ($paidAmount <= 0) {
             return;
         }
 
+        $courseBook->loadMissing('course');
+
         if (! $courseBook->enrollment_no) {
-            $enrollmentNo = $this->generateEnrollmentNo($courseBook->institute_id);
-            $courseBook->update(['enrollment_no' => $enrollmentNo]);
+            $courseBook->update(['enrollment_no' => $this->generateEnrollmentNo($courseBook)]);
         }
 
         $courseBook->update([

@@ -1,197 +1,214 @@
 @extends('layouts.institute')
 @section('title','Pending Admissions')
-@section('page-title','Admissions')
+@section('page-title','Pending Admissions')
 
 @push('styles')
 <style>
-.adm-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px}
-.adm-tab{padding:10px 22px;font-weight:700;font-size:13px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--text-2);transition:.15s;white-space:nowrap}
-.adm-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
-.adm-section{display:none}.adm-section.active{display:block}
+/* Stats */
+.adm-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:22px; }
+@media(max-width:640px){ .adm-stats { grid-template-columns:1fr 1fr; } }
+.adm-stat { background:var(--bg-2); border:1px solid var(--border); border-radius:12px; padding:14px 18px; }
+.adm-stat-num { font-size:26px; font-weight:900; line-height:1; }
+.adm-stat-label { font-size:11px; color:var(--text-2); margin-top:4px; font-weight:600; letter-spacing:.4px; }
 
-.student-card{display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);transition:.15s}
-.student-card:last-child{border-bottom:none}
-.student-card:hover{background:var(--bg-3)}
-.stu-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:var(--bg-3);border:2px solid var(--border)}
-.stu-name{font-weight:700;font-size:14px}
-.stu-sub{font-size:12px;color:var(--text-2);margin-top:2px}
-.stu-badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+/* Filter pills */
+.adm-filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:18px; }
+.adm-pill { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer;
+            border:1.5px solid var(--border); background:var(--bg-2); color:var(--text-2);
+            text-decoration:none; transition:.12s; }
+.adm-pill:hover, .adm-pill.active { border-color:var(--accent); color:var(--accent); background:var(--accent-bg); }
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
-@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}}
-.stat-box{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:14px 18px}
-.stat-num{font-size:28px;font-weight:900}
-.stat-label{font-size:12px;color:var(--text-2);margin-top:2px}
+/* Student card */
+.adm-card { display:grid; grid-template-columns:44px 1fr auto; gap:14px; align-items:start;
+            padding:16px 20px; border-bottom:1px solid var(--border); transition:.12s; }
+.adm-card:last-child { border-bottom:none; }
+.adm-card:hover { background:var(--bg-3); }
+.adm-avatar { width:44px; height:44px; border-radius:50%; background:var(--accent);
+              display:flex; align-items:center; justify-content:center;
+              font-size:15px; font-weight:800; color:#fff; overflow:hidden; flex-shrink:0; }
+.adm-avatar img { width:100%; height:100%; object-fit:cover; }
+.adm-name { font-weight:700; font-size:14px; }
+.adm-sub { font-size:12px; color:var(--text-2); margin-top:2px; }
+
+/* Progress bar */
+.adm-progress { display:flex; align-items:center; gap:0; margin-top:10px; }
+.adm-step { display:flex; align-items:center; gap:5px; font-size:11px; font-weight:600; }
+.adm-step-dot { width:20px; height:20px; border-radius:50%; display:flex; align-items:center;
+                justify-content:center; font-size:10px; flex-shrink:0; }
+.adm-step-dot.done  { background:var(--accent); color:#fff; }
+.adm-step-dot.next  { background:#f59e0b; color:#fff; }
+.adm-step-dot.idle  { background:var(--bg-3); color:var(--text-2); border:1.5px solid var(--border); }
+.adm-step-line { width:28px; height:2px; margin: 0 2px; background:var(--border); flex-shrink:0; }
+.adm-step-line.done { background:var(--accent); }
+.adm-step-label { color:var(--text-2); white-space:nowrap; }
+.adm-step-label.done { color:var(--accent); }
+.adm-step-label.next { color:#f59e0b; }
+
+.adm-actions { display:flex; flex-direction:column; gap:6px; align-items:flex-end; flex-shrink:0; }
 </style>
 @endpush
 
 @section('content')
-@php
-  $totalOpen     = $openBooks->count();
-  $totalAdmitted = $admittedBooks->count();
-  $detailsPending = $openBooks->where('details_complete', false)->count();
-  $readyForAdmission = $openBooks->where('admission_ready', true)->count();
-@endphp
 
 {{-- Stats --}}
-<div class="stats-row">
-  <div class="stat-box">
-    <div class="stat-num">{{ $totalOpen }}</div>
-    <div class="stat-label">Seat Booked (Pending)</div>
+<div class="adm-stats">
+  <div class="adm-stat">
+    <div class="adm-stat-num">{{ $countTotal }}</div>
+    <div class="adm-stat-label">TOTAL PENDING</div>
   </div>
-  <div class="stat-box">
-    <div class="stat-num" style="color:#16a34a">{{ $totalAdmitted }}</div>
-    <div class="stat-label">Admitted Students</div>
+  <div class="adm-stat">
+    <div class="adm-stat-num" style="color:#ef4444">{{ $countDetailsPending }}</div>
+    <div class="adm-stat-label">DETAILS PENDING</div>
   </div>
-  <div class="stat-box">
-    <div class="stat-num" style="color:#dc2626">{{ $detailsPending }}</div>
-    <div class="stat-label">Details Incomplete</div>
-  </div>
-  <div class="stat-box">
-    <div class="stat-num" style="color:#d97706">{{ $readyForAdmission }}</div>
-    <div class="stat-label">Ready for Admission</div>
+  <div class="adm-stat">
+    <div class="adm-stat-num" style="color:#f59e0b">{{ $countPaymentPending }}</div>
+    <div class="adm-stat-label">PAYMENT PENDING</div>
   </div>
 </div>
 
-{{-- Tabs --}}
-<div class="adm-tabs">
-  <div class="adm-tab active" onclick="switchTab('open',this)">
-    Seat Booked
-    @if($totalOpen > 0)<span class="badge badge-warning" style="margin-left:6px">{{ $totalOpen }}</span>@endif
+{{-- Filter pills + search --}}
+<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;">
+  <div class="adm-filters" style="margin-bottom:0;flex:1;min-width:0;">
+    <a href="{{ route('institute.enrollment.pending') }}" class="adm-pill {{ !request('filter') ? 'active' : '' }}">All ({{ $countTotal }})</a>
+    <a href="{{ route('institute.enrollment.pending', ['filter'=>'details']) }}" class="adm-pill {{ request('filter')==='details' ? 'active' : '' }}">Details Pending ({{ $countDetailsPending }})</a>
+    <a href="{{ route('institute.enrollment.pending', ['filter'=>'payment']) }}" class="adm-pill {{ request('filter')==='payment' ? 'active' : '' }}">Payment Pending ({{ $countPaymentPending }})</a>
   </div>
-  <div class="adm-tab" onclick="switchTab('admitted',this)">
-    Admitted
-    @if($totalAdmitted > 0)<span class="badge badge-success" style="margin-left:6px">{{ $totalAdmitted }}</span>@endif
+  <div style="position:relative;flex-shrink:0;">
+    <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-2);pointer-events:none;"
+         width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+    <input type="text" id="pending-search" placeholder="Search name or mobile…"
+           style="padding:6px 10px 6px 30px;border:1px solid var(--border);border-radius:20px;
+                  font-size:12px;background:var(--bg-2);color:var(--text);width:220px;outline:none;">
   </div>
 </div>
 
-{{-- OPEN — Seat Booked --}}
-<div class="adm-section active" id="tab-open">
-  <div class="gt-card">
-    <div class="gt-card-header">
-      <div>
-        <div class="gt-card-title">Seat Booked — Pending Admission</div>
-        <div class="text-xs text-muted">Click "Process Admission" to review details and complete admission.</div>
-      </div>
-      <a href="{{ route('institute.enrollment.choose') }}" class="btn btn-primary btn-sm">+ New Booking</a>
+{{-- Cards --}}
+<div class="gt-card" style="padding:0;">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div class="gt-card-title" style="margin:0;">Seat Booked — Pending</div>
+    <a href="{{ route('institute.enrollment.choose') }}" class="btn btn-primary btn-sm">+ New Booking</a>
+  </div>
+
+  @php
+    $filter = request('filter');
+    $shown  = $openBooks->when($filter === 'details', fn($c) => $c->where('details_complete', false))
+                        ->when($filter === 'payment', fn($c) => $c->where('details_complete', true));
+  @endphp
+
+  @if($shown->isEmpty())
+    <div style="padding:48px;text-align:center;color:var(--text-2);">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4;margin-bottom:10px;"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M9 12l2 2 4-4"/></svg>
+      <div style="font-size:14px;font-weight:600;">No pending bookings</div>
+      <div style="font-size:12px;margin-top:4px;">All students have been admitted or there are no bookings.</div>
     </div>
-
-    @if($openBooks->isEmpty())
-      <div class="gt-empty">
-        <div class="gt-empty-title">No pending bookings</div>
-        <div class="gt-empty-sub">All bookings are either admitted or none exist yet.</div>
-      </div>
-    @else
-      @foreach($openBooks as $book)
+  @else
+    @foreach($shown as $book)
       @php
-        $photo = $book->student->profile?->photo ?? 'images/user.png';
+        $profile = $book->student?->profile;
+        $photo   = $profile?->photo;
+        $name    = $profile?->name ?? $book->student?->user_id ?? '—';
+        $initials = strtoupper(substr($name, 0, 1));
+        $stage   = $book->stage; // 1=booked only, 2=details filled
+        $daysAgo = $book->created_at?->diffInDays(now());
       @endphp
-      <div class="student-card">
-        <img src="{{ asset($photo) }}" class="stu-avatar" alt="photo"
-             onerror="this.src='{{ asset('images/user.svg') }}'">
-        <div>
-          <div class="stu-name">{{ $book->student->profile?->name ?? $book->student->user_id }}</div>
-          <div class="stu-sub">
-            {{ $book->student->mobile }}
-            @if($book->student->email) &middot; {{ $book->student->email }}@endif
-          </div>
-          <div class="stu-sub">
-            {{ $book->course?->name }}
-            @if($book->batch) &middot; {{ $book->batch->name }}@endif
-            &middot; Booked {{ $book->book_date?->format('d M Y') ?? '' }}
-          </div>
-          <div class="stu-badges">
-            <span class="badge {{ $book->booking_mode === 'quick' ? 'badge-warning' : 'badge-accent' }}">
-              {{ strtoupper($book->booking_mode) }}
-            </span>
-            @if(!$book->details_complete)
-              <span class="badge badge-danger">Details Pending</span>
-            @else
-              <span class="badge badge-success">Details Complete</span>
-            @endif
-            @if($book->admission_ready)
-              <span class="badge badge-success">Ready</span>
-            @elseif($book->paid_amount > 0)
-              <span class="badge badge-warning">Partial Payment</span>
-            @endif
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <a href="{{ route('institute.enrollment.profile', $book) }}" class="btn btn-primary btn-sm">
-            Process Admission
-          </a>
-          @if($book->paid_amount > 0)
-            <div class="text-xs mono text-muted">₹{{ number_format($book->paid_amount, 2) }} paid</div>
+      <div class="adm-card" data-search="{{ strtolower($name . ' ' . ($book->student?->mobile ?? '')) }}">
+
+        {{-- Avatar --}}
+        <div class="adm-avatar">
+          @if($photo && !in_array($photo, ['images/user.svg','images/user.png']))
+            <img src="{{ asset($photo) }}" alt="">
+          @else
+            {{ $initials }}
           @endif
         </div>
-      </div>
-      @endforeach
-    @endif
-  </div>
-</div>
 
-{{-- RUN — Admitted --}}
-<div class="adm-section" id="tab-admitted">
-  <div class="gt-card">
-    <div class="gt-card-header">
-      <div>
-        <div class="gt-card-title">Admitted Students</div>
-        <div class="text-xs text-muted">Enrollment confirmed students. Click "Collect Fee" to manage payments.</div>
-      </div>
-    </div>
-
-    @if($admittedBooks->isEmpty())
-      <div class="gt-empty">
-        <div class="gt-empty-title">No admitted students yet</div>
-        <div class="gt-empty-sub">Process pending bookings to see admitted students here.</div>
-      </div>
-    @else
-      @foreach($admittedBooks as $book)
-      @php
-        $photo = $book->student->profile?->photo ?? 'images/user.png';
-        $due   = max(round($book->final_fee - $book->paid_amount, 2), 0);
-      @endphp
-      <div class="student-card">
-        <img src="{{ asset($photo) }}" class="stu-avatar" alt="photo"
-             onerror="this.src='{{ asset('images/user.svg') }}'">
+        {{-- Info --}}
         <div>
-          <div class="stu-name">{{ $book->student->profile?->name ?? $book->student->user_id }}</div>
-          <div class="stu-sub mono" style="color:var(--primary)">{{ $book->enrollment_no ?? '—' }}</div>
-          <div class="stu-sub">
-            {{ $book->course?->name }}
-            &middot; {{ $book->plan_code ?? 'N/A' }}
+          <div class="adm-name">{{ $name }}</div>
+          <div class="adm-sub">
+            {{ $book->student?->mobile }}
+            &nbsp;·&nbsp; {{ $book->course?->name ?? '—' }}
+            @if($book->batch) &nbsp;·&nbsp; {{ $book->batch->name }} @endif
           </div>
-          <div class="stu-badges">
-            <span class="badge badge-success">ADMITTED</span>
-            @if($due > 0)
-              <span class="badge badge-danger">Due ₹{{ number_format($due, 2) }}</span>
-            @else
-              <span class="badge badge-success">Fully Paid</span>
-            @endif
+          <div class="adm-sub">
+            Booked {{ $book->book_date?->format('d M Y') }}
+            @if($daysAgo > 0) &nbsp;·&nbsp; {{ $daysAgo }} din pehle @endif
+            &nbsp;·&nbsp;
+            <span style="font-size:11px;font-weight:600;color:{{ $book->booking_mode==='quick' ? '#f59e0b' : 'var(--accent)' }}">
+              {{ strtoupper($book->booking_mode) }}
+            </span>
+          </div>
+
+          {{-- 4-Step Progress --}}
+          <div class="adm-progress">
+            {{-- Step 1: Booked --}}
+            <div class="adm-step">
+              <div class="adm-step-dot done">✓</div>
+              <span class="adm-step-label done">Booked</span>
+            </div>
+            <div class="adm-step-line done"></div>
+
+            {{-- Step 2: Details --}}
+            <div class="adm-step">
+              <div class="adm-step-dot {{ $stage >= 2 ? 'done' : 'next' }}">{{ $stage >= 2 ? '✓' : '2' }}</div>
+              <span class="adm-step-label {{ $stage >= 2 ? 'done' : 'next' }}">Details</span>
+            </div>
+            <div class="adm-step-line {{ $stage >= 2 ? 'done' : '' }}"></div>
+
+            {{-- Step 3: Payment --}}
+            <div class="adm-step">
+              <div class="adm-step-dot {{ $stage >= 2 ? 'next' : 'idle' }}">{{ $stage >= 2 ? '3' : '3' }}</div>
+              <span class="adm-step-label {{ $stage >= 2 ? 'next' : '' }}">Payment</span>
+            </div>
+            <div class="adm-step-line"></div>
+
+            {{-- Step 4: Admitted --}}
+            <div class="adm-step">
+              <div class="adm-step-dot idle">4</div>
+              <span class="adm-step-label">Admitted</span>
+            </div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-          <a href="{{ route('institute.enrollment.payment-complete', $book) }}" class="btn btn-primary btn-sm">
-            Collect Fee
-          </a>
-          <a href="{{ route('institute.students.show', $book->student) }}" class="btn btn-outline btn-sm">
-            Profile
-          </a>
+
+        {{-- Actions --}}
+        <div class="adm-actions">
+          @if($stage === 1)
+            <a href="{{ route('institute.enrollment.profile', $book) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
+              Fill Details →
+            </a>
+            <span style="font-size:11px;color:#ef4444;font-weight:600;">Details pending</span>
+          @else
+            <a href="{{ route('institute.fee-collect.show', $book->student) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
+              Collect Fee →
+            </a>
+            <span style="font-size:11px;color:#f59e0b;font-weight:600;">Payment pending</span>
+          @endif
         </div>
+
       </div>
-      @endforeach
-    @endif
-  </div>
+    @endforeach
+  @endif
 </div>
+
 @endsection
 
 @push('scripts')
 <script>
-function switchTab(id, el) {
-  document.querySelectorAll('.adm-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.adm-section').forEach(s => s.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('tab-' + id).classList.add('active');
-}
+(function () {
+  const input = document.getElementById('pending-search');
+  if (!input) return;
+  let timer;
+  input.addEventListener('keyup', function () {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const q = input.value.trim().toLowerCase();
+      document.querySelectorAll('.adm-card[data-search]').forEach(card => {
+        card.style.display = !q || card.dataset.search.includes(q) ? '' : 'none';
+      });
+    }, 300);
+  });
+})();
 </script>
 @endpush

@@ -33,15 +33,12 @@
     {{-- Gaurangi logo --}}
     <div class="gt-login-logo">
       <div class="gt-login-logo-row">
-        <div class="logo-icon-box">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v4l3 3"/>
-          </svg>
-        </div>
+        <img src="{{ asset('images/gt-icon.png') }}" alt="GT" class="gt-logo-img"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="logo-icon-box" style="display:none;">GT</div>
         <div>
-          <div class="logo-wordmark">Gaurangi</div>
-          <div class="logo-tagline">Technologies</div>
+          <!-- <div class="logo-wordmark">Gaurangi</div>
+          <div class="logo-tagline">Technologies</div> -->
         </div>
       </div>
     </div>

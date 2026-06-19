@@ -14,8 +14,9 @@ class Institute extends Model
 
     protected $fillable = [
         'unique_id', 'name', 'short_name', 'email', 'mobile',
-        'owner_name', 'owner_mobile', 'logo', 'address', 'state',
-        'pin_code', 'website', 'type', 'status', 'slug', 'emergency_otp_secret',
+        'owner_name', 'owner_mobile', 'logo', 'signature', 'use_signature', 'stamp', 'use_stamp',
+        'address', 'state', 'district', 'pin_code', 'website', 'seat_booking_validity_days',
+        'type', 'status', 'slug', 'emergency_otp_secret',
     ];
 
     public function todayEmergencyCode(): string

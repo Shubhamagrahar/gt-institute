@@ -141,23 +141,15 @@
 
 {{-- ===== WALLET MODE FIELDS ===== --}}
 <div id="wallet-fields" style="{{ $selectedMgmt !== 'wallet' ? 'display:none;' : '' }}">
-  <div class="gt-form-grid-2" style="margin-top:12px;">
-    <div class="gt-form-group">
-      <label class="gt-label">Per Admission Charge (₹) <span style="color:var(--danger)">*</span></label>
-      <input type="number" name="admission_charge" id="admission_charge" class="gt-input"
-        value="{{ old('admission_charge', $franchise->admission_charge ?? 0) }}" min="0" step="0.01">
-      <div class="text-xs text-muted" style="margin-top:4px;">Deducted from wallet on each new admission</div>
-      @error('admission_charge')<div class="gt-error">{{ $message }}</div>@enderror
-    </div>
-    <div class="gt-form-group">
-      <label class="gt-label">Per Certificate Charge (₹) <span style="color:var(--danger)">*</span></label>
-      <input type="number" name="certificate_charge" id="certificate_charge" class="gt-input"
-        value="{{ old('certificate_charge', $franchise->certificate_charge ?? 0) }}" min="0" step="0.01">
-      <div class="text-xs text-muted" style="margin-top:4px;">Deducted from wallet on each certificate generation</div>
-      @error('certificate_charge')<div class="gt-error">{{ $message }}</div>@enderror
-    </div>
+
+  {{-- Info: course charges are set on the next step --}}
+  <div class="wallet-charges-info" style="margin-top:14px;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Course-wise admission &amp; certificate charges will be set on the <strong>next step</strong>.
   </div>
-  <div class="gt-form-grid-3" style="margin-top:4px;">
+
+  {{-- ── WALLET SETTINGS ── --}}
+  <div class="gt-form-grid-3" style="margin-top:14px;">
     <div class="gt-form-group">
       <label class="gt-label">Low Wallet Alert (₹)</label>
       <input type="number" name="low_wallet_alert" id="low_wallet_alert" class="gt-input"
@@ -201,8 +193,6 @@
   </div>
   {{-- Hidden fields for independent mode so validation passes --}}
   <input type="hidden" name="wallet_enabled" value="0">
-  <input type="hidden" name="admission_charge" value="0">
-  <input type="hidden" name="certificate_charge" value="0">
   <input type="hidden" name="low_wallet_alert" value="0">
   <input type="hidden" name="opening_balance" value="0">
 </div>
@@ -287,6 +277,161 @@
   border-radius: var(--radius-sm);
   padding: 12px 14px;
 }
+.wallet-charges-info {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12.5px; color: var(--text-2);
+  background: var(--bg-3); border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm); padding: 9px 13px;
+}
+
+/* ── Charge Rules UI ─────────────────────────────────────── */
+.cr-wrap { display: flex; flex-direction: column; gap: 0; }
+
+.cr-section {
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.cr-section + .cr-section { margin-top: 10px; }
+
+.cr-section-hd {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-3);
+  border-bottom: 1px solid var(--border-2);
+}
+.cr-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.cr-section-sub { font-size: 11.5px; color: var(--text-3); }
+
+.cr-override-badge {
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(138,115,245,.18);
+  color: rgba(138,115,245,.95);
+  border: 1px solid rgba(138,115,245,.3);
+  border-radius: 20px;
+  padding: 1px 7px;
+  letter-spacing: .3px;
+}
+
+.cr-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border: 1px solid rgba(138,115,245,.35);
+  border-radius: var(--radius-sm);
+  padding: 5px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.cr-add-btn:hover { background: rgba(138,115,245,.2); border-color: var(--accent); }
+
+.cr-table-wrap { overflow-x: auto; }
+
+.cr-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.cr-table thead th {
+  background: var(--bg-2);
+  color: var(--text-3);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-2);
+}
+.cr-table tbody tr { border-bottom: 1px solid var(--border-1); }
+.cr-table tbody tr:last-child { border-bottom: none; }
+.cr-table tbody tr:hover { background: var(--bg-3); }
+.cr-table td { padding: 8px 10px; vertical-align: middle; }
+
+.cr-table .cr-num-input {
+  width: 90px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-size: 13px;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color .15s;
+}
+.cr-table .cr-num-input:focus { border-color: var(--accent); }
+.cr-table .cr-dur-cell { display: flex; align-items: center; gap: 6px; color: var(--text-3); font-size: 12px; }
+.cr-table .cr-dur-cell .cr-num-input { width: 62px; }
+
+.cr-table .cr-course-select {
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm);
+  color: var(--text-1);
+  font-size: 13px;
+  padding: 5px 8px;
+  outline: none;
+  min-width: 160px;
+  transition: border-color .15s;
+}
+.cr-table .cr-course-select:focus { border-color: var(--accent); }
+
+.cr-del-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(239,68,68,.25);
+  background: rgba(239,68,68,.08);
+  color: rgba(239,68,68,.7);
+  cursor: pointer;
+  transition: all .15s;
+}
+.cr-del-btn:hover { background: rgba(239,68,68,.2); border-color: rgba(239,68,68,.5); color: #ef4444; }
+
+.cr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 14px;
+  color: var(--text-3);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.cr-priority-note {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-3);
+  background: var(--bg-3);
+  border: 1px solid var(--border-1);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  margin-top: 10px;
+}
+.cr-priority-note strong { color: var(--text-2); }
 </style>
 @endpush
 
@@ -374,6 +519,155 @@
   });
 
   syncMgmtType();
+})();
+</script>
+
+{{-- ── Charge Rules Script ─────────────────────────────── --}}
+<script>
+(function () {
+  // Courses list – populated from controller; fallback to empty
+  // Each entry: { id, name, course_short_name, duration (months) }
+  const COURSES = @json(($courses ?? collect())->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'duration' => $c->duration]));
+
+  const durTbody   = document.getElementById('dur-tbody');
+  const courseTbody = document.getElementById('course-tbody');
+  const durEmpty   = document.getElementById('dur-empty');
+  const courseEmpty = document.getElementById('course-empty');
+  const durJson    = document.getElementById('dur-json');
+  const courseJson = document.getElementById('course-json');
+
+  // ─── Sync hidden JSON fields before form submit ───────────
+  function syncJson() {
+    const durRows = [];
+    durTbody.querySelectorAll('tr[data-dur-row]').forEach(tr => {
+      durRows.push({
+        from:        parseInt(tr.querySelector('[data-field=from]').value)   || 0,
+        to:          parseInt(tr.querySelector('[data-field=to]').value)     || 0,
+        admission:   parseFloat(tr.querySelector('[data-field=adm]').value)  || 0,
+        certificate: parseFloat(tr.querySelector('[data-field=cert]').value) || 0,
+      });
+    });
+    durJson.value = JSON.stringify(durRows);
+
+    const courseRows = [];
+    courseTbody.querySelectorAll('tr[data-course-row]').forEach(tr => {
+      const sel = tr.querySelector('[data-field=course]');
+      courseRows.push({
+        course_id:   sel.value,
+        course_name: sel.options[sel.selectedIndex]?.text || '',
+        admission:   parseFloat(tr.querySelector('[data-field=adm]').value)  || 0,
+        certificate: parseFloat(tr.querySelector('[data-field=cert]').value) || 0,
+      });
+    });
+    courseJson.value = JSON.stringify(courseRows);
+  }
+
+  // ─── Duration row ──────────────────────────────────────────
+  function addDurationRow(data) {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-dur-row', '1');
+    tr.innerHTML = `
+      <td>
+        <div class="cr-dur-cell">
+          <input type="number" class="cr-num-input" data-field="from" min="1" max="60"
+                 value="${data?.from || 1}" placeholder="1"> months
+        </div>
+      </td>
+      <td>
+        <div class="cr-dur-cell">
+          <input type="number" class="cr-num-input" data-field="to" min="1" max="60"
+                 value="${data?.to || 3}" placeholder="3"> months
+        </div>
+      </td>
+      <td><input type="number" class="cr-num-input" data-field="adm"  min="0" step="0.01"
+                 value="${data?.admission || ''}" placeholder="0.00"></td>
+      <td><input type="number" class="cr-num-input" data-field="cert" min="0" step="0.01"
+                 value="${data?.certificate || ''}" placeholder="0.00"></td>
+      <td>
+        <button type="button" class="cr-del-btn" title="Remove">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </td>`;
+    tr.querySelector('.cr-del-btn').addEventListener('click', () => { tr.remove(); refreshDurEmpty(); syncJson(); });
+    tr.querySelectorAll('input').forEach(i => i.addEventListener('input', syncJson));
+    durTbody.appendChild(tr);
+    refreshDurEmpty();
+    syncJson();
+  }
+
+  function refreshDurEmpty() {
+    const has = durTbody.querySelectorAll('tr').length > 0;
+    durEmpty.style.display   = has ? 'none' : '';
+    document.getElementById('dur-table').style.display = has ? '' : 'none';
+  }
+
+  // ─── Course row ────────────────────────────────────────────
+  function buildCourseOptions(selected) {
+    let html = '<option value="">-- Select Course --</option>';
+    if (COURSES.length) {
+      COURSES.forEach(c => {
+        const sel = (String(c.id) === String(selected)) ? 'selected' : '';
+        const dur = c.duration ? ` (${c.duration} months)` : '';
+        html += `<option value="${c.id}" ${sel}>${c.name}${dur}</option>`;
+      });
+    } else {
+      html += '<option value="" disabled>(No courses loaded)</option>';
+    }
+    return html;
+  }
+
+  function addCourseRow(data) {
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-course-row', '1');
+    tr.innerHTML = `
+      <td>
+        <select class="cr-course-select" data-field="course">${buildCourseOptions(data?.course_id)}</select>
+      </td>
+      <td><input type="number" class="cr-num-input" data-field="adm"  min="0" step="0.01"
+                 value="${data?.admission || ''}" placeholder="0.00"></td>
+      <td><input type="number" class="cr-num-input" data-field="cert" min="0" step="0.01"
+                 value="${data?.certificate || ''}" placeholder="0.00"></td>
+      <td>
+        <button type="button" class="cr-del-btn" title="Remove">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </td>`;
+    tr.querySelector('.cr-del-btn').addEventListener('click', () => { tr.remove(); refreshCourseEmpty(); syncJson(); });
+    tr.querySelectorAll('input, select').forEach(i => i.addEventListener('input', syncJson));
+    courseTbody.appendChild(tr);
+    refreshCourseEmpty();
+    syncJson();
+  }
+
+  function refreshCourseEmpty() {
+    const has = courseTbody.querySelectorAll('tr').length > 0;
+    courseEmpty.style.display = has ? 'none' : '';
+    document.getElementById('course-table').style.display = has ? '' : 'none';
+  }
+
+  // ─── Buttons ───────────────────────────────────────────────
+  document.getElementById('btn-add-dur').addEventListener('click', () => addDurationRow());
+  document.getElementById('btn-add-course').addEventListener('click', () => addCourseRow());
+
+  // ─── Load existing data (edit mode) ───────────────────────
+  @if(isset($franchise))
+  try {
+    const existingDur = @json($franchise->duration_slabs ?? []);
+    existingDur.forEach(r => addDurationRow(r));
+  } catch(e) {}
+  try {
+    const existingCourse = @json($franchise->course_charges ?? []);
+    existingCourse.forEach(r => addCourseRow(r));
+  } catch(e) {}
+  @endif
+
+  // ─── Initial empty-state ──────────────────────────────────
+  refreshDurEmpty();
+  refreshCourseEmpty();
+
+  // ─── Sync on form submit ──────────────────────────────────
+  const form = document.querySelector('form');
+  if (form) form.addEventListener('submit', syncJson);
 })();
 </script>
 @endpush

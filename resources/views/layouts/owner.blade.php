@@ -18,11 +18,10 @@
 
     {{-- Brand --}}
     <div class="gt-sidebar-brand">
-      <div class="brand-icon">GT</div>
-      <div>
-        <div class="brand-text">Gaurangi</div>
-        <div class="brand-sub">Technologies</div>
-      </div>
+      <img src="{{ asset('images/gt-icon.png') }}" alt="Gaurangi Technologies" class="brand-logo-img"
+           style="height:36px;"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="brand-icon" style="display:none;">GT</div>
     </div>
 
     {{-- Navigation --}}

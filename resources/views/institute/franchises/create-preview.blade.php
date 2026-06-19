@@ -11,20 +11,24 @@
   $levelFee = (float) ($level['level_fee'] ?? 0);
   $mgmt     = $data['management_type'] ?? 'wallet';
   $isWallet = $mgmt === 'wallet';
-
-  $paymentDue  = $isWallet ? (float) ($data['opening_balance'] ?? 0) : $levelFee;
-  $paymentNote = $isWallet
-    ? 'Opening wallet balance (credited immediately on creation)'
-    : 'One-time onboarding fee payable to ' . auth('institute')->user()->institute->name;
+  $instituteName = auth('institute')->user()->institute->name ?? 'Institute';
 @endphp
 
 {{-- Step progress --}}
 <div class="frn-wizard">
   <div class="frn-wizard-step done"><span class="frn-step-dot">✓</span><span class="frn-step-lbl">Franchise Details</span></div>
   <div class="frn-wizard-line done"></div>
+  @if($isWallet)
+  <div class="frn-wizard-step done"><span class="frn-step-dot">✓</span><span class="frn-step-lbl">Duration Charges</span></div>
+  <div class="frn-wizard-line done"></div>
+  <div class="frn-wizard-step active"><span class="frn-step-dot">3</span><span class="frn-step-lbl">Review & Payment</span></div>
+  <div class="frn-wizard-line"></div>
+  <div class="frn-wizard-step"><span class="frn-step-dot">4</span><span class="frn-step-lbl">Wallet Ledger</span></div>
+  @else
   <div class="frn-wizard-step active"><span class="frn-step-dot">2</span><span class="frn-step-lbl">Review & Payment</span></div>
   <div class="frn-wizard-line"></div>
-  <div class="frn-wizard-step"><span class="frn-step-dot">3</span><span class="frn-step-lbl">{{ $isWallet ? 'Wallet Ledger' : 'Fee Collection' }}</span></div>
+  <div class="frn-wizard-step"><span class="frn-step-dot">3</span><span class="frn-step-lbl">Fee Collection</span></div>
+  @endif
 </div>
 
 <div class="frn-preview-layout">
@@ -79,14 +83,6 @@
         @endif
         @if($isWallet)
           <div class="frn-detail-item">
-            <span class="frn-detail-label">Per Admission Charge</span>
-            <span class="frn-detail-value mono">₹{{ number_format($data['admission_charge'] ?? 0, 2) }}</span>
-          </div>
-          <div class="frn-detail-item">
-            <span class="frn-detail-label">Per Certificate Charge</span>
-            <span class="frn-detail-value mono">₹{{ number_format($data['certificate_charge'] ?? 0, 2) }}</span>
-          </div>
-          <div class="frn-detail-item">
             <span class="frn-detail-label">Low Wallet Alert</span>
             <span class="frn-detail-value mono">₹{{ number_format($data['low_wallet_alert'] ?? 0, 2) }}</span>
           </div>
@@ -94,34 +90,91 @@
       </div>
     </div>
 
-    {{-- Payment Summary Card --}}
-    <div class="gt-card frn-payment-card">
+    {{-- Duration Charges Summary (wallet only) --}}
+    @if($isWallet)
+    <div class="gt-card frn-payment-card" style="margin-top:16px;">
+      <div class="gt-card-header" style="border-bottom:1px solid var(--border-1); padding-bottom:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
+        <div class="gt-card-title">Duration Charges</div>
+        <a href="{{ route('institute.franchises.charges') }}" style="font-size:12px; color:var(--accent);">Edit</a>
+      </div>
+      @php $durationCharges = array_values($data['_duration_charges'] ?? []); @endphp
+      @if(count($durationCharges))
+        <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
+          <thead>
+            <tr>
+              <th style="text-align:left; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Duration</th>
+              <th style="text-align:right; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Admission</th>
+              <th style="text-align:right; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Certificate</th>
+            </tr>
+          </thead>
+          <tbody>
+            @foreach($durationCharges as $dc)
+            <tr>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); color:var(--text-1);">
+                <span style="font-size:11.5px; font-weight:700; background:rgba(138,115,245,.12); color:rgba(138,115,245,.9); border:1px solid rgba(138,115,245,.25); border-radius:20px; padding:2px 9px;">
+                  {{ $dc['duration'] }} month{{ $dc['duration'] > 1 ? 's' : '' }}
+                </span>
+              </td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:right; color:var(--text-1);" class="mono">₹{{ number_format($dc['admission_charge'], 2) }}</td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:right; color:var(--text-1);" class="mono">₹{{ number_format($dc['certificate_charge'], 2) }}</td>
+            </tr>
+            @endforeach
+          </tbody>
+        </table>
+        <div style="font-size:11.5px; color:var(--text-3); margin-top:10px;">
+          These charges will be applied to all courses of the matching duration.
+        </div>
+      @else
+        <div style="font-size:12px; color:var(--text-3); text-align:center; padding:14px 0;">
+          No duration charges set — ₹0 will be deducted per admission/certificate.
+        </div>
+      @endif
+    </div>
+    @endif
+
+    {{-- Joining Fee Card (applies to ALL modes) --}}
+    <div class="gt-card frn-payment-card" style="margin-top:16px;">
       <div class="gt-card-header" style="border-bottom:1px solid var(--border-1); padding-bottom:12px; margin-bottom:16px;">
-        <div class="gt-card-title">{{ $isWallet ? 'Wallet Opening Balance' : 'Onboarding Fee' }}</div>
+        <div class="gt-card-title">Franchise Joining Fee</div>
       </div>
 
       <div class="frn-pay-table">
-        @if($isWallet)
-          <div class="frn-pay-row">
-            <span>Opening wallet balance</span>
-            <span class="mono">₹{{ number_format((float)($data['opening_balance'] ?? 0), 2) }}</span>
-          </div>
-        @else
-          <div class="frn-pay-row">
-            <span>Level onboarding fee — {{ $level['name'] ?? '' }}</span>
-            <span class="mono">₹{{ number_format($levelFee, 2) }}</span>
-          </div>
-        @endif
+        <div class="frn-pay-row">
+          <span>Level — {{ $level['name'] ?? '—' }}</span>
+          <span class="mono">₹{{ number_format($levelFee, 2) }}</span>
+        </div>
         <div class="frn-pay-row frn-pay-total">
-          <span class="fw-600">{{ $isWallet ? 'Amount to Credit' : 'Total Due from Franchise' }}</span>
-          <span class="mono fw-600" style="font-size:17px; color:var(--accent);">₹{{ number_format($paymentDue, 2) }}</span>
+          <span class="fw-600">Total Due from Franchise</span>
+          <span class="mono fw-600" style="font-size:17px; color:var(--accent);">₹{{ number_format($levelFee, 2) }}</span>
         </div>
       </div>
 
-      <div class="frn-pay-note {{ $isWallet ? 'frn-pay-note-blue' : 'frn-pay-note-amber' }}">
-        {{ $paymentNote }}
+      <div class="frn-pay-note frn-pay-note-amber">
+        @if($levelFee > 0)
+          Payable by franchise to {{ $instituteName }}. Collect via the fee collection page after creation.
+        @else
+          No joining fee for this level.
+        @endif
       </div>
     </div>
+
+    {{-- Operational Wallet (wallet mode only) --}}
+    @if($isWallet)
+    <div class="gt-card frn-payment-card" style="margin-top:12px;">
+      <div class="gt-card-header" style="border-bottom:1px solid var(--border-1); padding-bottom:12px; margin-bottom:16px;">
+        <div class="gt-card-title">Operational Wallet</div>
+      </div>
+      <div class="frn-pay-table">
+        <div class="frn-pay-row">
+          <span>Opening wallet balance</span>
+          <span class="mono">₹{{ number_format((float)($data['opening_balance'] ?? 0), 2) }}</span>
+        </div>
+      </div>
+      <div class="frn-pay-note frn-pay-note-blue">
+        Credited to franchise wallet immediately on creation. Used for per-admission &amp; certificate deductions.
+      </div>
+    </div>
+    @endif
 
   </div>{{-- /left --}}
 
@@ -136,28 +189,27 @@
       </div>
 
       <div class="frn-confirm-amount-box">
-        <div class="frn-confirm-amount-label">
-          {{ $isWallet ? 'Opening Balance' : 'Fee Due' }}
+        <div class="frn-confirm-amount-label">Joining Fee Due</div>
+        <div class="frn-confirm-amount-value">₹{{ number_format($levelFee, 2) }}</div>
+        <div class="frn-confirm-amount-sub">
+          {{ $levelFee > 0 ? 'Collect via fee page after creation' : 'No joining fee for this level' }}
         </div>
-        <div class="frn-confirm-amount-value">₹{{ number_format($paymentDue, 2) }}</div>
-        @if($paymentDue <= 0)
-          <div class="frn-confirm-amount-sub">No payment required</div>
-        @elseif($isWallet)
-          <div class="frn-confirm-amount-sub">Credited to wallet on creation</div>
-        @else
-          <div class="frn-confirm-amount-sub">Collect after creation</div>
-        @endif
       </div>
 
       <div class="frn-confirm-checklist">
         <div class="frn-check-item">✓ Franchise account created</div>
         <div class="frn-check-item">✓ Login credentials emailed</div>
-        @if($isWallet && $paymentDue > 0)
-          <div class="frn-check-item">✓ ₹{{ number_format($paymentDue, 2) }} opening balance credited</div>
-        @elseif(!$isWallet && $paymentDue > 0)
-          <div class="frn-check-item pending-check">→ Fee collection recorded as due</div>
+        @if($isWallet)
+          <div class="frn-check-item">✓ Operational wallet activated</div>
+          @if((float)($data['opening_balance'] ?? 0) > 0)
+            <div class="frn-check-item">✓ ₹{{ number_format((float)($data['opening_balance'] ?? 0), 2) }} opening balance credited</div>
+          @endif
+        @else
+          <div class="frn-check-item">✓ Independent access granted</div>
         @endif
-        <div class="frn-check-item">✓ {{ $isWallet ? 'Wallet system activated' : 'Independent access granted' }}</div>
+        @if($levelFee > 0)
+          <div class="frn-check-item pending-check">→ Joining fee ₹{{ number_format($levelFee, 2) }} pending collection</div>
+        @endif
       </div>
 
       <form method="POST" action="{{ route('institute.franchises.confirm') }}">
@@ -167,7 +219,9 @@
         </button>
       </form>
 
-      <a href="{{ route('institute.franchises.create') }}" class="frn-back-link">← Go back and edit details</a>
+      <a href="{{ $isWallet ? route('institute.franchises.charges') : route('institute.franchises.create') }}" class="frn-back-link">
+        ← {{ $isWallet ? 'Go back and edit charges' : 'Go back and edit details' }}
+      </a>
     </div>
   </div>
 

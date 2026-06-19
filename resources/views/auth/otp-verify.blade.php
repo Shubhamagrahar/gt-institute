@@ -79,15 +79,12 @@
     {{-- Logo --}}
     <div class="gt-login-logo">
       <div class="gt-login-logo-row">
-        <div class="logo-icon-box">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v4l3 3"/>
-          </svg>
-        </div>
+        <img src="{{ asset('images/gt-icon.png') }}" alt="GT" class="gt-logo-img"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="logo-icon-box" style="display:none;">GT</div>
         <div>
-          <div class="logo-wordmark">Gaurangi</div>
-          <div class="logo-tagline">Technologies</div>
+          <!-- <div class="logo-wordmark">Gaurangi</div>
+          <div class="logo-tagline">Technologies</div> -->
         </div>
       </div>
     </div>
@@ -138,11 +135,15 @@
         @endfor
       </div>
 
-      {{-- Submit --}}
-      <button type="submit" class="btn btn-primary w-full" style="margin-top:20px;" id="verify-btn" disabled>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        Verify &amp; Sign In
-      </button>
+      {{-- Submit button hidden; form auto-submits on last digit --}}
+      <button type="submit" id="verify-btn" style="display:none;" aria-hidden="true"></button>
+
+      {{-- Verifying indicator (shown during auto-submit) --}}
+      <div id="verifying-msg" style="display:none;text-align:center;margin-top:20px;color:rgba(138,115,245,.85);font-size:14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:6px;animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10" stroke-dasharray="31 31" stroke-dashoffset="0"/></svg>
+        Verifying…
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
     </form>
 
     <div class="resend-row">
@@ -171,8 +172,12 @@
   function sync() {
     const val = digits.map(d => d.value).join('');
     hidden.value = val;
-    btn.disabled = val.length < 6;
     digits.forEach(d => d.classList.toggle('filled', d.value !== ''));
+    if (val.length === 6) {
+      digits.forEach(d => d.disabled = true);
+      document.getElementById('verifying-msg').style.display = 'block';
+      document.getElementById('otp-form').submit();
+    }
   }
 
   digits.forEach((el, idx) => {
@@ -201,11 +206,6 @@
       digits[next].focus();
       sync();
     });
-  });
-
-  // Auto-submit when all 6 digits are filled
-  document.getElementById('otp-form').addEventListener('submit', function () {
-    sync();
   });
 
   digits[0].focus();

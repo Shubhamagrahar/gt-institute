@@ -1,228 +1,394 @@
 @extends('layouts.institute')
 @section('title','Dashboard')
-@section('page-title','Dashboard')
 @section('content')
 
-{{-- Welcome Banner --}}
-<div class="gt-welcome-banner">
-  <div style="z-index:1;">
-    <div class="gt-welcome-title">Welcome back 👋</div>
-    <div class="gt-welcome-sub">{{ auth()->user()->institute?->name ?? 'Institute' }} &nbsp;·&nbsp; {{ now()->format('l, d M Y') }}</div>
+{{-- ── Page Header ─────────────────────────────────────────────────────── --}}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
+  <div>
+    <div style="font-size:18px;font-weight:700;color:var(--text);line-height:1.2;">
+      {{ $institute->name }}
+    </div>
+    <div style="font-size:12.5px;color:var(--text-2);margin-top:3px;">
+      {{ now()->format('l, d F Y') }}
+      &nbsp;&middot;&nbsp;
+      <span style="color:var(--accent);font-weight:500;">{{ now()->format('F Y') }} Overview</span>
+    </div>
   </div>
-  <div class="gt-welcome-actions">
-    <a href="{{ route('institute.students.create') }}" class="btn-banner">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+  <div style="display:flex;gap:8px;">
+    <a href="{{ route('institute.quick-pay') }}" class="btn btn-outline btn-sm">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Quick Pay
+    </a>
+    <a href="{{ route('institute.enrollment.choose') }}" class="btn btn-primary btn-sm">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
       New Admission
     </a>
-    <a href="{{ route('institute.fee.index') }}" class="btn-banner">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Fee Dues
-    </a>
   </div>
 </div>
 
-{{-- Stats --}}
-<div class="gt-stats" style="grid-template-columns:repeat(auto-fit,minmax(155px,1fr));">
+{{-- ── Today's Follow-up Alert ─────────────────────────────────────────── --}}
+@if($enquiryStats['enquiryDueToday'] > 0 || $enquiryStats['enquiryOverdue'] > 0)
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;
+            background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;
+            padding:12px 18px;margin-bottom:16px;flex-wrap:wrap;">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div style="width:36px;height:36px;border-radius:9px;background:#f59e0b;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#92400e;">
+        @if($enquiryStats['enquiryDueToday'] > 0)
+          {{ $enquiryStats['enquiryDueToday'] }} follow-up{{ $enquiryStats['enquiryDueToday'] > 1 ? 's' : '' }} due today
+          @if($enquiryStats['enquiryOverdue'] > 0) &nbsp;&middot;&nbsp; @endif
+        @endif
+        @if($enquiryStats['enquiryOverdue'] > 0)
+          <span style="color:#dc2626;">{{ $enquiryStats['enquiryOverdue'] }} overdue</span>
+        @endif
+      </div>
+      <div style="font-size:11.5px;color:#a16207;margin-top:2px;">
+        Review and call your pending leads before the day ends.
+      </div>
+    </div>
+  </div>
+  <a href="{{ route('institute.enquiries.index', ['tab'=>'due']) }}"
+     style="font-size:12px;font-weight:700;color:#92400e;border:1.5px solid #f59e0b;
+            border-radius:8px;padding:6px 14px;white-space:nowrap;text-decoration:none;
+            background:#fef3c7;">
+    View Follow-ups &rarr;
+  </a>
+</div>
+@endif
+
+{{-- ── Primary Stats Row ───────────────────────────────────────────────── --}}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
+
+  {{-- Total Students --}}
   <div class="gt-stat">
     <div class="gt-stat-icon purple">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
-    <div>
+    <div style="min-width:0;">
       <div class="gt-stat-value">{{ $stats['total_students'] }}</div>
-      <div class="gt-stat-label">Enrolled</div>
-      <div class="gt-stat-sub">This session</div>
+      <div class="gt-stat-label">Total Students</div>
+      @if($stats['new_students_month'] > 0)
+        <div style="font-size:11px;color:var(--success);margin-top:2px;font-weight:500;">
+          +{{ $stats['new_students_month'] }} this month
+        </div>
+      @else
+        <div class="gt-stat-sub">All sessions</div>
+      @endif
     </div>
   </div>
-  <div class="gt-stat">
-    <div class="gt-stat-icon red">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-    </div>
-    <div>
-      <div class="gt-stat-value mono" style="font-size:17px;">₹{{ number_format($stats['total_fee_due'] ?? 0, 0) }}</div>
-      <div class="gt-stat-label">Total Due</div>
-      <div class="gt-stat-sub">Pending fees</div>
-    </div>
-  </div>
+
+  {{-- This Month Collection --}}
   <div class="gt-stat">
     <div class="gt-stat-icon green">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     </div>
-    <div>
-      <div class="gt-stat-value mono" style="font-size:17px;">₹{{ number_format($stats['student_wallet_balance'] ?? 0, 0) }}</div>
-      <div class="gt-stat-label">Student Wallet</div>
-      <div class="gt-stat-sub">Institute earnings balance</div>
+    <div style="min-width:0;">
+      <div class="gt-stat-value mono" style="font-size:16px;">₹{{ number_format($stats['fee_this_month'],0) }}</div>
+      <div class="gt-stat-label">This Month</div>
+      @if($stats['month_growth'] !== null)
+        <div style="font-size:11px;font-weight:500;margin-top:2px;color:{{ $stats['month_growth'] >= 0 ? 'var(--success)' : 'var(--danger)' }};">
+          {{ $stats['month_growth'] >= 0 ? '+' : '' }}{{ $stats['month_growth'] }}% vs last month
+        </div>
+      @else
+        <div class="gt-stat-sub">{{ now()->format('M Y') }}</div>
+      @endif
     </div>
   </div>
+
+  {{-- Today's Collection --}}
   <div class="gt-stat">
     <div class="gt-stat-icon teal">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     </div>
-    <div>
-      <div class="gt-stat-value mono" style="font-size:17px;">₹{{ number_format($stats['fee_today'] ?? 0, 0) }}</div>
+    <div style="min-width:0;">
+      <div class="gt-stat-value mono" style="font-size:16px;">₹{{ number_format($stats['fee_today'],0) }}</div>
       <div class="gt-stat-label">Today</div>
-      <div class="gt-stat-sub">Collection</div>
+      <div class="gt-stat-sub">{{ now()->format('d M') }}</div>
     </div>
   </div>
+
+  {{-- Active Admissions --}}
   <div class="gt-stat">
     <div class="gt-stat-icon orange">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
     </div>
-    <div>
-      <div class="gt-stat-value mono" style="font-size:17px;">₹{{ number_format($stats['fee_this_month'], 0) }}</div>
-      <div class="gt-stat-label">This Month</div>
-      <div class="gt-stat-sub">Collection</div>
-    </div>
-  </div>
-  <div class="gt-stat">
-    <div class="gt-stat-icon blue">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <div>
-      <div class="gt-stat-value">{{ $stats['total_staff'] }}</div>
-      <div class="gt-stat-label">Staff</div>
-      <div class="gt-stat-sub">{{ $stats['total_staff'] }} members</div>
+    <div style="min-width:0;">
+      <div class="gt-stat-value">{{ $stats['enrollments_run'] }}</div>
+      <div class="gt-stat-label">Active Admissions</div>
+      @if($stats['enrollments_open'] > 0)
+        <div style="font-size:11px;color:var(--warning);margin-top:2px;font-weight:500;">
+          {{ $stats['enrollments_open'] }} pending
+        </div>
+      @else
+        <div class="gt-stat-sub">Running</div>
+      @endif
     </div>
   </div>
+
 </div>
 
-{{-- Content Grid --}}
-<div class="gt-grid-2" style="gap:20px;">
+{{-- ── Secondary Stats Row ──────────────────────────────────────────────── --}}
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
 
-  {{-- Recent Students --}}
-  <div class="gt-card">
-    <div class="gt-card-header">
-      <div class="gt-card-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;opacity:.6;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        Recent Students
-      </div>
-      <a href="{{ route('institute.students.index') }}" class="btn btn-outline btn-sm">View All</a>
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['enrollments_open'] }}</div>
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Pending</div>
+      <div style="font-size:11px;color:var(--text-2);">Admissions</div>
     </div>
-    @forelse($recentStudents as $s)
-    <div class="flex items-center gap-3" style="padding:9px 0;border-bottom:1px solid var(--border);">
-      <div style="width:34px;height:34px;border-radius:50%;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--accent);flex-shrink:0;">
-        {{ strtoupper(substr($s->name,0,1)) }}
+  </div>
+
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['total_staff'] }}</div>
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Staff</div>
+      <div style="font-size:11px;color:var(--text-2);">Members</div>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['active_courses'] }}</div>
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Courses</div>
+      <div style="font-size:11px;color:var(--text-2);">Active</div>
+    </div>
+  </div>
+
+  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
+    <div style="font-size:16px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
+      ₹{{ number_format($stats['student_wallet_balance'],0) }}
+    </div>
+    <div>
+      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Wallet</div>
+      <div style="font-size:11px;color:var(--text-2);">Total collected</div>
+    </div>
+  </div>
+
+</div>
+
+{{-- ── Enquiry Pipeline ─────────────────────────────────────────────────── --}}
+<div class="gt-card" style="padding:0;overflow:hidden;margin-bottom:18px;">
+  <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div>
+      <div class="gt-card-title">Enquiry Pipeline</div>
+      <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">
+        Conversion rate:
+        <strong style="color:{{ $enquiryStats['conversionRate'] >= 50 ? 'var(--success)' : ($enquiryStats['conversionRate'] >= 25 ? '#f59e0b' : 'var(--danger)') }};">
+          {{ $enquiryStats['conversionRate'] }}%
+        </strong>
+        &nbsp;&middot;&nbsp; {{ $enquiryStats['enquiryTotal'] }} total enquiries
       </div>
-      <div class="flex-1" style="min-width:0;">
-        <div style="font-size:13px;font-weight:600;">{{ $s->name }}</div>
-        <div class="text-xs text-muted">{{ $s->user_id }} · {{ $s->mobile }}</div>
+    </div>
+    <a href="{{ route('institute.enquiries.index') }}" class="btn btn-outline btn-xs">View All</a>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);">
+    @php
+      $pipelineCols = [
+        ['label'=>'Open',        'value'=>$enquiryStats['enquiryOpen'],      'color'=>'#6c5dd3', 'tab'=>'open'],
+        ['label'=>'Due Today',   'value'=>$enquiryStats['enquiryDueToday'],  'color'=>'#f59e0b', 'tab'=>'due'],
+        ['label'=>'Overdue',     'value'=>$enquiryStats['enquiryOverdue'],   'color'=>'#ef4444', 'tab'=>'due'],
+        ['label'=>'Converted',   'value'=>$enquiryStats['enquiryConverted'], 'color'=>'#10b981', 'tab'=>'converted'],
+        ['label'=>'Lost',        'value'=>$enquiryStats['enquiryLost'],      'color'=>'#94a3b8', 'tab'=>'lost'],
+      ];
+    @endphp
+    @foreach($pipelineCols as $i => $col)
+    <a href="{{ route('institute.enquiries.index', ['tab'=>$col['tab']]) }}"
+       style="display:block;padding:16px 18px;border-right:{{ $i < 4 ? '1px solid var(--border)' : 'none' }};
+              text-decoration:none;transition:.12s;text-align:center;"
+       onmouseover="this.style.background='var(--bg-3)'"
+       onmouseout="this.style.background=''">
+      <div style="font-size:24px;font-weight:800;color:{{ $col['color'] }};">{{ $col['value'] }}</div>
+      <div style="font-size:11px;color:var(--text-2);margin-top:3px;font-weight:600;">{{ $col['label'] }}</div>
+    </a>
+    @endforeach
+  </div>
+  @if($enquiryStats['enquiryTotal'] > 0)
+  <div style="height:6px;background:var(--bg-4);display:flex;overflow:hidden;">
+    @php
+      $convPct = $enquiryStats['conversionRate'];
+      $lostPct = $enquiryStats['enquiryTotal'] > 0 ? round(($enquiryStats['enquiryLost']/$enquiryStats['enquiryTotal'])*100) : 0;
+      $openPct = 100 - $convPct - $lostPct;
+    @endphp
+    <div style="width:{{ $openPct }}%;background:#6c5dd3;"></div>
+    <div style="width:{{ $convPct }}%;background:#10b981;"></div>
+    <div style="width:{{ $lostPct }}%;background:#ef4444;"></div>
+  </div>
+  @endif
+</div>
+
+{{-- ── Charts Row ───────────────────────────────────────────────────────── --}}
+<div style="display:grid;grid-template-columns:1.7fr 1fr;gap:18px;margin-bottom:18px;">
+
+  {{-- Revenue Bar Chart --}}
+  <div class="gt-card" style="padding:18px 20px;">
+    <div class="gt-card-header" style="margin-bottom:14px;">
+      <div>
+        <div class="gt-card-title">Monthly Revenue</div>
+        <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">Last 6 months fee collection</div>
       </div>
-      <span class="badge {{ $s->status==='active'?'badge-success':'badge-neutral' }}">{{ ucfirst($s->status) }}</span>
+      <div style="text-align:right;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
+          ₹{{ number_format($stats['fee_this_month'],0) }}
+        </div>
+        <div style="font-size:11px;color:var(--text-3);">{{ now()->format('M Y') }}</div>
+      </div>
+    </div>
+    <div style="position:relative;height:200px;">
+      <canvas id="revenueChart"></canvas>
+    </div>
+  </div>
+
+  {{-- Enrollment Donut --}}
+  <div class="gt-card" style="padding:18px 20px;">
+    <div class="gt-card-header" style="margin-bottom:14px;">
+      <div>
+        <div class="gt-card-title">Enrollment Status</div>
+        <div style="font-size:11.5px;color:var(--text-3);margin-top:2px;">Active vs pending</div>
+      </div>
+    </div>
+    <div style="position:relative;height:160px;display:flex;align-items:center;justify-content:center;">
+      <canvas id="enrollmentChart"></canvas>
+    </div>
+    <div style="display:flex;justify-content:center;gap:20px;margin-top:14px;">
+      <div style="text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:#10b981;">{{ $stats['enrollments_run'] }}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:2px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#10b981;display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--text-2);">Active</span>
+        </div>
+      </div>
+      <div style="width:1px;background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:#f59e0b;">{{ $stats['enrollments_open'] }}</div>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:2px;">
+          <span style="width:8px;height:8px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--text-2);">Pending</span>
+        </div>
+      </div>
+      <div style="width:1px;background:var(--border);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['enrollments_run'] + $stats['enrollments_open'] }}</div>
+        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">Total</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{{-- ── Data Tables Row ──────────────────────────────────────────────────── --}}
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;">
+
+  {{-- Recent Fee Collections --}}
+  <div class="gt-card" style="padding:0;overflow:hidden;">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div class="gt-card-title">Recent Collections</div>
+      <a href="{{ route('institute.fee-collect.index') }}" class="btn btn-outline btn-xs">View All</a>
+    </div>
+    @forelse($recentFees as $fee)
+    @php
+      $feeStudent = $feeUserMap[$fee->user_id] ?? null;
+      $feeName = $feeStudent?->profile?->name ?? $feeStudent?->user_id ?? 'Student';
+      $feeAmount = $fee->amount ?? $fee->amt ?? 0;
+    @endphp
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border);">
+      <div style="width:32px;height:32px;border-radius:8px;background:var(--success-bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--success);flex-shrink:0;">
+        {{ strtoupper(substr($feeName,0,1)) }}
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $feeName }}</div>
+        <div style="font-size:11px;color:var(--text-2);">{{ $fee->payment_mode }} · {{ \Carbon\Carbon::parse($fee->date)->format('d M') }}</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--success);font-family:var(--font-mono);flex-shrink:0;">
+        +₹{{ number_format($feeAmount,0) }}
+      </div>
     </div>
     @empty
-    <div class="gt-empty">
-      <div class="gt-empty-icon">👨‍🎓</div>
-      <div class="gt-empty-title">No students yet</div>
-      <a href="{{ route('institute.students.create') }}" class="btn btn-primary btn-sm" style="margin-top:8px;">Add First Student</a>
+    <div class="gt-empty" style="padding:28px 16px;">
+      <div class="gt-empty-title">No collections yet</div>
     </div>
     @endforelse
   </div>
 
-  {{-- Quick Actions --}}
-  <div class="gt-card">
-    <div class="gt-card-header">
-      <div class="gt-card-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:5px;opacity:.6;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        Quick Actions
+  {{-- Course-wise Enrollments --}}
+  <div class="gt-card" style="padding:0;overflow:hidden;">
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div class="gt-card-title">Course Enrollments</div>
+      <a href="{{ route('institute.courses.enrollments') }}" class="btn btn-outline btn-xs">View All</a>
+    </div>
+    @php $maxEnroll = $courseEnrollments->max('total') ?: 1; @endphp
+    @forelse($courseEnrollments as $ce)
+    <div style="padding:10px 16px;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <div style="font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%;">
+          {{ $ce['name'] }}
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <span style="font-size:11px;color:var(--success);font-weight:600;">{{ $ce['run'] }} active</span>
+          @if($ce['open'] > 0)
+            <span style="font-size:11px;color:var(--warning);">{{ $ce['open'] }} pending</span>
+          @endif
+        </div>
+      </div>
+      <div style="height:4px;background:var(--bg-4);border-radius:99px;overflow:hidden;">
+        <div style="height:100%;border-radius:inherit;background:var(--accent);width:{{ round(($ce['total']/$maxEnroll)*100) }}%;"></div>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <a href="{{ route('institute.students.create') }}" class="gt-quick-action">
-        <div class="qa-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-        </div>
-        <span class="qa-label">New Admission</span>
-      </a>
-      <a href="{{ route('institute.students.index') }}" class="gt-quick-action">
-        <div class="qa-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        </div>
-        <span class="qa-label">Student List</span>
-      </a>
-      <a href="{{ route('institute.fee.index') }}" class="gt-quick-action">
-        <div class="qa-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <span class="qa-label">Fee Dues</span>
-      </a>
-      <a href="{{ route('institute.courses.create') }}" class="gt-quick-action">
-        <div class="qa-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        </div>
-        <span class="qa-label">Add Course</span>
-      </a>
-      <a href="{{ route('institute.fee.index') }}" class="gt-quick-action">
-        <div class="qa-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        </div>
-        <span class="qa-label">Fee Report</span>
-      </a>
-      <a href="{{ route('institute.staff.create') }}" class="gt-quick-action">
-        <div class="qa-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </div>
-        <span class="qa-label">Add Staff</span>
-      </a>
+    @empty
+    <div class="gt-empty" style="padding:28px 16px;">
+      <div class="gt-empty-title">No enrollments yet</div>
     </div>
-
-    @if($institute->subscription)
-    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
-      <span class="text-xs text-muted">Active Plan</span>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span class="badge badge-accent">{{ $institute->subscription->plan->name }}</span>
-        <span class="text-xs text-muted">Expires {{ \Carbon\Carbon::parse($institute->subscription->end_date)->format('d M Y') }}</span>
-      </div>
-    </div>
-    @endif
+    @endforelse
   </div>
+
 </div>
 
-{{-- ── Emergency Login Code (institute_head only) ─────────────────────── --}}
+{{-- ── Emergency Login Code ─────────────────────────────────────────────── --}}
 @if(auth()->user()->role === 'institute_head')
-<div class="gt-card" style="margin-top:20px;border-color:rgba(251,191,36,.2);">
+<div class="gt-card" style="border-color:rgba(251,191,36,.2);">
   <div class="gt-card-header" style="display:flex;align-items:center;gap:10px;">
-    <div style="width:34px;height:34px;border-radius:10px;background:rgba(251,191,36,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div style="width:32px;height:32px;border-radius:8px;background:rgba(251,191,36,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     </div>
     <div class="flex-1">
       <div class="gt-card-title" style="color:#fbbf24;">Emergency Login Code</div>
-      <div class="text-xs text-muted">For staff / franchise / students when OTP email is not received</div>
+      <div class="text-xs text-muted">For staff / students when OTP email is not received</div>
     </div>
   </div>
 
   @if(session('emergency_code'))
-    {{-- Show today's code --}}
-    <div style="background:rgba(251,191,36,.07);border:1.5px dashed rgba(251,191,36,.35);border-radius:14px;padding:20px;text-align:center;margin-bottom:14px;">
-      <div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px;">Today's Emergency Code — {{ now()->format('d M Y') }}</div>
-      <div style="font-family:'Courier New',monospace;font-size:34px;font-weight:800;letter-spacing:10px;color:#fbbf24;">
+    <div style="background:rgba(251,191,36,.07);border:1px dashed rgba(251,191,36,.3);border-radius:10px;padding:18px;text-align:center;margin-bottom:12px;">
+      <div style="font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px;">Today's Code — {{ now()->format('d M Y') }}</div>
+      <div style="font-family:var(--font-mono);font-size:30px;font-weight:800;letter-spacing:10px;color:#fbbf24;">
         {{ session('emergency_code') }}
       </div>
-      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:8px;">Rotates daily at midnight · Share verbally only</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.35);margin-top:6px;">Rotates daily at midnight · Share verbally only</div>
     </div>
-    <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;padding:0 4px;">
-      Tell this code to your staff or student over the phone. They enter it in the OTP field on the login page.
-      Do <strong style="color:#f87171;">not</strong> share it via chat or email.
+    <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.7;">
+      Tell this code to your staff or student over the phone. Do <strong style="color:#f87171;">not</strong> share via chat or email.
     </div>
   @else
-    {{-- Password gate --}}
     <form method="POST" action="{{ route('institute.accounts.emergency-code') }}">
       @csrf
-      <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:14px;line-height:1.7;">
-        Enter your password to reveal today's 6-digit emergency code for your staff and students.
+      <div style="font-size:12.5px;color:var(--text-2);margin-bottom:12px;line-height:1.6;">
+        Enter your password to reveal today's emergency code.
       </div>
       <div style="display:flex;gap:10px;align-items:flex-start;">
         <div style="flex:1;">
-          <input
-            type="password" name="password"
+          <input type="password" name="password"
             class="gt-input @error('password') is-invalid @enderror"
-            placeholder="Your account password"
-            autocomplete="current-password"
-          >
+            placeholder="Your account password" autocomplete="current-password">
           @error('password')
-            <div class="gt-error" style="margin-top:6px;">{{ $message }}</div>
+            <div class="gt-error" style="margin-top:5px;">{{ $message }}</div>
           @enderror
         </div>
-        <button type="submit" class="btn" style="background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);white-space:nowrap;">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        <button type="submit" class="btn" style="background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);white-space:nowrap;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           Show Code
         </button>
       </div>
@@ -232,3 +398,98 @@
 @endif
 
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  const accent  = '#6c5dd3';
+  const accentL = 'rgba(108,93,211,.12)';
+  const green   = '#10b981';
+  const amber   = '#f59e0b';
+  const gridCol = 'rgba(26,31,60,.07)';
+  const textCol = '#6b7280';
+
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size   = 11;
+
+  /* ── Revenue Bar Chart ── */
+  const revLabels  = @json($monthlyRevenue->pluck('label'));
+  const revAmounts = @json($monthlyRevenue->pluck('amount'));
+
+  new Chart(document.getElementById('revenueChart'), {
+    type: 'bar',
+    data: {
+      labels: revLabels,
+      datasets: [{
+        label: 'Collection (₹)',
+        data: revAmounts,
+        backgroundColor: revAmounts.map((v, i) =>
+          i === revAmounts.length - 1 ? accent : accentL),
+        borderColor: revAmounts.map((v, i) =>
+          i === revAmounts.length - 1 ? accent : 'rgba(108,93,211,.35)'),
+        borderWidth: 1.5,
+        borderRadius: 5,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ₹' + ctx.parsed.y.toLocaleString('en-IN')
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: textCol }
+        },
+        y: {
+          grid: { color: gridCol },
+          ticks: {
+            color: textCol,
+            callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v)
+          },
+          beginAtZero: true
+        }
+      }
+    }
+  });
+
+  /* ── Enrollment Donut ── */
+  const runCount  = {{ $stats['enrollments_run'] }};
+  const openCount = {{ $stats['enrollments_open'] }};
+  const total     = runCount + openCount;
+
+  new Chart(document.getElementById('enrollmentChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Active (RUN)', 'Pending (OPEN)'],
+      datasets: [{
+        data: total > 0 ? [runCount, openCount] : [1, 0],
+        backgroundColor: total > 0 ? [green, amber] : ['#e5e7ef'],
+        borderWidth: 0,
+        hoverOffset: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' ' + ctx.label + ': ' + ctx.parsed
+          }
+        }
+      }
+    }
+  });
+
+})();
+</script>
+@endpush

@@ -31,8 +31,6 @@ class Franchise extends Model
         'has_sub_franchise',
         'management_type',
         'onboarding_fee',
-        'admission_charge',
-        'certificate_charge',
         'fee_total',
         'status',
         'slug',
@@ -81,5 +79,15 @@ class Franchise extends Model
     public function feeOutstanding(): float
     {
         return max(0, (float) $this->fee_total - $this->feePaid());
+    }
+
+    public function courseCharges()
+    {
+        return $this->hasMany(FranchiseCourseCharge::class);
+    }
+
+    public function joiningWallet()
+    {
+        return $this->hasOne(FranchiseJoiningWallet::class);
     }
 }

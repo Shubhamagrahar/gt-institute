@@ -17,11 +17,10 @@
 
       {{-- Brand --}}
       <div class="gt-sidebar-brand" style="border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:14px;">
-        <div class="brand-icon" style="background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-size:13px;font-weight:900;">FR</div>
-        <div>
-          <div class="brand-text" style="font-size:15px;font-weight:800;">Franchise</div>
-          <div class="brand-sub" style="font-size:10px;opacity:.55;text-transform:uppercase;letter-spacing:.08em;">Control Panel</div>
-        </div>
+        <img src="{{ asset('images/gt-icon.png') }}" alt="Gaurangi Technologies" class="brand-logo-img"
+             style="height:36px;"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="brand-icon" style="display:none;">GT</div>
       </div>
 
       {{-- Franchise Identity --}}

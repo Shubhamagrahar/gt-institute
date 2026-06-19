@@ -9,5 +9,6 @@ class InstituteEnrollmentCounter extends Model
     protected $fillable = [
         'institute_id',
         'last_enrollment_no',
+        'last_student_no',
     ];
 }

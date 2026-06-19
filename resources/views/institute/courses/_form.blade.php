@@ -216,13 +216,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
       <div class="gt-form-group course-span-3">
         <label class="gt-label">Duration (months) <span style="color:var(--danger)">*</span></label>
-        <input type="number" name="duration" class="gt-input" value="{{ old('duration', $course->duration ?? 6) }}" min="1" required>
+        <input type="number" name="duration" class="gt-input" value="{{ old('duration', $course->duration ?? '') }}" min="1" required placeholder="e.g. 3">
         @error('duration')<div class="gt-error">{{ $message }}</div>@enderror
       </div>
 
       <div class="gt-form-group course-span-3">
         <label class="gt-label">Max Fee (Rs.) @if(\App\Models\CourseDetail::hasMaxFeeColumn())<span style="color:var(--danger)">*</span>@endif</label>
-        <input type="number" name="max_fee" class="gt-input" value="{{ old('max_fee', $course->display_max_fee ?? $course->fee ?? 0) }}" min="0" step="0.01" @if(\App\Models\CourseDetail::hasMaxFeeColumn()) required @endif>
+        <input type="number" name="max_fee" class="gt-input" value="{{ old('max_fee', $course->display_max_fee ?? $course->fee ?? '') }}" min="0" step="0.01" placeholder="0.00" @if(\App\Models\CourseDetail::hasMaxFeeColumn()) required @endif>
         @if(!\App\Models\CourseDetail::hasMaxFeeColumn())
           <div class="text-xs text-muted" style="margin-top:6px;">Database me `max_fee` column abhi nahi hai, isliye abhi ye value display-only fallback mode me hai.</div>
         @endif
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       <div class="gt-form-group course-span-3">
         <label class="gt-label">Fee (Rs.) <span style="color:var(--danger)">*</span></label>
-        <input type="number" name="fee" class="gt-input" value="{{ old('fee', $course->fee ?? 0) }}" min="0" step="0.01" required>
+        <input type="number" name="fee" class="gt-input" value="{{ old('fee', $course->fee ?? '') }}" min="0" step="0.01" placeholder="0.00" required>
         @error('fee')<div class="gt-error">{{ $message }}</div>@enderror
       </div>
 

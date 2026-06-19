@@ -28,4 +28,9 @@ class FranchiseLevel extends Model
     {
         return $this->hasMany(Franchise::class);
     }
+
+    public function courseCharges()
+    {
+        return $this->hasMany(LevelCourseCharge::class, 'franchise_level_id');
+    }
 }
