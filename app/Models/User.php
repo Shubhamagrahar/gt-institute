@@ -93,4 +93,26 @@ class User extends Authenticatable
     {
         return $this->hasMany(CourseBook::class);
     }
+
+    // Staff
+    public function staffProfile()
+    {
+        return $this->hasOne(StaffProfile::class);
+    }
+
+    public function salaryRecords()
+    {
+        return $this->hasMany(SalaryRecord::class, 'staff_user_id');
+    }
+
+    // Convenience: get staff permissions (returns array of permission keys)
+    public function staffPermissions(): array
+    {
+        return $this->staffProfile?->resolvedPermissions() ?? [];
+    }
+
+    public function hasStaffPermission(string $key): bool
+    {
+        return in_array($key, $this->staffPermissions());
+    }
 }

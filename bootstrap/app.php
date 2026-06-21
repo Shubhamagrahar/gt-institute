@@ -12,9 +12,21 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'check.session' => \App\Http\Middleware\CheckSession::class,
+            'role'             => \App\Http\Middleware\RoleMiddleware::class,
+            'check.session'    => \App\Http\Middleware\CheckSession::class,
+            'auth.staff'       => \App\Http\Middleware\AuthenticateStaff::class,
+            'staff.permission' => \App\Http\Middleware\CheckStaffPermission::class,
         ]);
+
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if (str_starts_with($request->path(), 'student/')) {
+                return route('student.login');
+            }
+            if (str_starts_with($request->path(), 'staff/')) {
+                return route('staff.login');
+            }
+            return route('login');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -299,12 +299,14 @@ class EnrollmentController extends Controller
             ->where('id', $data['course_id'])
             ->firstOrFail();
         $courseShortCode = $this->toCourseCode($request->input('course_short_code', ''), $course->name);
+        $plainPassword = Str::random(10);
         $result = DB::transaction(function () use (
             $data,
             $iid,
             $sessionId,
             $course,
-            $courseShortCode
+            $courseShortCode,
+            $plainPassword
         ) {
             $userId = $this->generateUserId($iid);
             $user = User::create([
@@ -312,7 +314,7 @@ class EnrollmentController extends Controller
                 'user_id' => $userId,
                 'mobile' => $data['mobile'],
                 'email' => $data['email'] ?? null,
-                'password' => Hash::make(Str::random(10)),
+                'password' => Hash::make($plainPassword),
                 'role' => 'student',
                 'user_type' => 'student',
                 'franchise_id' => null,
@@ -411,7 +413,7 @@ class EnrollmentController extends Controller
             ];
         });
 
-        $this->sendSeatBookingEmail($result['user'], $result['courseBook']);
+        $this->sendSeatBookingEmail($result['user'], $result['courseBook'], $plainPassword);
         $this->markEnquiryConverted($request->input('enquiry_id'), $result['courseBook']->id);
 
         return redirect()->route('institute.enrollment.pending')
@@ -433,14 +435,15 @@ class EnrollmentController extends Controller
         $courseSummary = $this->courseCatalogItem($course);
 
         $quickCourseCode = $this->toCourseCode($request->input('course_short_code', ''), $course->name);
-        $result = DB::transaction(function () use ($data, $iid, $sessionId, $course, $courseSummary, $fields, $quickCourseCode) {
+        $quickPlainPassword = Str::random(10);
+        $result = DB::transaction(function () use ($data, $iid, $sessionId, $course, $courseSummary, $fields, $quickCourseCode, $quickPlainPassword) {
             $userId = $this->generateUserId($iid);
             $user = User::create([
                 'institute_id' => $iid,
                 'user_id' => $userId,
                 'mobile' => $data['mobile'],
                 'email' => $data['email'] ?? null,
-                'password' => Hash::make(Str::random(10)),
+                'password' => Hash::make($quickPlainPassword),
                 'role' => 'student',
                 'user_type' => 'student',
                 'franchise_id' => null,
@@ -500,7 +503,7 @@ class EnrollmentController extends Controller
             ];
         });
 
-        $this->sendSeatBookingEmail($result['user'], $result['courseBook']);
+        $this->sendSeatBookingEmail($result['user'], $result['courseBook'], $quickPlainPassword);
         $this->markEnquiryConverted($request->input('enquiry_id'), $result['courseBook']->id);
 
         return redirect()->route('institute.enrollment.pending')
@@ -510,20 +513,33 @@ class EnrollmentController extends Controller
     public function profileForm(CourseBook $courseBook)
     {
         $this->authorizeCourseBook($courseBook);
-        $fields = AdmissionFormField::where('institute_id', $this->instituteId())
-            ->where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        $iid     = $this->instituteId();
         $profile = $courseBook->student->profile;
         $education = $courseBook->student->education;
         $states = State::orderBy('name')->pluck('name');
-        $educationField = AdmissionFormField::where('institute_id', $this->instituteId())
-            ->where('field_key', 'education_details')
-            ->first();
+
+        $savedFields = AdmissionFormField::where('institute_id', $iid)->get()->keyBy('field_key');
+
+        $districtsByState = Schema::hasTable('districts')
+            ? District::query()
+                ->select('districts.name as district_name', 'states.name as state_name')
+                ->join('states', 'states.id', '=', 'districts.state_id')
+                ->orderBy('states.name')->orderBy('districts.name')
+                ->get()
+                ->groupBy('state_name')
+                ->map(fn ($rows) => $rows->pluck('district_name')->values())
+                ->toArray()
+            : [];
+
+        $educationField   = $savedFields->get('education_details');
         $educationEnabled = ! $educationField || $educationField->is_active;
         $educationRequired = (bool) ($educationField?->is_required);
+        $institute        = auth('institute')->user()->institute;
 
-        return view('institute.enrollment.profile', compact('courseBook', 'fields', 'profile', 'education', 'states', 'educationEnabled', 'educationRequired'));
+        return view('institute.enrollment.profile', compact(
+            'courseBook', 'savedFields', 'profile', 'education',
+            'states', 'districtsByState', 'educationEnabled', 'educationRequired', 'institute'
+        ) + ['defaultPhotoPath' => $this->defaultPhotoPath()]);
     }
 
     public function saveProfile(Request $request, CourseBook $courseBook)
@@ -544,6 +560,7 @@ class EnrollmentController extends Controller
 
         $activeKeys = match ($section) {
             'guardian' => $guardianKeys,
+            'all'      => array_merge($personalKeys, $guardianKeys),
             default    => $personalKeys,
         };
 
@@ -574,14 +591,14 @@ class EnrollmentController extends Controller
             }
         }
 
-        if ($section === 'personal') {
+        if (in_array($section, ['personal', 'all'])) {
             $rules['name'] = 'required|string|max:100';
         }
 
         $validated = $request->validate($rules);
         $profile   = $user->profile ?? new UserProfile(['user_id' => $courseBook->user_id]);
 
-        if ($section === 'personal') {
+        if (in_array($section, ['personal', 'all'])) {
             $profile->name = $validated['name'];
         }
 
@@ -614,6 +631,30 @@ class EnrollmentController extends Controller
             'profile_completed_at' => now(),
             'booking_mode'         => $courseBook->booking_mode === 'quick' ? 'quick' : 'full',
         ]);
+
+        if ($section === 'all') {
+            // Save education records
+            if ($request->has('education')) {
+                $user->education()->where('institute_id', $courseBook->institute_id)->delete();
+                foreach ($request->input('education', []) as $edu) {
+                    if (blank($edu['examination'] ?? null)) continue;
+                    \App\Models\UserEducation::create([
+                        'user_id'          => $user->id,
+                        'institute_id'     => $courseBook->institute_id,
+                        'franchise_id'     => null,
+                        'examination'      => $edu['examination'],
+                        'institute_name'   => $edu['institute_name']   ?? null,
+                        'board_university' => $edu['board_university'] ?? null,
+                        'passing_year'     => $edu['passing_year']     ?? null,
+                        'division'         => $edu['division']         ?? null,
+                        'marks_percentage' => $edu['marks_percentage'] ?? null,
+                    ]);
+                }
+            }
+
+            return redirect()->route('institute.enrollment.preview', $courseBook)
+                ->with('success', 'Details saved successfully. Please review and proceed to payment.');
+        }
 
         $label = $section === 'guardian' ? 'Guardian' : 'Personal';
 
@@ -1021,7 +1062,14 @@ class EnrollmentController extends Controller
             ->first();
         $educationEnabled = ! $educationField || $educationField->is_active;
 
-        return view('institute.enrollment.preview', compact('courseBook', 'fields', 'profile', 'education', 'snapshots', 'plan', 'educationEnabled', 'displayTotalFee'));
+        $paidTotal = round((float) \App\Models\FeeCollectDetail::where('course_book_id', $courseBook->id)
+            ->whereNull('cancelled_at')
+            ->sum(\App\Models\FeeCollectDetail::amountColumn()), 2);
+
+        $savedFields = AdmissionFormField::where('institute_id', $iid)->get()->keyBy('field_key');
+        $institute   = auth('institute')->user()->institute;
+
+        return view('institute.enrollment.preview', compact('courseBook', 'fields', 'savedFields', 'profile', 'education', 'snapshots', 'plan', 'educationEnabled', 'displayTotalFee', 'paidTotal', 'institute'));
     }
 
     public function confirm(Request $request, CourseBook $courseBook)
@@ -1033,6 +1081,8 @@ class EnrollmentController extends Controller
         ]);
 
         $this->forceFinalizeAdmission($courseBook->fresh(['student.profile', 'paymentPlan', 'course']));
+
+        $this->sendAdmissionConfirmationEmail($courseBook->fresh(['course', 'batch', 'student.profile']));
 
         return redirect()->route('institute.enrollment.pending', ['filter' => 'all'])
             ->with('success', 'Admission completed successfully. You can review all booked and admitted students here.');
@@ -1110,7 +1160,7 @@ class EnrollmentController extends Controller
 
         $courseBook = CourseBook::create($courseBookData);
         $this->ensureStudentWallet($user);
-        $this->sendSeatBookingEmail($user, $courseBook->fresh(['student.profile', 'course', 'batch']));
+        $this->sendSeatBookingEmail($user, $courseBook->fresh(['student.profile', 'course', 'batch']), null);
 
         return redirect()->route('institute.enrollment.profile', $courseBook);
     }
@@ -1301,7 +1351,7 @@ class EnrollmentController extends Controller
             ],
             'name' => 'required|string|max:100',
             'mobile' => 'required|string|max:15|unique:users,mobile',
-            'email' => 'nullable|email|max:100|unique:users,email',
+            'email' => 'required|email|max:100|unique:users,email',
         ];
 
         foreach ($fields as $field) {
@@ -1879,19 +1929,64 @@ class EnrollmentController extends Controller
         return $short . '/STU/' . $year . '/' . str_pad((string) ($counter->last_student_no), 4, '0', STR_PAD_LEFT);
     }
 
-    private function sendSeatBookingEmail(?User $user, CourseBook $courseBook): void
+    private function sendSeatBookingEmail(?User $user, CourseBook $courseBook, ?string $plainPassword = null): void
     {
         if (! $user?->email) {
             return;
         }
 
+        $institute    = \App\Models\Owner\Institute::find($courseBook->institute_id);
+        $validityDays = $institute?->seat_booking_validity_days ?? 30;
+        $instituteName = $institute?->name ?? '';
+
         try {
             Mail::to($user->email)->send(new SeatBookingConfirmationMail(
                 $user->fresh(['profile']),
-                $courseBook->fresh(['course', 'batch', 'student.profile'])
+                $courseBook->fresh(['course', 'batch', 'student.profile']),
+                $validityDays,
+                $instituteName,
             ));
         } catch (\Throwable $e) {
             Log::warning('Seat booking email failed: ' . $e->getMessage(), [
+                'user_id' => $user->id ?? null,
+                'course_book_id' => $courseBook->id ?? null,
+            ]);
+        }
+    }
+
+    private function sendAdmissionConfirmationEmail(CourseBook $courseBook): void
+    {
+        $user = $courseBook->student;
+
+        if (! $user?->email) {
+            return;
+        }
+
+        // Only send credentials if this is the student's first confirmed admission
+        $confirmedCount = CourseBook::where('student_id', $user->id)
+            ->where('status', 'RUN')
+            ->count();
+
+        if ($confirmedCount > 1) {
+            return;
+        }
+
+        $plainPassword = \Illuminate\Support\Str::random(10);
+        $user->password       = \Illuminate\Support\Facades\Hash::make($plainPassword);
+        $user->remember_token = \Illuminate\Support\Str::random(60);
+        $user->save();
+
+        $instituteName = \App\Models\Owner\Institute::find($courseBook->institute_id)?->name ?? '';
+
+        try {
+            Mail::to($user->email)->send(new \App\Mail\AdmissionConfirmationMail(
+                $user->fresh(['profile']),
+                $courseBook->fresh(['course', 'batch', 'student.profile']),
+                $plainPassword,
+                $instituteName,
+            ));
+        } catch (\Throwable $e) {
+            Log::warning('Admission confirmation email failed: ' . $e->getMessage(), [
                 'user_id' => $user->id ?? null,
                 'course_book_id' => $courseBook->id ?? null,
             ]);

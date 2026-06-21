@@ -2,160 +2,435 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Receipt — {{ $fee->invoice_no }}</title>
+<title>Receipt — {{ $fee->invoice_no ?? '' }}</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#e8ecf0;padding:24px;color:#1f2937}
-.receipt-wrap{max-width:780px;margin:0 auto;background:#fff;box-shadow:0 4px 28px rgba(0,0,0,.12);border-radius:4px;overflow:hidden}
-.r-header{background:linear-gradient(135deg,#1b1464,#2980b9);color:#fff;padding:24px 32px;display:flex;gap:18px;align-items:center}
-.r-logo{width:60px;height:60px;border-radius:10px;object-fit:contain;background:#fff;padding:4px;flex-shrink:0}
-.r-logo-placeholder{width:60px;height:60px;border-radius:10px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;flex-shrink:0}
-.r-inst-name{font-size:20px;font-weight:800;line-height:1.2}
-.r-inst-detail{font-size:12px;opacity:.82;margin-top:4px;line-height:1.6}
-.r-title-bar{background:#f8faff;border-bottom:2px solid #e2e8f0;padding:12px 32px;display:flex;justify-content:space-between;align-items:center}
-.r-title{font-size:19px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#1e40af}
-.r-inv{font-size:13px;color:#475569;text-align:right;line-height:1.8}
-.r-body{padding:26px 32px}
-.r-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-bottom:22px;border-bottom:1px dashed #e2e8f0;padding-bottom:22px}
-.r-block-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#94a3b8;margin-bottom:9px;padding-bottom:5px;border-bottom:1px solid #f1f5f9}
-.r-row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13px;border-bottom:1px solid #f8faff}
-.r-row .lbl{color:#64748b;flex-shrink:0}
-.r-row .val{font-weight:600;text-align:right}
-.r-amount-box{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;border-radius:12px;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.r-amount-label{font-size:14px;color:#1e40af;font-weight:700}
-.r-amount-value{font-size:30px;font-weight:900;color:#1e3a8a}
-.r-balance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.r-balance-item{border:1px solid #e2e8f0;border-radius:10px;padding:11px;background:#f8faff;text-align:center}
-.r-balance-item .bi-lbl{font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:700;margin-bottom:3px}
-.r-balance-item .bi-val{font-size:15px;font-weight:800;color:#1f2937}
-.r-balance-item.due .bi-val{color:#dc2626}
-.r-balance-item.paid .bi-val{color:#16a34a}
-.r-note{background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:9px 14px;font-size:13px;color:#713f12;margin-bottom:18px}
-.r-footer{border-top:1px solid #e2e8f0;margin:0 32px;padding:16px 0 24px;display:flex;justify-content:space-between;align-items:flex-end;font-size:12px;color:#94a3b8}
-.r-sign-line{width:140px;border-top:1px solid #cbd5e1;padding-top:6px;margin-top:28px;text-align:center;font-size:11px;color:#64748b}
-.no-print{display:flex;gap:10px;justify-content:center;margin-bottom:20px}
-.no-print button{padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;border:none}
-.btn-print{background:#1e40af;color:#fff}
-.btn-close{background:#f1f5f9;color:#374151}
-@media print{
-  body{background:#fff;padding:0}
-  .receipt-wrap{box-shadow:none;max-width:100%;border-radius:0}
-  .no-print{display:none!important}
-  @page{size:A4;margin:12mm}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Arial, Helvetica, sans-serif; background: #bbb; }
+
+.no-print {
+  display: flex; gap: 10px; justify-content: center; padding: 16px;
+}
+.no-print button {
+  padding: 8px 22px; border: none; border-radius: 5px;
+  cursor: pointer; font-size: 13px; font-weight: 700;
+}
+.btn-p { background: #111; color: #fff; }
+.btn-c { background: #e5e7eb; color: #374151; }
+
+/* A4 Portrait */
+.a4 {
+  width: 210mm;
+  height: 297mm;
+  background: #fff;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 20px rgba(0,0,0,.25);
+}
+
+/* Top half — two receipts side by side */
+.top-half {
+  height: 148mm;
+  display: flex;
+  padding: 4mm 3mm 2mm 3mm;
+  gap: 0;
+}
+
+/* Dashed cut line */
+.cut-line {
+  width: 4mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+}
+.cut-line::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  border-left: 1.5px dashed #777;
+}
+.cut-line::after {
+  content: "✂";
+  position: relative;
+  font-size: 12px;
+  color: #666;
+  background: #fff;
+  padding: 4px 0;
+  z-index: 1;
+  line-height: 1;
+  transform: rotate(90deg);
+  display: block;
+}
+
+/* Bottom half — blank */
+.bottom-half {
+  flex: 1;
+  border-top: 1.5px dashed #bbb;
+  position: relative;
+}
+.bottom-half::after {
+  content: "— Blank (for next student's receipt) —";
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 8pt;
+  color: #d0d0d0;
+  white-space: nowrap;
+  font-family: Arial, sans-serif;
+}
+
+/* Each receipt = quarter of A4 */
+.receipt {
+  flex: 1;
+  border: 2px solid #000;
+  display: flex;
+  flex-direction: column;
+  font-size: 7.5pt;
+  overflow: hidden;
+}
+
+/* ── Institute Header ── */
+.r-head {
+  padding: 3.5px 6px;
+  border-bottom: 1.5px solid #000;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.r-head-logo {
+  width: 34px; height: 34px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border: 1px solid #ddd;
+}
+.r-head-logo-box {
+  width: 34px; height: 34px;
+  border: 1.5px solid #000;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14pt; font-weight: 900; flex-shrink: 0;
+}
+.r-head-text { flex: 1; text-align: center; }
+.r-head-name { font-size: 11pt; font-weight: 900; line-height: 1.2; }
+.r-head-addr { font-size: 6.5pt; color: #333; margin-top: 1px; line-height: 1.5; }
+
+/* ── FEES RECEIPT title ── */
+.r-title {
+  border-bottom: 1.5px solid #000;
+  padding: 4px 0;
+  text-align: center;
+  font-size: 12pt;
+  font-weight: 900;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  background: #fff;
+}
+
+/* ── Table ── */
+.rt {
+  width: 100%;
+  border-collapse: collapse;
+  flex: 1;
+}
+.rt td {
+  border: 1px solid #000;
+  padding: 2.5px 5px;
+  font-size: 7.5pt;
+  vertical-align: middle;
+}
+.rt .lbl { font-weight: 700; white-space: nowrap; }
+.rt .val { font-weight: 400; }
+.rt .vb  { font-weight: 700; }
+
+/* Header row for fee details */
+.rt .det-head td {
+  background: #f0f0f0;
+  font-weight: 900;
+  font-size: 7.5pt;
+  text-align: center;
+}
+
+/* Fee/Installment row — taller */
+.rt .fee-row td {
+  height: 28mm;
+  vertical-align: top;
+  padding: 4px 5px;
+  font-size: 8pt;
+}
+
+/* Amount paid — shaded bold */
+.rt .amt-row td {
+  background: #c8c8c8;
+  font-weight: 900;
+  font-size: 9.5pt;
+}
+.rt .amt-row .amt-val {
+  text-align: right;
+  padding-right: 7px;
+  font-size: 11pt;
+  letter-spacing: .01em;
+}
+
+/* Summary rows */
+.rt .sum-row td { font-size: 7.5pt; }
+.rt .sum-row .sv { text-align: right; padding-right: 7px; font-weight: 700; }
+.rt .sum-row.balance td { font-weight: 900; }
+
+/* Amount in words */
+.rt .words-row td {
+  font-size: 7.5pt;
+  font-weight: 700;
+  font-style: italic;
+  border-top: 1.5px solid #000;
+  padding: 3px 5px;
+}
+
+/* Signature row */
+.rt .sign-row td {
+  height: 20mm;
+  vertical-align: bottom;
+  padding: 3px 5px;
+  border-top: 1.5px solid #000;
+}
+.sign-cell-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.sign-box {
+  text-align: center;
+  font-size: 6.5pt;
+}
+.sign-img {
+  height: 22px;
+  max-width: 65px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 2px;
+}
+.sign-line {
+  border-top: 1px solid #000;
+  width: 70px;
+  margin: 0 auto 2px;
+}
+
+/* Copy label */
+.r-copy {
+  border-top: 1.5px solid #000;
+  padding: 2px 6px;
+  font-size: 6.5pt;
+  font-weight: 900;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  text-align: right;
+  background: #f8f8f8;
+}
+
+@media print {
+  body { background: #fff; }
+  .no-print { display: none !important; }
+  .a4 { box-shadow: none; margin: 0; }
+  .bottom-half::after { display: none; }
+  @page { size: A4 portrait; margin: 0; }
 }
 </style>
 </head>
 <body>
 @php
-$amountColumn = \App\Models\FeeCollectDetail::amountColumn();
-$thisPay = (float) $fee->{$amountColumn};
-$totalPaid = (float) \App\Models\FeeCollectDetail::where('course_book_id', $courseBook->id)->sum($amountColumn);
-$totalFee = (float) $courseBook->final_fee;
-$balanceDue = max($totalFee - $totalPaid, 0);
-$studentName = $courseBook->student->profile?->name ?? $courseBook->student->user_id;
+  $amtCol  = \App\Models\FeeCollectDetail::amountColumn();
+  $thisPay = (float) $fee->{$amtCol};
+  $totPaid = (float) \App\Models\FeeCollectDetail::where('course_book_id', $courseBook->id)
+                 ->whereNull('cancelled_at')->sum($amtCol);
+  $totFee  = (float) $courseBook->final_fee;
+  $balance = max($totFee - $totPaid, 0);
+
+  $profile = $courseBook->student->profile;
+  $sName   = $profile?->name   ?? $courseBook->student->user_id;
+  $fName   = $profile?->father_name ?? '';
+  $mobile  = $courseBook->student->mobile ?? '';
+
+  $iName   = $institute?->name    ?? 'Institute';
+  $iAddr   = $institute?->address ?? '';
+  $iCity   = $institute?->city    ?? '';
+  $iMob    = $institute?->mobile  ?? '';
+  $iLogo   = ($institute?->logo && !str_contains($institute->logo ?? '', 'default')) ? $institute->logo : null;
+
+  $useStamp = $institute?->use_stamp   && $institute?->stamp;
+  $useSig   = $institute?->use_signature && $institute?->signature;
+
+  // Amount in words
+  $toWords = function(float $amount) use (&$toWords): string {
+      $n = (int) round($amount);
+      if ($n === 0) return 'Zero Rupees Only';
+      $ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine',
+               'Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen',
+               'Seventeen','Eighteen','Nineteen'];
+      $tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+      $conv = function(int $n) use (&$conv, $ones, $tens): string {
+          if ($n === 0)   return '';
+          if ($n < 20)    return $ones[$n] . ' ';
+          if ($n < 100)   return $tens[intdiv($n,10)] . ' ' . ($n%10 ? $ones[$n%10].' ' : '');
+          if ($n < 1000)  return $ones[intdiv($n,100)] . ' Hundred ' . $conv($n % 100);
+          if ($n < 100000)   return $conv(intdiv($n,1000))    . 'Thousand '  . $conv($n % 1000);
+          if ($n < 10000000) return $conv(intdiv($n,100000))  . 'Lakh '      . $conv($n % 100000);
+          return                     $conv(intdiv($n,10000000)) . 'Crore '   . $conv($n % 10000000);
+      };
+      return 'Rupees ' . trim($conv($n)) . ' Only';
+  };
 @endphp
 
 <div class="no-print">
-  <button class="btn-print" onclick="window.print()">Print / Save PDF</button>
-  <button class="btn-close" onclick="window.close()">Close</button>
+  <button class="btn-p" onclick="window.print()">Print / Save PDF</button>
+  <button class="btn-c" onclick="window.close()">Close</button>
 </div>
 
-<div class="receipt-wrap">
-  {{-- Header --}}
-  <div class="r-header">
-    @if($institute?->logo)
-      <img src="{{ asset($institute->logo) }}" class="r-logo" alt="logo">
-    @else
-      <div class="r-logo-placeholder">{{ strtoupper(substr($institute?->name ?? 'I', 0, 1)) }}</div>
-    @endif
-    <div style="flex:1">
-      <div class="r-inst-name">{{ $institute?->name ?? 'Institute' }}</div>
-      <div class="r-inst-detail">
-        @if($institute?->address){{ $institute->address }}@endif
-        @if($institute?->mobile) &nbsp;|&nbsp; {{ $institute->mobile }}@endif
-        @if($institute?->email) &nbsp;|&nbsp; {{ $institute->email }}@endif
-      </div>
-    </div>
-    @if($institute?->unique_id)
-    <div style="text-align:right;font-size:12px;opacity:.8">
-      <div>Reg. ID</div>
-      <div style="font-weight:700;">{{ $institute->unique_id }}</div>
-    </div>
-    @endif
-  </div>
+<div class="a4">
+  <div class="top-half">
 
-  {{-- Title bar --}}
-  <div class="r-title-bar">
-    <div class="r-title">Fee Receipt</div>
-    <div class="r-inv">
-      <div><strong>Invoice No:</strong> {{ $fee->invoice_no }}</div>
-      <div><strong>Date:</strong> {{ $fee->date->format('d F Y') }}</div>
-    </div>
-  </div>
+    @foreach(['OFFICE COPY','STUDENT COPY'] as $copy)
+      @if(!$loop->first)<div class="cut-line"></div>@endif
 
-  <div class="r-body">
-    {{-- Student + Payment Info --}}
-    <div class="r-info-grid">
-      <div>
-        <div class="r-block-title">Student Information</div>
-        <div class="r-row"><span class="lbl">Name</span><span class="val">{{ $studentName }}</span></div>
-        <div class="r-row"><span class="lbl">Mobile</span><span class="val">{{ $courseBook->student->mobile }}</span></div>
-        @if($courseBook->student->email)
-        <div class="r-row"><span class="lbl">Email</span><span class="val">{{ $courseBook->student->email }}</span></div>
-        @endif
-        <div class="r-row"><span class="lbl">Enrollment No.</span><span class="val">{{ $courseBook->enrollment_no ?? 'Pending' }}</span></div>
-      </div>
-      <div>
-        <div class="r-block-title">Course & Payment Details</div>
-        <div class="r-row"><span class="lbl">Course</span><span class="val">{{ $courseBook->course->name }}</span></div>
-        @if($courseBook->batch)
-        <div class="r-row"><span class="lbl">Batch</span><span class="val">{{ $courseBook->batch->name }}</span></div>
-        @endif
-        <div class="r-row"><span class="lbl">Payment Mode</span><span class="val">{{ $fee->payment_mode }}</span></div>
-        @if($fee->utr)
-        <div class="r-row"><span class="lbl">UTR / Reference</span><span class="val">{{ $fee->utr }}</span></div>
-        @endif
-      </div>
-    </div>
+      <div class="receipt">
 
-    {{-- Amount paid this receipt --}}
-    <div class="r-amount-box">
-      <div class="r-amount-label">Amount Paid (This Receipt)</div>
-      <div class="r-amount-value">₹{{ number_format($thisPay, 2) }}</div>
-    </div>
+        {{-- Institute Header --}}
+        <div class="r-head">
+          @if($iLogo)
+            <img src="{{ asset($iLogo) }}" class="r-head-logo" alt="">
+          @else
+            <div class="r-head-logo-box">{{ strtoupper(substr($iName,0,1)) }}</div>
+          @endif
+          <div class="r-head-text">
+            <div class="r-head-name">{{ $iName }}</div>
+            <div class="r-head-addr">
+              {{ implode('', array_filter([$iAddr, $iCity], fn($v) => $v !== '')) }}
+            </div>
+            @if($iMob)<div class="r-head-addr">Ph. : {{ $iMob }}</div>@endif
+          </div>
+        </div>
 
-    {{-- Balance grid --}}
-    <div class="r-balance-grid">
-      <div class="r-balance-item">
-        <div class="bi-lbl">Course Fee</div>
-        <div class="bi-val">₹{{ number_format($totalFee, 2) }}</div>
-      </div>
-      <div class="r-balance-item paid">
-        <div class="bi-lbl">Total Paid</div>
-        <div class="bi-val">₹{{ number_format($totalPaid, 2) }}</div>
-      </div>
-      <div class="r-balance-item {{ $balanceDue > 0 ? 'due' : '' }}">
-        <div class="bi-lbl">Balance Due</div>
-        <div class="bi-val">₹{{ number_format($balanceDue, 2) }}</div>
-      </div>
-    </div>
+        {{-- Title --}}
+        <div class="r-title">Fees Receipt</div>
 
-    @if($fee->note)
-    <div class="r-note"><strong>Note:</strong> {{ $fee->note }}</div>
-    @endif
-  </div>
+        {{-- All rows in one table --}}
+        <table class="rt">
+          <colgroup>
+            <col style="width:28%"><col style="width:21%"><col style="width:15%"><col style="width:15%"><col style="width:21%">
+          </colgroup>
 
-  {{-- Footer --}}
-  <div class="r-footer">
-    <div style="line-height:1.7">
-      This is a computer-generated receipt. No signature required.<br>
-      For queries, contact the institute.
-    </div>
-    <div>
-      <div class="r-sign-line">Authorized Signatory</div>
-    </div>
-  </div>
+          <tr>
+            <td class="lbl">Receipt No.</td>
+            <td class="vb" colspan="2">{{ $fee->invoice_no }}</td>
+            <td class="lbl">Date :</td>
+            <td class="vb">{{ $fee->date->format('d-m-Y') }}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Enroll. No.</td>
+            <td class="val" colspan="4">{{ $courseBook->enrollment_no ?? 'Pending' }}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Student Name</td>
+            <td class="vb" colspan="4">{{ $sName }}</td>
+          </tr>
+          @if($fName)
+          <tr>
+            <td class="lbl">Father's Name</td>
+            <td class="val" colspan="4">{{ $fName }}</td>
+          </tr>
+          @endif
+          <tr>
+            <td class="lbl">Mobile</td>
+            <td class="val">{{ $mobile }}</td>
+            <td class="lbl">Pay Mode</td>
+            <td class="vb" colspan="2">{{ $fee->payment_mode }}</td>
+          </tr>
+          <tr>
+            <td class="lbl">Course</td>
+            <td class="val" colspan="2">{{ $courseBook->course->name }}</td>
+            <td class="lbl">Batch</td>
+            <td class="val">{{ $courseBook->batch?->name ?? '—' }}</td>
+          </tr>
+          @if($fee->utr)
+          <tr>
+            <td class="lbl">UTR / Ref.</td>
+            <td class="val" colspan="4">{{ $fee->utr }}</td>
+          </tr>
+          @endif
+
+          {{-- Fee Details Header --}}
+          <tr class="det-head">
+            <td colspan="4" style="text-align:left;padding-left:6px">Student's Fee Details</td>
+            <td>Amount (₹)</td>
+          </tr>
+
+          {{-- Fee / Installment row — tall --}}
+          <tr class="fee-row">
+            <td colspan="4">{{ $fee->note ?: 'Fee / Installment' }}</td>
+            <td style="text-align:right;padding-right:7px;vertical-align:top">
+              {{ number_format($thisPay, 2) }}
+            </td>
+          </tr>
+
+          {{-- Amount Paid shaded --}}
+          <tr class="amt-row">
+            <td class="lbl" colspan="4" style="padding-left:6px">Amount Paid (This Receipt)</td>
+            <td class="amt-val">{{ number_format($thisPay, 2) }}</td>
+          </tr>
+
+          {{-- Summary --}}
+          <tr class="sum-row">
+            <td class="lbl" colspan="4">Total Fee</td>
+            <td class="sv">{{ number_format($totFee, 2) }}</td>
+          </tr>
+          <tr class="sum-row">
+            <td class="lbl" colspan="4">Paid Fee</td>
+            <td class="sv">{{ number_format($totPaid, 2) }}</td>
+          </tr>
+          <tr class="sum-row balance">
+            <td class="lbl" colspan="4">Balance Fee</td>
+            <td class="sv">{{ number_format($balance, 2) }}</td>
+          </tr>
+
+          {{-- Amount in Words --}}
+          <tr class="words-row">
+            <td colspan="5">{{ $toWords($thisPay) }}</td>
+          </tr>
+
+          {{-- Signature / Stamp row --}}
+          <tr class="sign-row">
+            <td colspan="5">
+              <div class="sign-cell-inner">
+                <div class="sign-box">
+                  <div class="sign-line"></div>
+                  <div>Student's Signature</div>
+                </div>
+                <div class="sign-box">
+                  @if($useStamp)
+                    <img src="{{ asset($institute->stamp) }}" class="sign-img" alt="stamp">
+                  @endif
+                  @if($useSig)
+                    <img src="{{ asset($institute->signature) }}" class="sign-img" alt="signature">
+                  @endif
+                  <div class="sign-line"></div>
+                  <div>Authorised Signatory</div>
+                </div>
+              </div>
+            </td>
+          </tr>
+
+        </table>
+
+        {{-- Copy label --}}
+        <div class="r-copy">{{ $copy }}</div>
+
+      </div>{{-- /receipt --}}
+    @endforeach
+
+  </div>{{-- /top-half --}}
+
+  <div class="bottom-half"></div>
 </div>
+
 </body>
 </html>

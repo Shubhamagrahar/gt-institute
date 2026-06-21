@@ -17,6 +17,16 @@ return [
             'driver'   => 'session',
             'provider' => 'users',
         ],
+
+        'staff' => [
+            'driver'   => 'session',
+            'provider' => 'users',
+        ],
+
+        'student' => [
+            'driver'   => 'session',
+            'provider' => 'users',
+        ],
     ],
 
     'providers' => [

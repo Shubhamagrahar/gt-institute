@@ -29,18 +29,25 @@ use App\Http\Controllers\Institute\FranchiseLevelController;
 use App\Http\Controllers\Institute\ChannelPartnerController;
 use App\Http\Controllers\Institute\AccountController;
 use App\Http\Controllers\Institute\FeesDashboardController;
+use App\Http\Controllers\Institute\StaffRoleController;
+use App\Http\Controllers\Staff\AuthController as StaffAuthController;
+use App\Http\Controllers\Staff\DashboardController as StaffDashboard;
+use App\Http\Controllers\Student\AuthController as StudentAuthController;
+use App\Http\Controllers\Student\DashboardController as StudentDashboard;
+use App\Http\Controllers\Student\PasswordResetController as StudentPasswordReset;
 use App\Http\Controllers\Franchise\DashboardController as FranchiseDashboard;
 use App\Http\Controllers\Franchise\EnrollmentController as FranchiseEnrollment;
 use App\Http\Controllers\Franchise\WalletController as FranchiseWallet;
 use App\Http\Controllers\Franchise\StudentController as FranchiseStudent;
 use App\Http\Controllers\Franchise\CertificateController as FranchiseCertificate;
 
-// Root redirect
-Route::get('/', fn() => redirect()->route('login'));
+// Home page — portal selection
+Route::get('/', fn() => view('home'));
 
 // Auth routes
 Route::middleware('guest:web,institute')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
+    Route::get('/franchise/login', fn() => view('auth.franchise-login'))->name('franchise.login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
     Route::get('/login/otp', [LoginController::class, 'showOtpVerify'])->name('login.otp.show');
     Route::post('/login/otp', [LoginController::class, 'verifyOtp'])->name('login.otp.verify');
@@ -213,6 +220,12 @@ Route::post('enrollment/{courseBook}/payment', [EnrollmentController::class, 'ad
 Route::post('enrollment/education/add', [EnrollmentController::class, 'addEducation'])->name('enrollment.education.add');
 Route::delete('enrollment/education/{education}', [EnrollmentController::class, 'removeEducation'])->name('enrollment.education.remove');
 
+// DEV ONLY — Email preview (remove before production)
+Route::get('dev/preview-email/seat-booking/{courseBook}', function (\App\Models\CourseBook $courseBook) {
+    $user = $courseBook->student;
+    return new \App\Mail\SeatBookingConfirmationMail($user, $courseBook->load(['course','batch','student.profile']), 'TempPass@123');
+})->middleware('auth:institute');
+
 // Enquiries
 Route::get('enquiries', [\App\Http\Controllers\Institute\EnquiryController::class, 'index'])->name('enquiries.index');
 Route::get('enquiries/create', [\App\Http\Controllers\Institute\EnquiryController::class, 'create'])->name('enquiries.create');
@@ -270,3 +283,51 @@ Route::prefix('franchise')
         Route::get('/certificate',          [FranchiseCertificate::class, 'index'])->name('certificate.index');
         Route::get('/certificate/view',     [FranchiseCertificate::class, 'view'])->name('certificate.view');
     });
+
+// ── STAFF AUTH ────────────────────────────────────────────────────────────────
+Route::prefix('staff')->name('staff.')->group(function () {
+    Route::middleware('guest:staff')->group(function () {
+        Route::get('/login',  [StaffAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [StaffAuthController::class, 'login'])->name('login.post');
+    });
+    Route::post('/logout', [StaffAuthController::class, 'logout'])->name('logout');
+
+    // Staff Panel (protected)
+    Route::middleware('auth.staff')->group(function () {
+        Route::get('/dashboard', [StaffDashboard::class, 'index'])->name('dashboard');
+    });
+});
+
+// ── INSTITUTE: Staff Role Management (add to institute group above) ───────────
+Route::prefix('institute')->name('institute.')->middleware(['auth:institute', 'role:institute_head', 'check.session'])->group(function () {
+    Route::resource('staff-roles', StaffRoleController::class)->except(['show']);
+    Route::get('staff/{staff}/permissions', [\App\Http\Controllers\Institute\StaffController::class, 'permissions'])->name('staff.permissions');
+    Route::post('staff/{staff}/permissions', [\App\Http\Controllers\Institute\StaffController::class, 'savePermissions'])->name('staff.permissions.save');
+    Route::get('staff/{staff}/salary', [\App\Http\Controllers\Institute\StaffController::class, 'salary'])->name('staff.salary');
+    Route::post('staff/{staff}/salary/record', [\App\Http\Controllers\Institute\StaffController::class, 'createSalaryRecord'])->name('staff.salary.record');
+    Route::post('staff/{staff}/salary/pay', [\App\Http\Controllers\Institute\StaffController::class, 'recordPayment'])->name('staff.salary.pay');
+    Route::delete('staff/salary/transaction/{txn}', [\App\Http\Controllers\Institute\StaffController::class, 'deleteTransaction'])->name('staff.salary.transaction.delete');
+    Route::get('staff/{staff}/salary/{record}/slip', [\App\Http\Controllers\Institute\StaffController::class, 'salarySlip'])->name('staff.salary.slip');
+});
+
+// ── STUDENT PORTAL ────────────────────────────────────────────────────────────
+Route::prefix('student')->name('student.')->group(function () {
+    Route::middleware('guest:student')->group(function () {
+        Route::get('/login',  [StudentAuthController::class, 'showLogin'])->name('login');
+        Route::post('/login', [StudentAuthController::class, 'login'])->name('login.post');
+        Route::get('/forgot-password',       [StudentPasswordReset::class, 'showForgotForm'])->name('password.request');
+        Route::post('/forgot-password',      [StudentPasswordReset::class, 'sendResetLink'])->name('password.email');
+        Route::get('/forgot-password/sent',  [StudentPasswordReset::class, 'showSentPage'])->name('password.sent');
+        Route::get('/reset-password/{token}',[StudentPasswordReset::class, 'showResetForm'])->name('password.reset');
+        Route::post('/reset-password',       [StudentPasswordReset::class, 'resetPassword'])->name('password.update');
+    });
+    Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
+
+    Route::middleware('auth:student')->group(function () {
+        Route::get('/dashboard',  [StudentDashboard::class, 'dashboard'])->name('dashboard');
+        Route::get('/profile',    [StudentDashboard::class, 'profile'])->name('profile');
+        Route::get('/fees',       [StudentDashboard::class, 'fees'])->name('fees');
+        Route::get('/attendance', [StudentDashboard::class, 'attendance'])->name('attendance');
+        Route::get('/courses',    [StudentDashboard::class, 'courses'])->name('courses');
+    });
+});

@@ -1,11 +1,24 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign In — GT Institute</title>
+  <link rel="icon" href="{{ asset('images/gt-favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <style>
+    /* Fix browser autofill background breaking dark theme */
+    .gt-login-page .gt-input:-webkit-autofill,
+    .gt-login-page .gt-input:-webkit-autofill:hover,
+    .gt-login-page .gt-input:-webkit-autofill:focus,
+    .gt-login-page .gt-input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 40px #202645 inset !important;
+      -webkit-text-fill-color: #fff !important;
+      caret-color: #fff;
+      transition: background-color 5000s ease-in-out 0s;
+      border-color: rgba(255,255,255,.09) !important;
+    }
+
     /* Password toggle */
     #toggle-pwd { cursor: pointer; }
     .login-meta-row {
@@ -116,6 +129,10 @@
     {{-- Powered by --}}
     <div class="gt-login-powered">
       Powered by <a href="#">Gaurangi Technologies</a>
+    </div>
+
+    <div style="text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.3);">
+      <a href="{{ url('/') }}" style="color:rgba(138,115,245,.7);text-decoration:none;font-weight:600;">← Back to Portal Selection</a>
     </div>
 
   </div>

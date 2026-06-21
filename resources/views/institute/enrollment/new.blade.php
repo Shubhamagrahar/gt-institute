@@ -296,10 +296,7 @@
                 @error('channel_partner_id')<div class="gt-error">{{ $message }}</div>@enderror
               </div>
 
-              <div class="gt-form-group">
-                <label class="gt-label">Course Duration</label>
-                <input type="text" class="gt-input" id="course_duration_view" value="-" readonly>
-              </div>
+
             </div>
 
             <div class="inline-fee-panel">
@@ -937,6 +934,7 @@
           courseSelect.value = c.id;
           courseSearchDisplay.value = c.name;
           courseSearchDropdown.style.display = 'none';
+          renderCourseSummary();
           updateStep1Summary();
         });
         courseSearchDropdown.appendChild(d);
@@ -987,7 +985,7 @@
 
   function renderCourseSummary() {
     const course = selectedCourse();
-    document.getElementById('course_duration_view').value = course ? `${course.duration} month(s)` : '-';
+
     sideCourseName.textContent = course ? course.name : '-';
     sideCourseDuration.textContent = course ? `${course.duration} month(s)` : '-';
     if (!course) {

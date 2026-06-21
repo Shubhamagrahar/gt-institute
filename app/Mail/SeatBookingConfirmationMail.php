@@ -16,14 +16,15 @@ class SeatBookingConfirmationMail extends Mailable
 
     public function __construct(
         public User $user,
-        public CourseBook $courseBook
-    ) {
-    }
+        public CourseBook $courseBook,
+        public int $validityDays = 30,
+        public string $instituteName = '',
+    ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Seat booking confirmed - ' . ($this->courseBook->course?->name ?? 'Admission')
+            subject: 'Seat Booked — ' . ($this->courseBook->course?->name ?? 'Your Course'),
         );
     }
 
@@ -31,10 +32,6 @@ class SeatBookingConfirmationMail extends Mailable
     {
         return new Content(
             view: 'emails.seat-booking-confirmation',
-            with: [
-                'user' => $this->user,
-                'courseBook' => $this->courseBook,
-            ]
         );
     }
 }

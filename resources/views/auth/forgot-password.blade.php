@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Forgot Password - GT Institute</title>
+  <link rel="icon" href="{{ asset('images/gt-favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <style>
     .gt-login-links { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:14px; }
@@ -23,8 +24,8 @@
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="logo-icon-box" style="display:none;">GT</div>
         <div>
-          <div class="logo-wordmark">Gaurangi</div>
-          <div class="logo-tagline">Technologies</div>
+          <!-- <div class="logo-wordmark">Gaurangi</div>
+          <div class="logo-tagline">Technologies</div> -->
         </div>
       </div>
     </div>

@@ -128,13 +128,12 @@
           @error('mobile')<div class="gt-error">{{ $message }}</div>@enderror
         </div>
 
-        @if($quickFields->has('email'))
-          <div class="gt-form-group">
-            <label class="gt-label">Email @if($quickFields['email']->quick_is_required)<span style="color:var(--danger)">*</span>@endif</label>
-            <input type="email" name="email" class="gt-input" value="{{ old('email') }}" autocomplete="off" {{ $quickFields['email']->quick_is_required ? 'required' : '' }}>
-            @error('email')<div class="gt-error">{{ $message }}</div>@enderror
-          </div>
-        @endif
+        <div class="gt-form-group">
+          <label class="gt-label">Email <span style="color:var(--danger)">*</span></label>
+          <input type="email" name="email" class="gt-input" value="{{ old('email', $enquiryPrefill['email'] ?? '') }}" autocomplete="off" required>
+          <div class="gt-field-error" id="email-error" style="display:none;color:var(--danger);font-size:12px;margin-top:3px;"></div>
+          @error('email')<div class="gt-error">{{ $message }}</div>@enderror
+        </div>
 
         @foreach($quickFields as $field)
           @continue(in_array($field->field_key, ['name', 'mobile', 'email', 'education_details'], true))
@@ -434,7 +433,6 @@
     feeBox.style.display = 'block';
   }
 
-  const courseSelect = document.getElementById('course_id');
   courseSelect.addEventListener('change', () => renderFeeBreakdown(courseSelect.value));
 
   renderDurationOptions();

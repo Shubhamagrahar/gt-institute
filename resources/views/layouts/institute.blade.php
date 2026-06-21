@@ -1,12 +1,24 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Dashboard') — {{ Auth::guard('institute')->user()->institute?->name ?? 'Institute' }}</title>
+  <link rel="icon" href="{{ asset('images/gt-favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   @stack('styles')
+  <style>
+    @keyframes gt-spin { to { transform: rotate(360deg); } }
+    .gt-btn-spinner {
+      display: inline-block; width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,.35);
+      border-top-color: #fff; border-radius: 50%;
+      animation: gt-spin .55s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+      flex-shrink: 0;
+    }
+  </style>
 </head>
 <body>
 <div class="gt-overlay" id="overlay"></div>
@@ -249,9 +261,17 @@
     </a>
 
     <div class="gt-sidebar-section">Team & Account</div>
-    <a href="{{ route('institute.staff.index') }}" class="gt-nav-item {{ request()->routeIs('institute.staff.*') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Staff
+    <a href="{{ route('institute.staff.index') }}" class="gt-nav-item {{ request()->routeIs('institute.staff.index','institute.staff.create','institute.staff.show','institute.staff.edit') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Staff Members
+    </a>
+    <a href="{{ route('institute.staff-roles.index') }}" class="gt-nav-item {{ request()->routeIs('institute.staff-roles.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Staff Roles
+    </a>
+    <a href="{{ route('institute.attendance.staff') }}" class="gt-nav-item {{ request()->routeIs('institute.attendance.staff') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+      Staff Attendance
     </a>
     <a href="{{ route('institute.accounts.billing') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.billing') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h3"/></svg>
@@ -368,5 +388,24 @@ document.getElementById('overlay')?.addEventListener('click', function() {
 });
 </script>
 @stack('scripts')
+<script>
+/* ── Global form submit spinner ── */
+document.addEventListener('submit', function (e) {
+  var form = e.target;
+  if (form.dataset.noSpinner) return;
+
+  var btn = form.querySelector('button[type="submit"]:not([data-no-spinner])');
+  if (!btn || btn.disabled) return;
+
+  var label = btn.dataset.loadingText || 'Please wait…';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="gt-btn-spinner"></span>' + label;
+
+  // Safety fallback: re-enable after 20s in case of server error redirect
+  setTimeout(function () {
+    btn.disabled = false;
+  }, 20000);
+}, true);
+</script>
 </body>
 </html>
