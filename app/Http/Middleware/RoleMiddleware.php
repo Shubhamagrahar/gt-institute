@@ -13,12 +13,12 @@ class RoleMiddleware
         // Owner panel
         if (in_array('owner', $roles)) {
             if (!Auth::guard('web')->check()) {
-                return redirect()->route('login');
+                return redirect()->route('owner.login');
             }
             $admin = Auth::guard('web')->user();
             if ($admin->status === 'inactive') {
                 Auth::guard('web')->logout();
-                return redirect()->route('login')->withErrors(['login' => 'Account deactivated.']);
+                return redirect()->route('owner.login')->withErrors(['login' => 'Account deactivated.']);
             }
             return $next($request);
         }

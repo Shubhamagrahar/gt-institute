@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if (str_starts_with($request->path(), 'owner/')) {
+                return route('owner.login');
+            }
             if (str_starts_with($request->path(), 'student/')) {
                 return route('student.login');
             }

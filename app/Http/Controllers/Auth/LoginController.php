@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Mail\LoginOtpMail;
-use App\Models\SuperAdmin;
 use App\Models\SystemSetting;
 use App\Models\User;
 use Carbon\Carbon;
@@ -21,9 +20,6 @@ class LoginController extends Controller
 
     public function showLogin()
     {
-        if (Auth::guard('web')->check()) {
-            return redirect()->route('owner.dashboard');
-        }
         if (Auth::guard('institute')->check()) {
             return redirect()->route('institute.dashboard');
         }
@@ -41,23 +37,6 @@ class LoginController extends Controller
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 
-        // ── Super Admin ───────────────────────────────────────────────────────
-        $admin = SuperAdmin::where('email', $login)
-            ->orWhere('mobile', $login)
-            ->orWhere('admin_id', $login)
-            ->first();
-
-        if ($admin && Hash::check($password, $admin->password)) {
-            if ($admin->status === 'inactive') {
-                return back()->withErrors(['login' => 'Your admin account is deactivated.'])->withInput();
-            }
-            // Super admin — direct login, no OTP
-            Auth::guard('web')->login($admin, $remember);
-            $request->session()->regenerate();
-            return redirect()->route('owner.dashboard');
-        }
-
-        // ── Institute User ────────────────────────────────────────────────────
         $user = User::where('email', $login)
             ->orWhere('mobile', $login)
             ->orWhere('user_id', $login)
@@ -160,7 +139,6 @@ class LoginController extends Controller
 
     public function logout(Request $request)
     {
-        Auth::guard('web')->logout();
         Auth::guard('institute')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

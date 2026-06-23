@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\OwnerLoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboard;
 use App\Http\Controllers\Owner\FeatureController;
@@ -44,8 +45,17 @@ use App\Http\Controllers\Franchise\CertificateController as FranchiseCertificate
 // Home page — portal selection
 Route::get('/', fn() => view('home'));
 
-// Auth routes
-Route::middleware('guest:web,institute')->group(function () {
+// ── Owner (Super Admin) Auth ──────────────────────────────────────────────────
+Route::prefix('owner')->name('owner.')->group(function () {
+    Route::middleware('guest:web')->group(function () {
+        Route::get('/login',  [OwnerLoginController::class, 'showLogin'])->name('login');
+        Route::post('/login', [OwnerLoginController::class, 'login'])->name('login.post');
+    });
+    Route::post('/logout', [OwnerLoginController::class, 'logout'])->name('logout');
+});
+
+// ── Institute Auth ────────────────────────────────────────────────────────────
+Route::middleware('guest:institute')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::get('/franchise/login', fn() => view('auth.franchise-login'))->name('franchise.login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');
