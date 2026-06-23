@@ -7,15 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        // Add separate index on batch_id first so FK constraint still has a supporting index
-        \DB::statement('ALTER TABLE attendance_students ADD INDEX idx_att_batch_id (batch_id)');
-        \DB::statement('ALTER TABLE attendance_students DROP INDEX attendance_students_user_id_date_batch_id_unique');
-        \DB::statement('
+        \DB::unprepared('
             ALTER TABLE attendance_students
+                DROP FOREIGN KEY attendance_students_batch_id_foreign,
+                DROP INDEX attendance_students_user_id_date_batch_id_unique,
                 ADD COLUMN course_id BIGINT UNSIGNED NULL AFTER batch_id,
                 ADD COLUMN session_id BIGINT UNSIGNED NULL AFTER course_id,
                 ADD COLUMN course_book_id BIGINT UNSIGNED NULL AFTER session_id,
-                ADD UNIQUE INDEX att_student_course_date_unique (user_id, course_id, date)
+                ADD INDEX idx_att_batch_id (batch_id),
+                ADD UNIQUE INDEX att_student_course_date_unique (user_id, course_id, date),
+                ADD CONSTRAINT attendance_students_batch_id_foreign
+                    FOREIGN KEY (batch_id) REFERENCES batch_details (id) ON DELETE SET NULL
         ');
     }
 
