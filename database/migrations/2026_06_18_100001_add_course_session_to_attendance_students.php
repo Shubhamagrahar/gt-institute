@@ -14,7 +14,6 @@ return new class extends Migration {
                 ADD COLUMN course_id BIGINT UNSIGNED NULL AFTER batch_id,
                 ADD COLUMN session_id BIGINT UNSIGNED NULL AFTER course_id,
                 ADD COLUMN course_book_id BIGINT UNSIGNED NULL AFTER session_id,
-                ADD INDEX idx_att_batch_id (batch_id),
                 ADD UNIQUE INDEX att_student_course_date_unique (user_id, course_id, date),
                 ADD CONSTRAINT attendance_students_batch_id_foreign
                     FOREIGN KEY (batch_id) REFERENCES batch_details (id) ON DELETE SET NULL
