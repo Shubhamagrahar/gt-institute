@@ -83,6 +83,15 @@
                 <a href="{{ route('institute.franchises.certificate', $franchise) }}" target="_blank"
                   class="btn btn-xs" style="background:rgba(200,146,42,.12);color:#8b6520;border:1px solid rgba(200,146,42,.3);"
                   title="Download Franchise Certificate">📜 Certificate</a>
+                <form method="POST" action="{{ route('institute.franchises.resend-credentials', $franchise) }}"
+                  onsubmit="return confirm('Resend login credentials to {{ $franchise->email }}?\n\nThis will reset the current password and email new credentials.')">
+                  @csrf
+                  <button type="submit" class="btn btn-xs"
+                    style="background:rgba(99,102,241,.12);color:#4338ca;border:1px solid rgba(99,102,241,.25);"
+                    title="Resend login credentials via email">
+                    🔑 Credentials
+                  </button>
+                </form>
                 <form method="POST" action="{{ route('institute.franchises.toggle', $franchise) }}">
                   @csrf
                   @method('PATCH')

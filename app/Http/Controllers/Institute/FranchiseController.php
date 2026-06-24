@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Institute;
 
 use App\Http\Controllers\Controller;
+use App\Mail\FranchiseWelcomeMail;
 use App\Models\CourseDetail;
 use App\Models\Franchise;
 use App\Models\FranchiseCourseCharge;
@@ -15,6 +16,7 @@ use App\Services\InvoiceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
 class FranchiseController extends Controller
@@ -495,6 +497,30 @@ class FranchiseController extends Controller
             ->get(['course_name', 'duration', 'admission_charge', 'certificate_charge']);
 
         return response()->json($charges);
+    }
+
+    // ─── Resend Credentials ───────────────────────────────────────────────────
+
+    public function resendCredentials(Franchise $franchise)
+    {
+        $this->authorizeFranchise($franchise);
+
+        $head = $franchise->head;
+        abort_if(! $head, 404, 'Franchise login user not found.');
+
+        $plainPassword = $this->onboarding->generatePassword();
+        $head->update(['password' => $plainPassword]);
+
+        try {
+            Mail::to($franchise->email)->send(
+                new FranchiseWelcomeMail($franchise, $head, $plainPassword)
+            );
+        } catch (\Throwable $e) {
+            logger()->error("Franchise resend credentials mail failed for franchise {$franchise->id}: " . $e->getMessage());
+            return back()->with('error', 'Failed to send credentials email. Please try again.');
+        }
+
+        return back()->with('success', "Login credentials resent to {$franchise->email}.");
     }
 
     // ─── Auth Helper ──────────────────────────────────────────────────────────

@@ -1,0 +1,78 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Deploy to msd.gtsaas.in
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, curl, zip, gd, bcmath, intl, mysql
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Wait before SSH (avoid rate limiting)
+        run: sleep 5
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          timeout: 60s
+          command_timeout: 10m
+          script: |
+            set -e
+            git config --global --add safe.directory /var/www/msd.gtsaas.in
+            cd /var/www/msd.gtsaas.in
+
+            # Always match server to GitHub exactly
+            git fetch origin master
+            git reset --hard origin/master
+
+            # Install PHP dependencies
+            composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Ensure storage directories exist
+            mkdir -p storage/framework/views
+            mkdir -p storage/framework/cache/data
+            mkdir -p storage/framework/sessions
+            mkdir -p storage/logs
+
+            # Run migrations
+            php artisan migrate --force
+
+            # Clear old caches first
+            php artisan config:clear
+            php artisan route:clear
+            php artisan view:clear
+            php artisan event:clear
+
+            # Rebuild caches
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            php artisan event:cache
+
+            # Restart queue worker
+            php artisan queue:restart
+
+            # Fix permissions
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+
+            echo "Deployment complete!"
