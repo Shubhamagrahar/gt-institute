@@ -205,6 +205,16 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
         Route::get('franchises/{franchise}/fee/{collection}/receipt', [FranchiseFeeController::class, 'receipt'])->name('franchises.fee.receipt');
         Route::patch('franchises/{franchise}/fee/{collection}/cancel', [FranchiseFeeController::class, 'cancel'])->name('franchises.fee.cancel');
 
+// Certificates & Marksheets
+Route::get('certificates',                    [\App\Http\Controllers\Institute\CertificateController::class, 'index'])       ->name('certificates.index');
+Route::get('certificates/generate',           [\App\Http\Controllers\Institute\CertificateController::class, 'generate'])    ->name('certificates.generate');
+Route::get('certificates/walk-in',            [\App\Http\Controllers\Institute\CertificateController::class, 'walkin'])      ->name('certificates.walkin');
+Route::get('certificates/requests',           [\App\Http\Controllers\Institute\CertificateController::class, 'requests'])    ->name('certificates.requests');
+Route::get('certificates/history',            [\App\Http\Controllers\Institute\CertificateController::class, 'history'])     ->name('certificates.history');
+Route::get('certificates/enrollments/{user}', [\App\Http\Controllers\Institute\CertificateController::class, 'enrollments']) ->name('certificates.enrollments');
+Route::post('certificates',                   [\App\Http\Controllers\Institute\CertificateController::class, 'store'])       ->name('certificates.store');
+Route::post('certificates/reject',            [\App\Http\Controllers\Institute\CertificateController::class, 'reject'])      ->name('certificates.reject');
+
 // Fees Dashboard
 Route::get('fees-dashboard', [FeesDashboardController::class, 'index'])->name('fees-dashboard');
 Route::get('fees-search', [FeesDashboardController::class, 'search'])->name('fees-search');

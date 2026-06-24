@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Certificate & Marksheet — Prototype</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;min-height:100vh}
+
+/* ── Shell ── */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:#1e293b;flex-shrink:0;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo .brand{font-size:15px;font-weight:800;color:#fff}
+.sidebar-logo .sub{font-size:10px;color:#94a3b8;margin-top:2px}
+.sidebar-section{padding:18px 14px 6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#64748b}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 14px;font-size:13px;font-weight:500;color:#94a3b8;cursor:pointer;border-radius:8px;margin:1px 6px;transition:.12s;text-decoration:none}
+.nav-item:hover{background:rgba(255,255,255,.06);color:#e2e8f0}
+.nav-item.active{background:rgba(99,102,241,.2);color:#818cf8}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2}
+
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:16px;font-weight:800}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.avatar-circle{width:34px;height:34px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+
+.content{padding:24px 28px;flex:1}
+
+/* ── Screens ── */
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── Cards ── */
+.card{background:#fff;border-radius:14px;border:1px solid #e2e8f0;overflow:hidden;margin-bottom:18px}
+.card-head{padding:14px 18px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:14px;font-weight:800}
+.card-body{padding:18px}
+
+/* ── Stat cards ── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
+.stat-card{border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;color:#fff}
+.stat-card.amber{background:linear-gradient(135deg,#f59e0b,#b45309)}
+.stat-card.blue{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.stat-card.green{background:linear-gradient(135deg,#10b981,#047857)}
+.stat-card.purple{background:linear-gradient(135deg,#6366f1,#4338ca)}
+.stat-icon{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:2}
+.stat-num{font-size:26px;font-weight:900;line-height:1}
+.stat-lbl{font-size:11px;opacity:.85;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:.12s;text-decoration:none}
+.btn-primary{background:#6366f1;color:#fff}
+.btn-primary:hover{background:#4f46e5}
+.btn-outline{background:#fff;color:#475569;border:1.5px solid #e2e8f0}
+.btn-outline:hover{border-color:#6366f1;color:#6366f1}
+.btn-danger{background:#fff;color:#dc2626;border:1.5px solid #fca5a5}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-xs{padding:4px 10px;font-size:11px}
+
+/* ── Section head ── */
+.sec-head{display:flex;align-items:center;gap:8px;margin:22px 0 12px}
+.sec-bar{width:4px;height:18px;border-radius:3px;background:#6366f1}
+.sec-txt{font-size:14px;font-weight:800}
+
+/* ── Flow cards ── */
+.flow-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.flow-card{border-radius:14px;border:1.5px solid #e2e8f0;background:#fff;overflow:hidden}
+.flow-head{padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0}
+.flow-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.flow-icon.blue{background:#eff6ff} .flow-icon.blue svg{stroke:#3b82f6}
+.flow-icon.amber{background:#fffbeb} .flow-icon.amber svg{stroke:#f59e0b}
+.flow-icon svg{width:16px;height:16px;fill:none;stroke-width:2}
+.flow-title{font-size:13px;font-weight:800}
+.flow-sub{font-size:11px;color:#64748b;margin-top:1px}
+.flow-steps{list-style:none}
+.flow-step{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:1px solid #f1f5f9}
+.flow-step:last-child{border-bottom:none}
+.step-num{width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-num.blue{background:#eff6ff;color:#3b82f6}
+.step-num.amber{background:#fffbeb;color:#f59e0b}
+.step-body{}
+.step-title{font-size:12px;font-weight:700}
+.step-desc{font-size:11px;color:#64748b;margin-top:1px}
+.step-chips{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap}
+
+/* ── Chips ── */
+.chip{display:inline-block;font-size:10px;font-weight:800;padding:2px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.4px}
+.chip-ms{background:#ede9fe;color:#5b21b6}
+.chip-tc{background:#dbeafe;color:#1e40af}
+.chip-cc{background:#dcfce7;color:#15803d}
+.chip-pending{background:#fef3c7;color:#92400e}
+.chip-approved{background:#d1fae5;color:#065f46}
+.chip-rejected{background:#fee2e2;color:#991b1b}
+.chip-generated{background:#dbeafe;color:#1e40af}
+.chip-direct{background:#f1f5f9;color:#64748b}
+.chip-franchise{background:#fef3c7;color:#92400e}
+.chip-walkin{background:#fce7f3;color:#9d174d}
+
+/* ── Doc type cards ── */
+.doc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.doc-card{border-radius:12px;border:1.5px solid #e2e8f0;padding:18px;text-align:center}
+.doc-badge-lbl{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
+.doc-name{font-size:14px;font-weight:800;margin-bottom:6px}
+.doc-desc{font-size:12px;color:#64748b;line-height:1.6}
+.doc-elig{font-size:11px;color:#94a3b8;margin-top:8px;font-weight:600}
+
+/* ── Action list ── */
+.action-list{border-radius:14px;border:1.5px solid #e2e8f0;background:#fff;overflow:hidden;margin-bottom:20px}
+.action-item{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid #f1f5f9;transition:.1s}
+.action-item:last-child{border-bottom:none}
+.action-item:hover{background:#f8fafc}
+.action-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.action-icon svg{width:18px;height:18px;fill:none;stroke-width:2}
+.action-icon.blue{background:#eff6ff} .action-icon.blue svg{stroke:#3b82f6}
+.action-icon.purple{background:#ede9fe} .action-icon.purple svg{stroke:#5b21b6}
+.action-icon.amber{background:#fffbeb} .action-icon.amber svg{stroke:#f59e0b}
+.action-icon.green{background:#dcfce7} .action-icon.green svg{stroke:#15803d}
+.action-icon.pink{background:#fce7f3} .action-icon.pink svg{stroke:#9d174d}
+.action-info{flex:1}
+.action-title{font-size:13px;font-weight:700}
+.action-desc{font-size:12px;color:#64748b;margin-top:2px}
+
+/* ── Table ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl thead th{background:#f8fafc;padding:9px 14px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.tbl tbody td{padding:11px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.tbl tbody tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover{background:#f8fafc}
+.stu-name{font-weight:700;font-size:13px}
+.stu-enr{font-size:11px;color:#94a3b8}
+.cert-no{font-family:monospace;font-size:12px;color:#6366f1}
+
+/* ── Generate layout ── */
+.gen-layout{display:grid;grid-template-columns:340px 1fr;gap:18px;align-items:start}
+.left-panel{border-radius:14px;border:1.5px solid #e2e8f0;background:#fff;overflow:hidden;position:sticky;top:76px}
+.left-panel-head{padding:14px 16px;border-bottom:1px solid #e2e8f0;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.left-panel-head svg{width:15px;height:15px;stroke:#6366f1;fill:none;stroke-width:2}
+.left-panel-body{padding:16px}
+
+/* Search box */
+.search-box{display:flex;align-items:center;gap:8px;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 14px;background:#f8fafc;margin-bottom:14px}
+.search-box svg{width:14px;height:14px;stroke:#94a3b8;fill:none;stroke-width:2;flex-shrink:0}
+.search-box input{border:none;background:transparent;outline:none;font-size:13px;color:#1e293b;width:100%}
+
+/* Student found card */
+.stu-found{background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.stu-found-avatar{width:36px;height:36px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex-shrink:0}
+.stu-found-name{font-size:13px;font-weight:800}
+.stu-found-meta{font-size:11px;color:#64748b}
+
+/* Enrollment picker */
+.enr-pick-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:8px}
+.enr-pick-item{border:1.5px solid #e2e8f0;border-radius:9px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:.12s}
+.enr-pick-item.sel{border-color:#6366f1;background:#f5f3ff}
+.enr-pick-item:hover{border-color:#6366f1}
+.enr-course{font-size:13px;font-weight:700}
+.enr-meta-txt{font-size:11px;color:#64748b;margin-top:2px}
+.enr-close-badge{background:#dcfce7;color:#15803d;font-size:10px;font-weight:800;padding:1px 7px;border-radius:4px;text-transform:uppercase}
+
+/* Doc type picker */
+.doctype-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:16px}
+.doctype-btn{border:1.5px solid #e2e8f0;border-radius:9px;padding:10px 6px;text-align:center;cursor:pointer;transition:.12s}
+.doctype-btn:hover{border-color:#6366f1}
+.doctype-btn.sel{border-color:#6366f1;background:#f5f3ff}
+.dtb-code{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+.dtb-name{font-size:11px;font-weight:700;margin-top:3px}
+.dtb-ms{color:#5b21b6} .dtb-tc{color:#1e40af} .dtb-cc{color:#15803d}
+
+/* Right form */
+.form-panel{border-radius:14px;border:1.5px solid #e2e8f0;background:#fff;overflow:hidden}
+.form-sec{padding:18px 20px;border-bottom:1px solid #f1f5f9}
+.form-sec:last-child{border-bottom:none}
+.form-sec-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:14px}
+.form-row{display:grid;gap:12px;margin-bottom:12px}
+.form-row.c2{grid-template-columns:1fr 1fr}
+.form-row.c3{grid-template-columns:1fr 1fr 1fr}
+.form-row:last-child{margin-bottom:0}
+.fg{}
+.fg label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:5px}
+.fg input,.fg select{width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;background:#f8fafc;color:#1e293b;outline:none;transition:.15s}
+.fg input:focus,.fg select:focus{border-color:#6366f1;background:#fff}
+.fg input[readonly]{background:#f1f5f9;color:#94a3b8}
+
+/* Marks table */
+.marks-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px}
+.marks-tbl th{background:#f8fafc;padding:8px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:#64748b;border-bottom:1px solid #e2e8f0}
+.marks-tbl td{padding:7px 10px;border-bottom:1px solid #f1f5f9}
+.marks-tbl tr:last-child td{border-bottom:none}
+.marks-tbl input{padding:6px 9px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13px;background:#f8fafc;color:#1e293b;outline:none;width:100%}
+.marks-tbl input:focus{border-color:#6366f1}
+.add-row-btn{width:100%;padding:8px;border:1.5px dashed #e2e8f0;border-radius:8px;background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;transition:.12s;margin-top:8px}
+.add-row-btn:hover{border-color:#6366f1;color:#6366f1}
+.rm-row{background:none;border:none;cursor:pointer;color:#ef4444;font-size:16px;padding:0 4px}
+
+.totals-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:12px}
+.total-box{background:#f8fafc;border-radius:8px;padding:8px 12px;text-align:center}
+.total-box .t-lbl{font-size:10px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:4px}
+.total-box .t-val{font-size:15px;font-weight:900;color:#1e293b}
+
+.result-row{display:flex;gap:8px;margin-top:4px}
+.result-pick{flex:1;border:1.5px solid #e2e8f0;border-radius:8px;padding:9px;text-align:center;cursor:pointer;font-size:13px;font-weight:700;transition:.12s}
+.result-pick.pass.sel{border-color:#16a34a;background:#dcfce7;color:#15803d}
+.result-pick.fail.sel{border-color:#dc2626;background:#fee2e2;color:#991b1b}
+
+.form-submit{padding:16px 20px;background:#f8fafc;display:flex;align-items:center;justify-content:space-between}
+.submit-note{font-size:12px;color:#64748b}
+
+/* Request cards */
+.req-card{border:1.5px solid #e2e8f0;border-radius:14px;background:#fff;margin-bottom:14px;overflow:hidden}
+.req-card-head{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid #f1f5f9}
+.req-avatar{width:40px;height:40px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0}
+.req-card-name{font-size:14px;font-weight:800}
+.req-card-meta{font-size:11px;color:#64748b;margin-top:2px}
+.req-card-body{display:grid;grid-template-columns:1fr 1fr 1fr 180px;gap:0}
+.req-field{padding:11px 16px;border-right:1px solid #f1f5f9}
+.req-field:last-child{border-right:none}
+.rf-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;margin-bottom:4px}
+.rf-val{font-size:13px;font-weight:600}
+.req-actions-cell{padding:10px 14px;display:flex;flex-direction:column;gap:7px;justify-content:center}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:100;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:16px;padding:26px;width:420px;max-width:90vw}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:16px}
+.modal-box textarea{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;background:#f8fafc;color:#1e293b;resize:vertical;min-height:90px;outline:none;font-family:inherit}
+.modal-box textarea:focus{border-color:#6366f1}
+.modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}
+
+/* Walk-in banner */
+.info-banner{background:#fffbeb;border:1.5px solid #fbbf24;border-radius:12px;padding:13px 16px;margin-bottom:18px;display:flex;gap:10px;align-items:flex-start}
+.info-banner svg{flex-shrink:0;stroke:#d97706;fill:none;stroke-width:2;margin-top:1px}
+.info-banner-title{font-size:13px;font-weight:800;color:#78350f}
+.info-banner-sub{font-size:12px;color:#92400e;margin-top:2px}
+
+/* Walkin wrap */
+.walkin-wrap{max-width:740px;margin:0 auto}
+
+/* Filter bar */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;align-items:center}
+.filter-tab{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer;transition:.12s}
+.filter-tab:hover,.filter-tab.active{border-color:#6366f1;color:#6366f1;background:#f5f3ff}
+.filter-tab .count{background:#6366f1;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:5px}
+
+/* Note banner */
+.note-proto{background:#fffbeb;border:1.5px solid #fbbf24;border-radius:10px;padding:10px 16px;margin-bottom:20px;font-size:12px;font-weight:600;color:#78350f;display:flex;gap:8px;align-items:center}
+
+/* History filter bar */
+.hist-filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.hist-filters select,.hist-filters input{padding:7px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;background:#fff;color:#1e293b;outline:none}
+.hist-filters select:focus,.hist-filters input:focus{border-color:#6366f1}
+
+/* Super admin screen */
+.sa-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.sa-inst-card{border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;padding:16px}
+.sa-inst-name{font-size:14px;font-weight:800}
+.sa-inst-sub{font-size:12px;color:#64748b;margin-top:3px}
+.sa-inst-foot{margin-top:12px;padding-top:12px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.toggle{width:44px;height:24px;border-radius:20px;border:none;cursor:pointer;position:relative;transition:.2s}
+.toggle.on{background:#6366f1}
+.toggle.off{background:#e2e8f0}
+.toggle::after{content:'';width:18px;height:18px;border-radius:50%;background:#fff;position:absolute;top:3px;transition:.2s}
+.toggle.on::after{left:22px}
+.toggle.off::after{left:3px}
+.feat-tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.feat-active{background:#dcfce7;color:#15803d}
+.feat-inactive{background:#f1f5f9;color:#94a3b8}
+.validity-tag{font-size:11px;color:#64748b;font-weight:600}
+
+/* Cert PDF Preview mockup */
+.pdf-preview{background:#fff;border:2px solid #1e293b;padding:28px 32px;max-width:620px;margin:0 auto;font-family:'Times New Roman',serif;color:#000;position:relative;overflow:hidden}
+.pdf-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:60px;font-weight:900;color:rgba(0,0,0,.04);white-space:nowrap;pointer-events:none;letter-spacing:4px}
+.pdf-head{text-align:center;margin-bottom:16px}
+.pdf-inst-name{font-size:24px;font-weight:900;margin-bottom:4px}
+.pdf-inst-addr{font-size:13px;margin-bottom:2px}
+.pdf-inst-phone{font-size:12px}
+.pdf-logo{width:70px;height:70px;border-radius:50%;background:#e2e8f0;margin:10px auto;display:flex;align-items:center;justify-content:center;font-size:24px}
+.pdf-cert-no{display:flex;justify-content:space-between;font-size:13px;margin:8px 0 16px;font-family:inherit}
+.pdf-title{text-align:center;font-size:22px;font-weight:900;text-decoration:underline;letter-spacing:2px;margin:12px 0 20px}
+.pdf-body{font-size:14px;line-height:2;margin-bottom:30px}
+.pdf-bold{font-weight:900}
+.pdf-marks-tbl{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+.pdf-marks-tbl th,.pdf-marks-tbl td{border:1px solid #000;padding:6px 10px;text-align:left}
+.pdf-marks-tbl th{background:#f1f5f9;font-weight:800}
+.pdf-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:30px;font-size:13px;font-family:inherit}
+.pdf-sign{text-align:center}
+.pdf-sign-line{border-top:1px solid #000;padding-top:4px;font-size:13px;font-weight:700;margin-top:40px}
+.screen-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.screen-tab{padding:7px 18px;border-radius:8px;border:1.5px solid #e2e8f0;background:#fff;color:#64748b;font-size:12px;font-weight:700;cursor:pointer;transition:.12s}
+.screen-tab.active{background:#6366f1;color:#fff;border-color:#6366f1}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="brand">GT Institute</div>
+      <div class="sub">Management Software</div>
+    </div>
+
+    <div class="sidebar-section">Students</div>
+    <a class="nav-item" onclick="goto('home')">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" onclick="goto('home')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Running
+    </a>
+
+    <div class="sidebar-section">Certificates</div>
+    <a class="nav-item active" id="nav-overview" onclick="goto('overview')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 11 12 14 22 4"/></svg>
+      Overview
+    </a>
+    <a class="nav-item" id="nav-generate" onclick="goto('generate')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Generate
+    </a>
+    <a class="nav-item" id="nav-walkin" onclick="goto('walkin')">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Walk-in
+    </a>
+    <a class="nav-item" id="nav-requests" onclick="goto('requests')">
+      <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Requests <span style="background:#f59e0b;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:auto;">3</span>
+    </a>
+    <a class="nav-item" id="nav-history" onclick="goto('history')">
+      <svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg>
+      History
+    </a>
+    <a class="nav-item" id="nav-superadmin" onclick="goto('superadmin')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+      Super Admin
+    </a>
+    <a class="nav-item" id="nav-pdfpreview" onclick="goto('pdfpreview')">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      PDF Preview
+    </a>
+
+    <div class="sidebar-section">Fees</div>
+    <a class="nav-item" onclick="goto('home')">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Fee Collection
+    </a>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Certificates & Marksheets</div>
+      <div class="topbar-right">
+        <div style="font-size:12px;color:#64748b;">GT Institute, Rewa</div>
+        <div class="avatar-circle">S</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 1: OVERVIEW
+      ══════════════════════════════════════════════ -->
+      <div class="screen active" id="screen-overview">
+        <div class="note-proto">🧪 Prototype — Sirf UI design dikhane ke liye hai. Data dummy hai.</div>
+
+        <!-- Stats -->
+        <div class="stat-grid">
+          <div class="stat-card amber">
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+            <div><div class="stat-num">3</div><div class="stat-lbl">Pending Requests</div></div>
+          </div>
+          <div class="stat-card blue">
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div><div class="stat-num">12</div><div class="stat-lbl">This Month</div></div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div><div class="stat-num">47</div><div class="stat-lbl">Total Generated</div></div>
+          </div>
+        </div>
+
+        <!-- Doc types -->
+        <div class="sec-head"><div class="sec-bar"></div><div class="sec-txt">Document Types</div></div>
+        <div class="doc-grid">
+          <div class="doc-card">
+            <div class="doc-badge-lbl chip chip-ms" style="display:inline-block;margin-bottom:8px;">Marksheet</div>
+            <div class="doc-name">Marksheet</div>
+            <div class="doc-desc">Subject-wise marks, percentage, grade aur result. Institute manually marks enter karta hai.</div>
+            <div class="doc-elig">Eligible: CLOSE status students only</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-badge-lbl chip chip-tc" style="display:inline-block;margin-bottom:8px;">TC</div>
+            <div class="doc-name">Transfer Certificate</div>
+            <div class="doc-desc">Course complete karne ke baad official document. Start/end date, passing year ke saath.</div>
+            <div class="doc-elig">Eligible: CLOSE status students only</div>
+          </div>
+          <div class="doc-card">
+            <div class="doc-badge-lbl chip chip-cc" style="display:inline-block;margin-bottom:8px;">CC</div>
+            <div class="doc-name">Character Certificate</div>
+            <div class="doc-desc">Student ka character aur conduct certify karta hai. Academic session aur grade ke saath.</div>
+            <div class="doc-elig">Eligible: CLOSE status students only</div>
+          </div>
+        </div>
+
+        <!-- How it works -->
+        <div class="sec-head"><div class="sec-bar"></div><div class="sec-txt">How It Works</div></div>
+        <div class="flow-grid">
+          <div class="flow-card">
+            <div class="flow-head">
+              <div class="flow-icon blue"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
+              <div><div class="flow-title">Institute — Direct Generate</div><div class="flow-sub">Apne enrolled students ke liye</div></div>
+            </div>
+            <ul class="flow-steps">
+              <li class="flow-step"><div class="step-num blue">1</div><div class="step-body"><div class="step-title">Student Search</div><div class="step-desc">Name / Mobile / Enrollment No.</div></div></li>
+              <li class="flow-step"><div class="step-num blue">2</div><div class="step-body"><div class="step-title">Enrollment Select</div><div class="step-desc">Sirf CLOSE (completed) enrollments</div></div></li>
+              <li class="flow-step"><div class="step-num blue">3</div><div class="step-body"><div class="step-title">Document Type</div><div class="step-desc" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="chip chip-ms">MS</span><span class="chip chip-tc">TC</span><span class="chip chip-cc">CC</span></div></div></li>
+              <li class="flow-step"><div class="step-num blue">4</div><div class="step-body"><div class="step-title">Fill Details + Marks</div><div class="step-desc">Marksheet ke liye subjects + marks</div></div></li>
+              <li class="flow-step"><div class="step-num blue">5</div><div class="step-body"><div class="step-title">Generate → PDF Print</div><div class="step-desc">Auto-print certificate PDF</div></div></li>
+            </ul>
+          </div>
+          <div class="flow-card">
+            <div class="flow-head">
+              <div class="flow-icon amber"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div><div class="flow-title">Franchise → Request Flow</div><div class="flow-sub">Franchise apne student ke liye request karta hai</div></div>
+            </div>
+            <ul class="flow-steps">
+              <li class="flow-step"><div class="step-num amber">1</div><div class="step-body"><div class="step-title">Franchise Request Submit</div><div class="step-desc">Student + type + note</div><span class="chip chip-pending" style="margin-top:4px;display:inline-block;">Pending</span></div></li>
+              <li class="flow-step"><div class="step-num amber">2</div><div class="step-body"><div class="step-title">Institute Ko Dikhega</div><div class="step-desc">Dashboard pe pending count aur Requests page</div></div></li>
+              <li class="flow-step"><div class="step-num amber">3</div><div class="step-body"><div class="step-title">Approve ya Reject</div><div class="step-desc" style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px"><span class="chip chip-approved">Approve</span><span class="chip chip-rejected">Reject + Note</span></div></div></li>
+              <li class="flow-step"><div class="step-num amber">4</div><div class="step-body"><div class="step-title">Generate → Notify Franchise</div><div class="step-desc">PDF generate, franchise download kar sakta hai</div><span class="chip chip-generated" style="margin-top:4px;display:inline-block;">Generated</span></div></li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="sec-head"><div class="sec-bar"></div><div class="sec-txt">Quick Actions</div></div>
+        <div class="action-list">
+          <div class="action-item">
+            <div class="action-icon purple"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="action-info"><div class="action-title">Generate Certificate / Marksheet</div><div class="action-desc">CLOSE status enrolled student ka document generate karo</div></div>
+            <button class="btn btn-primary btn-sm" onclick="goto('generate')">Generate →</button>
+          </div>
+          <div class="action-item">
+            <div class="action-icon pink"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></div>
+            <div class="action-info"><div class="action-title">Walk-in Certificate</div><div class="action-desc">Student enrolled nahi hai — manually details fill karo</div></div>
+            <button class="btn btn-outline btn-sm" onclick="goto('walkin')">Walk-in →</button>
+          </div>
+          <div class="action-item">
+            <div class="action-icon amber"><svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+            <div class="action-info"><div class="action-title">Franchise Requests</div><div class="action-desc">Franchise se aayi pending requests approve ya reject karo</div></div>
+            <button class="btn btn-outline btn-sm" onclick="goto('requests')">View (3) →</button>
+          </div>
+          <div class="action-item">
+            <div class="action-icon green"><svg viewBox="0 0 24 24"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"/></svg></div>
+            <div class="action-info"><div class="action-title">Generated Documents History</div><div class="action-desc">Sab certificates ka record, reprint option ke saath</div></div>
+            <button class="btn btn-outline btn-sm" onclick="goto('history')">View All →</button>
+          </div>
+        </div>
+
+        <!-- Pending requests preview -->
+        <div class="sec-head"><div class="sec-bar"></div><div class="sec-txt">Pending Requests (Preview)</div></div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="tbl">
+            <thead><tr><th>Student</th><th>Course</th><th>Type</th><th>Franchise</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody>
+              <tr><td><div class="stu-name">Priya Sharma</div><div class="stu-enr">ENR/0003</div></td><td>Computer Fundamentals</td><td><span class="chip chip-ms">MS</span></td><td>ABC Franchise</td><td><span class="chip chip-pending">Pending</span></td><td style="text-align:right"><button class="btn btn-primary btn-xs" onclick="goto('requests')">Review</button></td></tr>
+              <tr><td><div class="stu-name">Rahul Verma</div><div class="stu-enr">ENR/0007</div></td><td>Tally Prime</td><td><span class="chip chip-tc">TC</span></td><td>XYZ Center</td><td><span class="chip chip-pending">Pending</span></td><td style="text-align:right"><button class="btn btn-primary btn-xs" onclick="goto('requests')">Review</button></td></tr>
+              <tr><td><div class="stu-name">Anita Patel</div><div class="stu-enr">ENR/0011</div></td><td>DTP & Graphics</td><td><span class="chip chip-cc">CC</span></td><td>ABC Franchise</td><td><span class="chip chip-pending">Pending</span></td><td style="text-align:right"><button class="btn btn-primary btn-xs" onclick="goto('requests')">Review</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 2: GENERATE
+      ══════════════════════════════════════════════ -->
+      <div class="screen" id="screen-generate">
+        <div class="note-proto">🧪 Prototype — Student search, enrollment pick, type select, form fill karo aur Generate click karo.</div>
+        <div class="gen-layout">
+
+          <!-- Left panel -->
+          <div class="left-panel">
+            <div class="left-panel-head">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              Student Select
+            </div>
+            <div class="left-panel-body">
+              <!-- Search -->
+              <div class="search-box">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" placeholder="Name / Mobile / Enrollment…" id="gen-search" oninput="genSearch(this.value)">
+              </div>
+
+              <!-- Suggest dropdown (demo) -->
+              <div id="gen-suggest" style="display:none;border:1.5px solid #6366f1;border-radius:10px;overflow:hidden;margin-bottom:12px;">
+                <div class="suggest-item-demo" onclick="selectDemoStu('Shubham Agrahari','9797378558','ENR/0001','Computer Concept')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f1f5f9;display:flex;gap:10px;align-items:center;transition:.1s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  <div style="width:30px;height:30px;border-radius:50%;background:#6366f1;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">S</div>
+                  <div><div style="font-size:13px;font-weight:700">Shubham Agrahari</div><div style="font-size:11px;color:#64748b">ENR/0001 · 9797378558</div></div>
+                </div>
+                <div class="suggest-item-demo" onclick="selectDemoStu('Priya Sharma','9876543210','ENR/0003','Computer Fundamentals')" style="padding:10px 14px;cursor:pointer;display:flex;gap:10px;align-items:center" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                  <div style="width:30px;height:30px;border-radius:50%;background:#f59e0b;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">P</div>
+                  <div><div style="font-size:13px;font-weight:700">Priya Sharma</div><div style="font-size:11px;color:#64748b">ENR/0003 · 9876543210</div></div>
+                </div>
+              </div>
+
+              <!-- Student found -->
+              <div class="stu-found" id="gen-stu-found" style="display:none;">
+                <div class="stu-found-avatar" id="gen-stu-avatar">S</div>
+                <div>
+                  <div class="stu-found-name" id="gen-stu-name">Shubham Agrahari</div>
+                  <div class="stu-found-meta" id="gen-stu-meta">ENR/0001 · 9797378558</div>
+                </div>
+              </div>
+
+              <!-- Enrollment picker -->
+              <div id="gen-enr-sec" style="display:none;margin-bottom:14px;">
+                <div class="enr-pick-label">Select Enrollment</div>
+                <div id="gen-enr-list"></div>
+              </div>
+
+              <!-- Doc type -->
+              <div id="gen-doctype-sec" style="display:none;">
+                <div class="enr-pick-label">Document Type</div>
+                <div class="doctype-grid">
+                  <div class="doctype-btn" id="dbt-ms" onclick="selectDocType('ms')"><div class="dtb-code dtb-ms">MS</div><div class="dtb-name">Marksheet</div></div>
+                  <div class="doctype-btn" id="dbt-tc" onclick="selectDocType('tc')"><div class="dtb-code dtb-tc">TC</div><div class="dtb-name">Transfer</div></div>
+                  <div class="doctype-btn" id="dbt-cc" onclick="selectDocType('cc')"><div class="dtb-code dtb-cc">CC</div><div class="dtb-name">Character</div></div>
+                </div>
+              </div>
+
+              <!-- Walk-in link -->
+              <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f1f5f9;text-align:center;">
+                <div style="font-size:12px;color:#94a3b8;margin-bottom:8px;">Student enrolled nahi hai?</div>
+                <button class="btn btn-outline btn-sm" style="width:100%;justify-content:center;" onclick="goto('walkin')">Walk-in Certificate →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Form (hidden until student+type selected) -->
+          <div>
+            <div id="gen-placeholder" style="display:flex;align-items:center;justify-content:center;min-height:300px;background:#fff;border-radius:14px;border:1.5px solid #e2e8f0;">
+              <div style="text-align:center;color:#94a3b8;">
+                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:.35;margin-bottom:12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <div style="font-size:14px;font-weight:700;">Left se student aur type select karo</div>
+                <div style="font-size:12px;margin-top:4px;">Form yahan dikhega</div>
+              </div>
+            </div>
+
+            <!-- MS Form -->
+            <div id="gen-form-ms" style="display:none;">
+              <div class="form-panel">
+                <div class="form-sec">
+                  <div class="form-sec-title">Student Information</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Student Name *</label><input type="text" id="f-name" value="Shubham Agrahari"></div>
+                    <div class="fg"><label>Father's Name</label><input type="text" value="Ramesh Agrahari"></div>
+                  </div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Enrollment No.</label><input type="text" id="f-enr" value="INST20260002/ENR/0001" readonly></div>
+                    <div class="fg"><label>Mobile</label><input type="text" value="9797378558"></div>
+                  </div>
+                </div>
+                <div class="form-sec">
+                  <div class="form-sec-title">Course Details</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Course Name *</label><input type="text" id="f-course" value="Course on Computer Concept"></div>
+                    <div class="fg"><label>Duration</label><input type="text" value="6 Months"></div>
+                  </div>
+                  <div class="form-row c3">
+                    <div class="fg"><label>Start Date</label><input type="date" value="2025-07-01"></div>
+                    <div class="fg"><label>End Date</label><input type="date" value="2025-12-31"></div>
+                    <div class="fg"><label>Academic Session</label><input type="text" value="2025-26"></div>
+                  </div>
+                </div>
+                <div class="form-sec">
+                  <div class="form-sec-title">Subject-wise Marks</div>
+                  <table class="marks-tbl">
+                    <thead><tr><th style="width:35%">Subject</th><th>Max</th><th>Obtained</th><th>Grade</th><th style="width:40px"></th></tr></thead>
+                    <tbody id="ms-body">
+                      <tr><td><input type="text" value="Computer Fundamentals"></td><td><input type="number" value="100" oninput="calcMS()"></td><td><input type="number" value="82" oninput="calcMS()"></td><td><input type="text" value="A"></td><td></td></tr>
+                      <tr><td><input type="text" value="MS Office"></td><td><input type="number" value="100" oninput="calcMS()"></td><td><input type="number" value="78" oninput="calcMS()"></td><td><input type="text" value="B+"></td><td><button class="rm-row" onclick="this.closest('tr').remove();calcMS()">×</button></td></tr>
+                      <tr><td><input type="text" value="Internet & Email"></td><td><input type="number" value="100" oninput="calcMS()"></td><td><input type="number" value="90" oninput="calcMS()"></td><td><input type="text" value="A+"></td><td><button class="rm-row" onclick="this.closest('tr').remove();calcMS()">×</button></td></tr>
+                    </tbody>
+                  </table>
+                  <button class="add-row-btn" onclick="addMSRow()">+ Add Subject</button>
+                  <div class="totals-row" style="margin-top:12px;">
+                    <div class="total-box"><div class="t-lbl">Total Max</div><div class="t-val" id="ms-max">300</div></div>
+                    <div class="total-box"><div class="t-lbl">Total Obtained</div><div class="t-val" id="ms-obt">250</div></div>
+                    <div class="total-box"><div class="t-lbl">Percentage</div><div class="t-val" id="ms-pct">83.33%</div></div>
+                  </div>
+                  <div class="form-row c2" style="margin-top:12px;">
+                    <div class="fg"><label>Overall Grade</label><select><option>A+</option><option selected>A</option><option>B+</option><option>B</option><option>C</option></select></div>
+                    <div class="fg"><label>Result</label>
+                      <div class="result-row">
+                        <div class="result-pick pass sel" id="rp-pass" onclick="pickResult('pass')">PASS</div>
+                        <div class="result-pick fail" id="rp-fail" onclick="pickResult('fail')">FAIL</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-submit">
+                  <span class="submit-note">📄 PDF new tab mein khulega — auto print</span>
+                  <button class="btn btn-primary" onclick="goto('pdfpreview')">Generate &amp; Print →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- TC Form -->
+            <div id="gen-form-tc" style="display:none;">
+              <div class="form-panel">
+                <div class="form-sec">
+                  <div class="form-sec-title">Student Information</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Student Name *</label><input type="text" value="Shubham Agrahari"></div>
+                    <div class="fg"><label>Father's Name</label><input type="text" value="Ramesh Agrahari"></div>
+                  </div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Enrollment No.</label><input type="text" value="INST20260002/ENR/0001" readonly></div>
+                    <div class="fg"><label>Mobile</label><input type="text" value="9797378558"></div>
+                  </div>
+                </div>
+                <div class="form-sec">
+                  <div class="form-sec-title">Course Details</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Course Name *</label><input type="text" value="Course on Computer Concept"></div>
+                    <div class="fg"><label>Duration</label><input type="text" value="6 Months"></div>
+                  </div>
+                  <div class="form-row c3">
+                    <div class="fg"><label>Start Date</label><input type="date" value="2025-07-01"></div>
+                    <div class="fg"><label>End Date</label><input type="date" value="2025-12-31"></div>
+                    <div class="fg"><label>Passing Year</label><input type="text" value="2025"></div>
+                  </div>
+                </div>
+                <div class="form-sec">
+                  <div class="form-sec-title">TC Details</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Reason for Leaving</label><select><option selected>Course Completed</option><option>Transfer</option><option>Personal Reasons</option></select></div>
+                    <div class="fg"><label>Conduct</label><select><option selected>Good</option><option>Satisfactory</option><option>Excellent</option></select></div>
+                  </div>
+                </div>
+                <div class="form-submit">
+                  <span class="submit-note">📄 PDF new tab mein khulega — auto print</span>
+                  <button class="btn btn-primary" onclick="goto('pdfpreview')">Generate &amp; Print →</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- CC Form -->
+            <div id="gen-form-cc" style="display:none;">
+              <div class="form-panel">
+                <div class="form-sec">
+                  <div class="form-sec-title">Student Information</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Student Name *</label><input type="text" value="Shubham Agrahari"></div>
+                    <div class="fg"><label>Father's Name</label><input type="text" value="Ramesh Agrahari"></div>
+                  </div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Enrollment No.</label><input type="text" value="INST20260002/ENR/0001" readonly></div>
+                    <div class="fg"><label>Mobile</label><input type="text" value="9797378558"></div>
+                  </div>
+                </div>
+                <div class="form-sec">
+                  <div class="form-sec-title">Course Details</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Course Name</label><input type="text" value="Course on Computer Concept"></div>
+                    <div class="fg"><label>Academic Session</label><input type="text" value="2025-26"></div>
+                  </div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Start Date</label><input type="date" value="2025-07-01"></div>
+                    <div class="fg"><label>End Date</label><input type="date" value="2025-12-31"></div>
+                  </div>
+                </div>
+                <div class="form-sec">
+                  <div class="form-sec-title">Character Details</div>
+                  <div class="form-row c2">
+                    <div class="fg"><label>Character Grade</label><select><option selected>Satisfactory</option><option>Good</option><option>Excellent</option></select></div>
+                    <div class="fg"><label>Conduct</label><select><option selected>Good</option><option>Excellent</option><option>Satisfactory</option></select></div>
+                  </div>
+                </div>
+                <div class="form-submit">
+                  <span class="submit-note">📄 PDF new tab mein khulega — auto print</span>
+                  <button class="btn btn-primary" onclick="goto('pdfpreview')">Generate &amp; Print →</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 3: WALK-IN
+      ══════════════════════════════════════════════ -->
+      <div class="screen" id="screen-walkin">
+        <div class="walkin-wrap">
+          <div class="info-banner">
+            <svg width="18" height="18" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <div><div class="info-banner-title">Walk-in Certificate</div><div class="info-banner-sub">Un students ke liye jinhe system mein enrollment nahi hai. Alag center/course se aaye hain ya directly certificate chahiye. Saare details manually bharo.</div></div>
+          </div>
+
+          <div class="form-panel">
+            <div class="form-sec">
+              <div class="form-sec-title">Document Type</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+                <div class="doctype-btn sel" id="wi-btn-ms" onclick="wiSwitchType('ms')"><div class="dtb-code dtb-ms">MS</div><div class="dtb-name">Marksheet</div></div>
+                <div class="doctype-btn" id="wi-btn-tc" onclick="wiSwitchType('tc')"><div class="dtb-code dtb-tc">TC</div><div class="dtb-name">Transfer Cert.</div></div>
+                <div class="doctype-btn" id="wi-btn-cc" onclick="wiSwitchType('cc')"><div class="dtb-code dtb-cc">CC</div><div class="dtb-name">Character Cert.</div></div>
+              </div>
+            </div>
+            <div class="form-sec">
+              <div class="form-sec-title">Student Details</div>
+              <div class="form-row c2">
+                <div class="fg"><label>Student Full Name *</label><input type="text" placeholder="e.g. Rahul Sharma"></div>
+                <div class="fg"><label>Father's Name</label><input type="text" placeholder="e.g. Ramesh Sharma"></div>
+              </div>
+              <div class="form-row c2">
+                <div class="fg"><label>Mobile</label><input type="text" placeholder="10-digit mobile"></div>
+                <div class="fg"><label>Date of Birth</label><input type="date"></div>
+              </div>
+            </div>
+            <div class="form-sec">
+              <div class="form-sec-title">Course Details</div>
+              <div class="form-row c2">
+                <div class="fg"><label>Course Name *</label><input type="text" placeholder="e.g. Computer Fundamentals"></div>
+                <div class="fg"><label>Duration</label><input type="text" placeholder="e.g. 6 Months"></div>
+              </div>
+              <div class="form-row c3">
+                <div class="fg"><label>Start Date</label><input type="date"></div>
+                <div class="fg"><label>End Date</label><input type="date"></div>
+                <div class="fg"><label>Passing Year</label><input type="text" placeholder="2026"></div>
+              </div>
+            </div>
+
+            <!-- MS section -->
+            <div class="form-sec" id="wi-ms-sec">
+              <div class="form-sec-title">Subject-wise Marks</div>
+              <table class="marks-tbl">
+                <thead><tr><th>Subject</th><th>Max</th><th>Obtained</th><th>Grade</th><th></th></tr></thead>
+                <tbody id="wi-body">
+                  <tr><td><input type="text" placeholder="Subject name"></td><td><input type="number" placeholder="100"></td><td><input type="number" placeholder="75"></td><td><input type="text" placeholder="A"></td><td></td></tr>
+                </tbody>
+              </table>
+              <button class="add-row-btn" onclick="wiAddRow()">+ Add Subject</button>
+              <div class="form-row c2" style="margin-top:12px;">
+                <div class="fg"><label>Overall Grade</label><select><option>A+</option><option>A</option><option>B+</option><option>B</option><option>C</option></select></div>
+                <div class="fg"><label>Result</label><select><option>PASS</option><option>FAIL</option></select></div>
+              </div>
+            </div>
+
+            <!-- TC section -->
+            <div class="form-sec" id="wi-tc-sec" style="display:none;">
+              <div class="form-sec-title">TC Details</div>
+              <div class="form-row c2">
+                <div class="fg"><label>Reason</label><select><option>Course Completed</option><option>Transfer</option><option>Personal Reasons</option></select></div>
+                <div class="fg"><label>Conduct</label><select><option>Good</option><option>Satisfactory</option><option>Excellent</option></select></div>
+              </div>
+            </div>
+
+            <!-- CC section -->
+            <div class="form-sec" id="wi-cc-sec" style="display:none;">
+              <div class="form-sec-title">Character Details</div>
+              <div class="form-row c2">
+                <div class="fg"><label>Character Grade</label><select><option>Satisfactory</option><option>Good</option><option>Excellent</option></select></div>
+                <div class="fg"><label>Conduct</label><select><option>Good</option><option>Excellent</option><option>Satisfactory</option></select></div>
+              </div>
+            </div>
+
+            <div class="form-submit">
+              <button class="btn btn-outline btn-sm" onclick="goto('generate')">← Enrolled Student</button>
+              <button class="btn btn-primary" onclick="goto('pdfpreview')">Generate &amp; Print →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 4: REQUESTS
+      ══════════════════════════════════════════════ -->
+      <div class="screen" id="screen-requests">
+        <div class="filter-bar">
+          <div class="filter-tab active">Pending <span class="count">3</span></div>
+          <div class="filter-tab">Approved</div>
+          <div class="filter-tab">Rejected</div>
+          <div class="filter-tab">Generated</div>
+          <div class="filter-tab">All</div>
+        </div>
+
+        <!-- Request Card 1 -->
+        <div class="req-card">
+          <div class="req-card-head">
+            <div class="req-avatar">P</div>
+            <div style="flex:1">
+              <div class="req-card-name">Priya Sharma</div>
+              <div class="req-card-meta">INST20260002/ENR/0003 · 9876543210</div>
+            </div>
+            <span class="chip chip-ms" style="margin-right:8px;">Marksheet</span>
+            <span class="chip chip-pending">Pending</span>
+          </div>
+          <div class="req-card-body">
+            <div class="req-field"><div class="rf-lbl">Course</div><div class="rf-val">Computer Fundamentals</div></div>
+            <div class="req-field"><div class="rf-lbl">Franchise</div><div class="rf-val">ABC Franchise</div></div>
+            <div class="req-field"><div class="rf-lbl">Requested</div><div class="rf-val">21 Jun 2026</div></div>
+            <div class="req-actions-cell">
+              <button class="btn btn-primary btn-xs" onclick="goto('generate')" style="justify-content:center;">✓ Approve & Generate</button>
+              <button class="btn btn-danger btn-xs" onclick="openRejectModal()" style="justify-content:center;">✕ Reject</button>
+            </div>
+          </div>
+          <div style="padding:10px 16px;background:#fffbeb;font-size:12px;color:#92400e;border-top:1px solid #fde68a;">
+            <strong>Franchise note:</strong> Student needs marksheet for job application.
+          </div>
+        </div>
+
+        <!-- Request Card 2 -->
+        <div class="req-card">
+          <div class="req-card-head">
+            <div class="req-avatar" style="background:#f59e0b;">R</div>
+            <div style="flex:1">
+              <div class="req-card-name">Rahul Verma</div>
+              <div class="req-card-meta">INST20260002/ENR/0007 · 9812345678</div>
+            </div>
+            <span class="chip chip-tc" style="margin-right:8px;">TC</span>
+            <span class="chip chip-pending">Pending</span>
+          </div>
+          <div class="req-card-body">
+            <div class="req-field"><div class="rf-lbl">Course</div><div class="rf-val">Tally Prime</div></div>
+            <div class="req-field"><div class="rf-lbl">Franchise</div><div class="rf-val">XYZ Center</div></div>
+            <div class="req-field"><div class="rf-lbl">Requested</div><div class="rf-val">22 Jun 2026</div></div>
+            <div class="req-actions-cell">
+              <button class="btn btn-primary btn-xs" onclick="goto('generate')" style="justify-content:center;">✓ Approve & Generate</button>
+              <button class="btn btn-danger btn-xs" onclick="openRejectModal()" style="justify-content:center;">✕ Reject</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Request Card 3 -->
+        <div class="req-card">
+          <div class="req-card-head">
+            <div class="req-avatar" style="background:#10b981;">A</div>
+            <div style="flex:1">
+              <div class="req-card-name">Anita Patel</div>
+              <div class="req-card-meta">INST20260002/ENR/0011 · 9900112233</div>
+            </div>
+            <span class="chip chip-cc" style="margin-right:8px;">CC</span>
+            <span class="chip chip-pending">Pending</span>
+          </div>
+          <div class="req-card-body">
+            <div class="req-field"><div class="rf-lbl">Course</div><div class="rf-val">DTP & Graphics</div></div>
+            <div class="req-field"><div class="rf-lbl">Franchise</div><div class="rf-val">ABC Franchise</div></div>
+            <div class="req-field"><div class="rf-lbl">Requested</div><div class="rf-val">23 Jun 2026</div></div>
+            <div class="req-actions-cell">
+              <button class="btn btn-primary btn-xs" onclick="goto('generate')" style="justify-content:center;">✓ Approve & Generate</button>
+              <button class="btn btn-danger btn-xs" onclick="openRejectModal()" style="justify-content:center;">✕ Reject</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 5: HISTORY
+      ══════════════════════════════════════════════ -->
+      <div class="screen" id="screen-history">
+        <div class="hist-filters">
+          <select><option>All Types</option><option>Marksheet</option><option>TC</option><option>CC</option></select>
+          <select><option>All Sources</option><option>Direct</option><option>Franchise</option><option>Walk-in</option></select>
+          <input type="date" placeholder="From">
+          <input type="date" placeholder="To">
+          <input type="text" placeholder="Student / Cert No." style="min-width:180px;">
+          <button class="btn btn-outline btn-sm">Filter</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="tbl">
+            <thead><tr><th>Cert No.</th><th>Student</th><th>Course</th><th>Type</th><th>Source</th><th>Generated</th><th style="text-align:right">Actions</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="cert-no">GT/MS/240624-001</span></td>
+                <td><div class="stu-name">Shubham Agrahari</div><div class="stu-enr">ENR/0001</div></td>
+                <td style="font-size:12px;">Course on Computer Concept</td>
+                <td><span class="chip chip-ms">Marksheet</span></td>
+                <td><span class="chip chip-direct">Direct</span></td>
+                <td style="font-size:12px;color:#64748b;">24 Jun 2026</td>
+                <td style="text-align:right;"><button class="btn btn-outline btn-xs" onclick="goto('pdfpreview')">Reprint</button></td>
+              </tr>
+              <tr>
+                <td><span class="cert-no">GT/TC/240622-001</span></td>
+                <td><div class="stu-name">Rahul Verma</div><div class="stu-enr">ENR/0007</div></td>
+                <td style="font-size:12px;">Tally Prime</td>
+                <td><span class="chip chip-tc">TC</span></td>
+                <td><span class="chip chip-franchise">Franchise</span></td>
+                <td style="font-size:12px;color:#64748b;">22 Jun 2026</td>
+                <td style="text-align:right;"><button class="btn btn-outline btn-xs" onclick="goto('pdfpreview')">Reprint</button></td>
+              </tr>
+              <tr>
+                <td><span class="cert-no">GT/CC/240620-001</span></td>
+                <td><div class="stu-name">Sonu Kumar (Walk-in)</div><div class="stu-enr">No Enrollment</div></td>
+                <td style="font-size:12px;">MS Office</td>
+                <td><span class="chip chip-cc">CC</span></td>
+                <td><span class="chip chip-walkin">Walk-in</span></td>
+                <td style="font-size:12px;color:#64748b;">20 Jun 2026</td>
+                <td style="text-align:right;"><button class="btn btn-outline btn-xs" onclick="goto('pdfpreview')">Reprint</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding:12px 16px;border-top:1px solid #f1f5f9;font-size:12px;color:#94a3b8;">Showing 3 records</div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 6: SUPER ADMIN
+      ══════════════════════════════════════════════ -->
+      <div class="screen" id="screen-superadmin">
+        <div class="note-proto">🔐 Super Admin Panel — Tum (developer) yahan se institutes ko Certificate Module access doge. Institute pehle tumhe payment karega, phir tum yahan se unlock karoge.</div>
+
+        <div class="stat-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+          <div class="stat-card blue"><div class="stat-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/></svg></div><div><div class="stat-num">8</div><div class="stat-lbl">Total Institutes</div></div></div>
+          <div class="stat-card green"><div class="stat-icon"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/></svg></div><div><div class="stat-num">5</div><div class="stat-lbl">Feature Active</div></div></div>
+          <div class="stat-card amber"><div class="stat-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg></div><div><div class="stat-num">3</div><div class="stat-lbl">Inactive</div></div></div>
+          <div class="stat-card purple"><div class="stat-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><div><div class="stat-num">₹15,000</div><div class="stat-lbl">Revenue</div></div></div>
+        </div>
+
+        <div class="sec-head"><div class="sec-bar"></div><div class="sec-txt">Institute — Certificate Module Access</div></div>
+        <div class="sa-grid">
+          <div class="sa-inst-card">
+            <div class="sa-inst-name">GT Institute, Rewa</div>
+            <div class="sa-inst-sub">Owner: Shubham Agrahari · 9797378558</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="feat-tag feat-active">Certificate Module: Active</span>
+              <span class="validity-tag">Valid till: 31 Dec 2026</span>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:6px;">Paid: ₹3,000 · Activated: 01 Jan 2026</div>
+            <div class="sa-inst-foot">
+              <button class="btn btn-outline btn-sm">Edit / Extend</button>
+              <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+          </div>
+          <div class="sa-inst-card">
+            <div class="sa-inst-name">Unnati Computer Center</div>
+            <div class="sa-inst-sub">Owner: Ramesh Patel · 9812345678</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="feat-tag feat-inactive">Certificate Module: Inactive</span>
+            </div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:6px;">Not activated yet</div>
+            <div class="sa-inst-foot">
+              <button class="btn btn-primary btn-sm" onclick="openActivateModal()">Activate →</button>
+              <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+          </div>
+          <div class="sa-inst-card">
+            <div class="sa-inst-name">Bright Future Institute</div>
+            <div class="sa-inst-sub">Owner: Sunita Verma · 9900112233</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="feat-tag feat-active">Certificate Module: Active</span>
+              <span class="validity-tag">Valid till: 30 Jun 2026</span>
+            </div>
+            <div style="font-size:12px;color:#dc2626;margin-top:6px;font-weight:600;">⚠ Validity expiring in 6 days</div>
+            <div class="sa-inst-foot">
+              <button class="btn btn-outline btn-sm">Renew</button>
+              <button class="toggle on" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+          </div>
+          <div class="sa-inst-card">
+            <div class="sa-inst-name">Digital Learning Hub</div>
+            <div class="sa-inst-sub">Owner: Ajay Singh · 9876543210</div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+              <span class="feat-tag feat-inactive">Certificate Module: Inactive</span>
+            </div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:6px;">Not activated yet</div>
+            <div class="sa-inst-foot">
+              <button class="btn btn-primary btn-sm" onclick="openActivateModal()">Activate →</button>
+              <button class="toggle off" onclick="this.classList.toggle('on');this.classList.toggle('off')"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════
+           SCREEN 7: PDF PREVIEW (Marksheet)
+      ══════════════════════════════════════════════ -->
+      <div class="screen" id="screen-pdfpreview">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div class="screen-tabs">
+            <div class="screen-tab active" onclick="switchPdf('ms',this)">Marksheet</div>
+            <div class="screen-tab" onclick="switchPdf('tc',this)">Transfer Cert.</div>
+            <div class="screen-tab" onclick="switchPdf('cc',this)">Character Cert.</div>
+          </div>
+          <button class="btn btn-primary btn-sm" style="margin-left:auto;" onclick="window.print()">🖨 Print</button>
+        </div>
+
+        <!-- Marksheet PDF -->
+        <div id="pdf-ms">
+          <div class="pdf-preview">
+            <div class="pdf-watermark">GT INSTITUTE</div>
+            <div class="pdf-head">
+              <div class="pdf-inst-name">GT Institute</div>
+              <div class="pdf-inst-addr">Rewa, Madhya Pradesh</div>
+              <div class="pdf-inst-phone">Phone: 9797378558</div>
+            </div>
+            <div class="pdf-logo">🏛️</div>
+            <div class="pdf-cert-no">
+              <span>Certificate No: <strong>GT/MS/240624-001</strong></span>
+              <span>Date: 24-06-2026</span>
+            </div>
+            <div class="pdf-title">MARKSHEET</div>
+            <div style="text-align:center;font-size:13px;margin-bottom:16px;font-family:'Times New Roman',serif;">Academic Session: 2025-26</div>
+            <div class="pdf-body">
+              <strong>Student Name:</strong> <span class="pdf-bold">Shubham Agrahari</span><br>
+              <strong>Father's Name:</strong> <span class="pdf-bold">Ramesh Agrahari</span><br>
+              <strong>Course:</strong> <span class="pdf-bold">Course on Computer Concept</span><br>
+              <strong>Enrollment No.:</strong> <span class="pdf-bold">INST20260002/ENR/0001</span><br>
+              <strong>Duration:</strong> <span class="pdf-bold">6 Months</span> &nbsp;&nbsp; <strong>Period:</strong> <span class="pdf-bold">July 2025 to December 2025</span>
+            </div>
+            <table class="pdf-marks-tbl">
+              <thead><tr><th>#</th><th>Subject</th><th>Max Marks</th><th>Obtained</th><th>Grade</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Computer Fundamentals</td><td>100</td><td>82</td><td>A</td></tr>
+                <tr><td>2</td><td>MS Office</td><td>100</td><td>78</td><td>B+</td></tr>
+                <tr><td>3</td><td>Internet & Email</td><td>100</td><td>90</td><td>A+</td></tr>
+                <tr><td colspan="2"><strong>TOTAL</strong></td><td><strong>300</strong></td><td><strong>250</strong></td><td><strong>A</strong></td></tr>
+              </tbody>
+            </table>
+            <div style="font-size:14px;font-family:'Times New Roman',serif;margin-top:10px;">
+              <strong>Percentage:</strong> 83.33% &nbsp;&nbsp;&nbsp; <strong>Result:</strong> <span style="font-size:16px;font-weight:900;color:#15803d;">PASS</span>
+            </div>
+            <div class="pdf-footer">
+              <div>Date: 24-06-2026</div>
+              <div class="pdf-sign">
+                <div class="pdf-sign-line">Principal / Director</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TC PDF -->
+        <div id="pdf-tc" style="display:none;">
+          <div class="pdf-preview">
+            <div class="pdf-watermark">GT INSTITUTE</div>
+            <div class="pdf-head">
+              <div class="pdf-inst-name">GT Institute</div>
+              <div class="pdf-inst-addr">Rewa, Madhya Pradesh</div>
+              <div class="pdf-inst-phone">Phone: 9797378558</div>
+            </div>
+            <div class="pdf-logo">🏛️</div>
+            <div class="pdf-cert-no">
+              <span>Certificate No: <strong>GT/TC/240622-001</strong></span>
+              <span>Date: 22-06-2026</span>
+            </div>
+            <div class="pdf-title">TRANSFER CERTIFICATE</div>
+            <div class="pdf-body" style="margin-top:30px;line-height:2.2;">
+              This is to certify that Mr./Ms. <strong>Shubham Agrahari</strong>, Son/Daughter of <strong>Ramesh Agrahari</strong>, was a bonafide student of this institution. He/She studied in the course <strong>Course on Computer Concept</strong> from <strong>July 2025</strong> to <strong>December 2025</strong>. His/Her Enrollment Number is <strong>INST20260002/ENR/0001</strong>. He/She has successfully completed the course and passed in the year <strong>2025</strong>. This Transfer Certificate is issued as he/she has completed the course and is leaving the institution after passing.
+            </div>
+            <div class="pdf-footer">
+              <div>Date: 22-06-2026</div>
+              <div class="pdf-sign"><div class="pdf-sign-line">Principal / Director</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CC PDF -->
+        <div id="pdf-cc" style="display:none;">
+          <div class="pdf-preview">
+            <div class="pdf-watermark">GT INSTITUTE</div>
+            <div class="pdf-head">
+              <div class="pdf-inst-name">GT Institute</div>
+              <div class="pdf-inst-addr">Rewa, Madhya Pradesh</div>
+              <div class="pdf-inst-phone">Phone: 9797378558</div>
+            </div>
+            <div class="pdf-logo">🏛️</div>
+            <div class="pdf-cert-no">
+              <span>Certificate No: <strong>GT/CC/240620-001</strong></span>
+              <span>Date: 20-06-2026</span>
+            </div>
+            <div class="pdf-title">CHARACTER CERTIFICATE</div>
+            <div class="pdf-body" style="margin-top:30px;line-height:2.2;">
+              This is to certify that Mr./Ms. <strong>Shubham Agrahari</strong>, Son/Daughter of <strong>Ramesh Agrahari</strong>, is a bonafide student of this institution. He/She was admitted in the academic session <strong>2025-26</strong>. Enrollment Number: <strong>INST20260002/ENR/0001</strong>. Course: <strong>Course on Computer Concept</strong>. Period of Study: From <strong>July 2025</strong> To <strong>December 2025</strong>. Passing Year: <strong>2025</strong>. During the period of study, his/her character and conduct were found to be <strong>SATISFACTORY</strong>.
+            </div>
+            <div class="pdf-footer">
+              <div>Date: 20-06-2026</div>
+              <div class="pdf-sign"><div class="pdf-sign-line">Principal / Director</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Reject Modal -->
+<div class="modal-overlay" id="reject-modal">
+  <div class="modal-box">
+    <div class="modal-title">Reject Certificate Request</div>
+    <label style="font-size:12px;font-weight:700;color:#64748b;display:block;margin-bottom:6px;">Rejection Reason (franchise ko dikhega)</label>
+    <textarea placeholder="Reason likhao…"></textarea>
+    <div class="modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="closeRejectModal()">Cancel</button>
+      <button class="btn btn-sm" style="background:#dc2626;color:#fff;" onclick="closeRejectModal()">Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- Activate Modal -->
+<div class="modal-overlay" id="activate-modal">
+  <div class="modal-box">
+    <div class="modal-title">Activate Certificate Module</div>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Unnati Computer Center</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:5px;">AMOUNT PAID (₹)</label><input type="number" placeholder="e.g. 3000" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;"></div>
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:5px;">PAYMENT DATE</label><input type="date" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;"></div>
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:5px;">VALID TILL</label><input type="date" style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;"></div>
+        <div><label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:5px;">PLAN</label><select style="width:100%;padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;outline:none;"><option>1 Year</option><option>Lifetime</option><option>6 Months</option></select></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-outline btn-sm" onclick="closeActivateModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="closeActivateModal()">Activate Feature</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Screen navigation ──
+const screens = ['overview','generate','walkin','requests','history','superadmin','pdfpreview'];
+const titles  = {
+  overview:'Certificates & Marksheets', generate:'Generate Certificate / Marksheet',
+  walkin:'Walk-in Certificate', requests:'Franchise Certificate Requests',
+  history:'Generated Documents', superadmin:'Super Admin — Feature Access',
+  pdfpreview:'PDF Preview'
+};
+
+function goto(name) {
+  screens.forEach(s => {
+    document.getElementById('screen-'+s)?.classList.remove('active');
+    const nav = document.getElementById('nav-'+s);
+    if (nav) nav.classList.remove('active');
+  });
+  document.getElementById('screen-'+name)?.classList.add('active');
+  const nav = document.getElementById('nav-'+name);
+  if (nav) nav.classList.add('active');
+  document.getElementById('topbar-title').textContent = titles[name] || name;
+  window.scrollTo(0,0);
+}
+
+// ── Generate screen: student search ──
+let searchTimer;
+function genSearch(val) {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    document.getElementById('gen-suggest').style.display = val.length >= 1 ? 'block' : 'none';
+  }, 200);
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.left-panel')) document.getElementById('gen-suggest').style.display = 'none';
+});
+
+function selectDemoStu(name, mobile, enr, course) {
+  document.getElementById('gen-suggest').style.display = 'none';
+  document.getElementById('gen-search').value = name;
+  document.getElementById('gen-stu-found').style.display = 'flex';
+  document.getElementById('gen-stu-avatar').textContent = name.charAt(0).toUpperCase();
+  document.getElementById('gen-stu-name').textContent = name;
+  document.getElementById('gen-stu-meta').textContent = enr + ' · ' + mobile;
+
+  // Show enrollment picker
+  document.getElementById('gen-enr-sec').style.display = 'block';
+  document.getElementById('gen-enr-list').innerHTML = `
+    <div class="enr-pick-item" onclick="pickEnr(this,'${course}','${enr}')">
+      <div class="enr-course">${course}</div>
+      <div class="enr-meta-txt">${enr} <span class="enr-close-badge">Completed</span></div>
+    </div>`;
+  document.getElementById('gen-doctype-sec').style.display = 'none';
+  hideAllForms();
+}
+
+function pickEnr(el, course, enr) {
+  document.querySelectorAll('.enr-pick-item').forEach(i => i.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('f-course').value = course;
+  document.getElementById('f-enr').value = enr;
+  document.getElementById('gen-doctype-sec').style.display = 'block';
+}
+
+function hideAllForms() {
+  ['ms','tc','cc'].forEach(t => {
+    document.getElementById('gen-form-'+t).style.display = 'none';
+    document.getElementById('dbt-'+t).classList.remove('sel');
+  });
+  document.getElementById('gen-placeholder').style.display = 'flex';
+}
+
+function selectDocType(type) {
+  ['ms','tc','cc'].forEach(t => {
+    document.getElementById('gen-form-'+t).style.display = 'none';
+    document.getElementById('dbt-'+t).classList.remove('sel');
+  });
+  document.getElementById('gen-form-'+type).style.display = 'block';
+  document.getElementById('dbt-'+type).classList.add('sel');
+  document.getElementById('gen-placeholder').style.display = 'none';
+}
+
+// ── Marks calc ──
+let msRowCount = 3;
+function calcMS() {
+  let mx=0,ob=0;
+  document.querySelectorAll('#ms-body tr').forEach(r=>{
+    mx += parseFloat(r.querySelectorAll('input')[1]?.value)||0;
+    ob += parseFloat(r.querySelectorAll('input')[2]?.value)||0;
+  });
+  document.getElementById('ms-max').textContent = mx||'—';
+  document.getElementById('ms-obt').textContent = ob||'—';
+  document.getElementById('ms-pct').textContent = mx>0?(ob/mx*100).toFixed(2)+'%':'—';
+}
+function addMSRow(){
+  const i=msRowCount++;
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" placeholder="Subject name"></td><td><input type="number" placeholder="100" oninput="calcMS()"></td><td><input type="number" placeholder="0" oninput="calcMS()"></td><td><input type="text" placeholder="A"></td><td><button class="rm-row" onclick="this.closest('tr').remove();calcMS()">×</button></td>`;
+  document.getElementById('ms-body').appendChild(tr);
+}
+
+// ── Result pick ──
+function pickResult(r){
+  document.getElementById('rp-pass').classList.toggle('sel',r==='pass');
+  document.getElementById('rp-fail').classList.toggle('sel',r==='fail');
+}
+
+// ── Walk-in type switch ──
+function wiSwitchType(type){
+  ['ms','tc','cc'].forEach(t=>{
+    document.getElementById('wi-btn-'+t).classList.remove('sel');
+    document.getElementById('wi-'+t+'-sec').style.display='none';
+  });
+  document.getElementById('wi-btn-'+type).classList.add('sel');
+  document.getElementById('wi-'+type+'-sec').style.display='block';
+}
+let wiCount=1;
+function wiAddRow(){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input type="text" placeholder="Subject name"></td><td><input type="number" placeholder="100"></td><td><input type="number" placeholder="0"></td><td><input type="text" placeholder="A"></td><td><button class="rm-row" onclick="this.closest('tr').remove()">×</button></td>`;
+  document.getElementById('wi-body').appendChild(tr);
+}
+
+// ── Modals ──
+function openRejectModal(){ document.getElementById('reject-modal').classList.add('open'); }
+function closeRejectModal(){ document.getElementById('reject-modal').classList.remove('open'); }
+function openActivateModal(){ document.getElementById('activate-modal').classList.add('open'); }
+function closeActivateModal(){ document.getElementById('activate-modal').classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); });
+});
+
+// ── PDF tab switch ──
+function switchPdf(type, btn) {
+  ['ms','tc','cc'].forEach(t => document.getElementById('pdf-'+t).style.display='none');
+  document.getElementById('pdf-'+type).style.display='block';
+  document.querySelectorAll('.screen-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// Init
+calcMS();
+</script>
+</body>
+</html>

@@ -15,9 +15,11 @@ class CourseController extends Controller
 
     public function index()
     {
+        $institute = $this->institute();
         $courses = CourseDetail::with(['courseType', 'feeStructures'])
-            ->where('institute_id', $this->institute()->id)->latest()->get();
-        return view('institute.courses.index', compact('courses'));
+            ->where('institute_id', $institute->id)->latest()->get();
+        $courseTypes = CourseType::where('institute_id', $institute->id)->orderBy('name')->get();
+        return view('institute.courses.index', compact('courses', 'courseTypes'));
     }
 
     public function create()

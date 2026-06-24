@@ -132,6 +132,30 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+  const searchInput  = document.getElementById('table-search');
+  const typeFilter   = document.getElementById('type-filter');
+  const visibleCount = document.getElementById('visible-count');
+  const rows         = document.querySelectorAll('.course-list-table tbody tr[data-type-id]');
+
+  function applyFilters() {
+    const term     = searchInput.value.toLowerCase().trim();
+    const typeId   = typeFilter.value;
+    let count      = 0;
+    rows.forEach(function (row) {
+      const text     = row.textContent.toLowerCase();
+      const rowType  = row.dataset.typeId || '';
+      const matchText = !term || text.includes(term);
+      const matchType = !typeId || rowType === typeId;
+      const visible  = matchText && matchType;
+      row.style.display = visible ? '' : 'none';
+      if (visible) count++;
+    });
+    visibleCount.textContent = count;
+  }
+
+  searchInput.addEventListener('input', applyFilters);
+  typeFilter.addEventListener('change', applyFilters);
+
   document.querySelectorAll('[data-course-toggle]').forEach(function (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
@@ -174,8 +198,16 @@ document.addEventListener('DOMContentLoaded', function () {
 @section('content')
 <div class="gt-card">
   <div class="gt-card-header">
-    <div class="gt-card-title">All Courses ({{ $courses->count() }})</div>
-    <input type="text" id="table-search" class="gt-input" style="max-width:240px;" placeholder="Search course, code, type...">
+    <div class="gt-card-title">All Courses (<span id="visible-count">{{ $courses->count() }}</span>)</div>
+    <div class="flex gap-2 align-center" style="flex-wrap:wrap;">
+      <select id="type-filter" class="gt-input" style="max-width:200px;">
+        <option value="">All Course Types</option>
+        @foreach($courseTypes as $type)
+          <option value="{{ $type->id }}">{{ $type->name }}</option>
+        @endforeach
+      </select>
+      <input type="text" id="table-search" class="gt-input" style="max-width:240px;" placeholder="Search course, code, type...">
+    </div>
   </div>
   <div class="gt-table-wrap">
     <table class="gt-table course-list-table">
@@ -193,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </thead>
       <tbody>
         @forelse($courses as $index => $c)
-        <tr>
+        <tr data-type-id="{{ $c->course_type_id }}">
           <td><span class="serial-badge">{{ $index + 1 }}</span></td>
           <td>
             <div class="course-name-cell">

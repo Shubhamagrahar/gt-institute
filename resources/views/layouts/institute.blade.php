@@ -251,6 +251,28 @@
       Fee Collection
     </a>
 
+    <div class="gt-sidebar-section">Certificates</div>
+    <a href="{{ route('institute.certificates.index') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.index') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 11 12 14 22 4"/></svg>
+      Overview
+    </a>
+    <a href="{{ route('institute.certificates.generate') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.generate') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+      Generate
+    </a>
+    <a href="{{ route('institute.certificates.walkin') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.walkin') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      Walk-in
+    </a>
+    <a href="{{ route('institute.certificates.requests') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.requests') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+      Requests
+    </a>
+    <a href="{{ route('institute.certificates.history') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.history') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      History
+    </a>
+
     <div class="gt-sidebar-section">Channel Partners</div>
     <a href="{{ route('institute.channel-partners.create') }}" class="gt-nav-item {{ request()->routeIs('institute.channel-partners.create') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11h4"/><path d="M19 9v4"/><path d="M2 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
