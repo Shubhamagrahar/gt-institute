@@ -178,7 +178,7 @@ class FranchiseOnboardingService
         });
     }
 
-    private function generatePassword(int $length = 10): string
+    public function generatePassword(int $length = 10): string
     {
         $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
         return substr(str_shuffle(str_repeat($chars, 4)), 0, $length);

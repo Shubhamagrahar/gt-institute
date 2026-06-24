@@ -192,6 +192,7 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
         Route::post('franchises/{franchise}/recharge', [FranchiseController::class, 'recharge'])->name('franchises.recharge');
         Route::post('franchises/{franchise}/recharge-bonus', [FranchiseController::class, 'rechargeBonus'])->name('franchises.recharge-bonus');
         Route::get('franchises/{franchise}/certificate', [FranchiseController::class, 'certificate'])->name('franchises.certificate');
+        Route::post('franchises/{franchise}/resend-credentials', [FranchiseController::class, 'resendCredentials'])->name('franchises.resend-credentials');
         Route::get('franchises/{franchise}/course-charges', [FranchiseController::class, 'courseCharges'])->name('franchises.course-charges');
         Route::get('franchise-wallets', [FranchiseController::class, 'walletIndex'])->name('franchises.wallets');
         // Franchise onboarding fee collection (institute ↔ franchise, completely separate from wallet)
