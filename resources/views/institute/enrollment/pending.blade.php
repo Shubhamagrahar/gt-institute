@@ -192,6 +192,68 @@
   @endif
 </div>
 
+{{-- ── Expired Bookings ── --}}
+@if($expiredBooks->isNotEmpty())
+<div class="gt-card" style="padding:0;margin-top:24px;">
+  <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="gt-card-title" style="margin:0;">Expired Bookings</div>
+      <span style="font-size:11px;font-weight:700;background:#fef2f2;color:#ef4444;padding:2px 10px;border-radius:20px;border:1px solid #fecaca;">
+        {{ $expiredBooks->count() }}
+      </span>
+    </div>
+    <span style="font-size:12px;color:var(--text-2);">Click View to renew a booking</span>
+  </div>
+
+  @foreach($expiredBooks as $book)
+    @php
+      $profile  = $book->student?->profile;
+      $name     = $profile?->name ?? $book->student?->user_id ?? '—';
+      $initials = strtoupper(substr($name, 0, 1));
+      $photo    = $profile?->photo;
+    @endphp
+    <div class="adm-card" style="grid-template-columns:44px 1fr auto;opacity:.85;">
+
+      {{-- Avatar --}}
+      <div class="adm-avatar" style="background:#ef4444;">
+        @if($photo && !in_array($photo, ['images/user.svg','images/user.png']))
+          <img src="{{ asset($photo) }}" alt="">
+        @else
+          {{ $initials }}
+        @endif
+      </div>
+
+      {{-- Info --}}
+      <div>
+        <div class="adm-name">{{ $name }}</div>
+        <div class="adm-sub">
+          {{ $book->student?->mobile }}
+          &nbsp;·&nbsp; {{ $book->course?->name ?? '—' }}
+        </div>
+        <div class="adm-sub" style="margin-top:3px;">
+          Booked {{ $book->book_date ? \Carbon\Carbon::parse($book->book_date)->format('d M Y') : '—' }}
+          &nbsp;·&nbsp;
+          <span style="color:#ef4444;font-weight:600;">
+            Expired {{ $book->book_date ? \Carbon\Carbon::parse($book->book_date)->diffForHumans() : '' }}
+          </span>
+        </div>
+      </div>
+
+      {{-- Action --}}
+      <div class="adm-actions">
+        @if($book->student)
+          <a href="{{ route('institute.students.show', $book->student) }}"
+             class="btn btn-outline btn-sm" style="white-space:nowrap;">
+            View →
+          </a>
+        @endif
+      </div>
+
+    </div>
+  @endforeach
+</div>
+@endif
+
 @endsection
 
 @push('scripts')

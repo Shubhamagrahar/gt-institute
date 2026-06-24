@@ -72,7 +72,7 @@ class EnrollmentController extends Controller
         $validityDays = \Auth::guard('institute')->user()->institute?->seat_booking_validity_days ?? 30;
         CourseBook::where('institute_id', $iid)
             ->where('status', 'OPEN')
-            ->where('created_at', '<', now()->subDays($validityDays))
+            ->where('book_date', '<', now()->subDays($validityDays)->toDateString())
             ->update(['status' => 'EXPIRED']);
 
         $openBooks = CourseBook::with(['student.profile', 'course', 'batch'])
@@ -93,8 +93,16 @@ class EnrollmentController extends Controller
         $countDetailsPending = $openBooks->where('details_complete', false)->count();
         $countPaymentPending = $openBooks->where('details_complete', true)->count();
 
+        $expiredBooks = CourseBook::with(['student.profile', 'course'])
+            ->where('institute_id', $iid)
+            ->where('status', 'EXPIRED')
+            ->latest('book_date')
+            ->limit(50)
+            ->get();
+
         return view('institute.enrollment.pending', compact(
-            'openBooks', 'countTotal', 'countDetailsPending', 'countPaymentPending'
+            'openBooks', 'countTotal', 'countDetailsPending', 'countPaymentPending',
+            'expiredBooks'
         ));
     }
 
@@ -888,14 +896,20 @@ class EnrollmentController extends Controller
                 $overdueDays = ($graceEnd && $today->gt($graceEnd)) ? (int) $today->diffInDays($graceEnd) : 0;
                 $lateFee     = round($overdueDays * (float) ($plan->late_fee_per_day ?? 0), 2);
                 $monthlyAmt  = (float) ($plan->monthly_amount ?? 0);
-                $totalDue    = round($monthlyAmt + $lateFee, 2);
                 $isDue       = $nextDue && $nextDue->format('Y-m') <= $today->format('Y-m');
+
+                // Accumulated months: if May unpaid and June starts, both are due
+                $monthsUnpaid = ($isDue && $nextDue)
+                    ? max(1, (int) $nextDue->copy()->startOfMonth()->diffInMonths($today->copy()->startOfMonth()) + 1)
+                    : 0;
+                $totalDue = round($monthsUnpaid * $monthlyAmt + $lateFee, 2);
 
                 $book->setAttribute('paid_total', $paidTotal);
                 $book->setAttribute('next_due', $nextDue);
                 $book->setAttribute('grace_end', $graceEnd);
                 $book->setAttribute('overdue_days', $overdueDays);
                 $book->setAttribute('late_fee_amt', $lateFee);
+                $book->setAttribute('months_unpaid', $monthsUnpaid);
                 $book->setAttribute('total_due_now', $totalDue);
                 $book->setAttribute('monthly_amount', $monthlyAmt);
                 $book->setAttribute('is_overdue', $overdueDays > 0);
@@ -911,6 +925,34 @@ class EnrollmentController extends Controller
         return view('institute.enrollment.monthly-fees', compact(
             'enrollments', 'overdueList', 'dueList', 'upcomingList', 'today'
         ));
+    }
+
+    public function renewBooking(CourseBook $courseBook)
+    {
+        $this->authorizeCourseBook($courseBook);
+
+        abort_unless($courseBook->status === 'EXPIRED', 422, 'Only expired bookings can be renewed.');
+
+        $courseBook->update([
+            'status'    => 'OPEN',
+            'book_date' => now()->toDateString(),
+        ]);
+
+        $name = $courseBook->student?->profile?->name ?? $courseBook->student?->user_id ?? 'Student';
+
+        return redirect()->route('institute.enrollment.pending')
+            ->with('success', "Booking renewed for {$name}. Complete details or payment from the list below.");
+    }
+
+    public function cancelBooking(CourseBook $courseBook)
+    {
+        $this->authorizeCourseBook($courseBook);
+        abort_unless(in_array($courseBook->status, ['OPEN', 'EXPIRED']), 422, 'Only OPEN or EXPIRED bookings can be cancelled.');
+
+        $courseBook->update(['status' => 'CANCEL']);
+
+        $name = $courseBook->student?->profile?->name ?? $courseBook->student?->user_id ?? 'Student';
+        return redirect()->back()->with('success', "Booking cancelled for {$name}.");
     }
 
     public function cancelFee(Request $request, CourseBook $courseBook, FeeCollectDetail $fee)
@@ -1080,7 +1122,22 @@ class EnrollmentController extends Controller
             'profile_completed_at' => $courseBook->profile_completed_at ?? now(),
         ]);
 
-        $this->forceFinalizeAdmission($courseBook->fresh(['student.profile', 'paymentPlan', 'course']));
+        $fresh = $courseBook->fresh(['student.profile', 'paymentPlan', 'course']);
+        $plan  = $fresh->paymentPlan;
+
+        // For OTP/MONTHLY plans that require upfront payment, block confirm if nothing paid yet.
+        if ($plan && in_array($plan->plan_type, ['OTP', 'MONTHLY'])) {
+            $paid = (float) FeeCollectDetail::where('course_book_id', $courseBook->id)
+                ->whereNull('cancelled_at')
+                ->sum(FeeCollectDetail::amountColumn());
+
+            if ($paid <= 0) {
+                return redirect()->route('institute.enrollment.fee', $courseBook)
+                    ->with('error', 'Fee collection required before confirming admission. Please collect at least the first payment.');
+            }
+        }
+
+        $this->forceFinalizeAdmission($fresh);
 
         $this->sendAdmissionConfirmationEmail($courseBook->fresh(['course', 'batch', 'student.profile']));
 

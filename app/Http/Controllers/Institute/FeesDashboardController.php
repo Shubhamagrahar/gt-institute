@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CourseBook;
 use App\Models\CourseDetail;
 use App\Models\EnrollmentPaymentPlan;
+use App\Models\StudentTransaction;
 use App\Models\FeeCollectDetail;
 use App\Models\InstituteSession;
 use App\Models\User;
@@ -150,6 +151,60 @@ class FeesDashboardController extends Controller
             });
 
         return response()->json($books->values());
+    }
+
+    public function collectionReport(Request $request)
+    {
+        $iid    = $this->instituteId();
+        $amtCol = FeeCollectDetail::amountColumn();
+        $today  = now()->toDateString();
+        $month  = $request->input('month', now()->format('Y-m'));
+
+        // Daily: today's collections
+        $dailyRows = FeeCollectDetail::with(['courseBook.course', 'courseBook.student.profile'])
+            ->where('institute_id', $iid)
+            ->whereDate('date', $today)
+            ->whereNull('cancelled_at')
+            ->latest('id')
+            ->get();
+
+        $dailyTotal   = $dailyRows->sum($amtCol);
+        $dailyByCash  = $dailyRows->where('payment_mode', 'CASH')->sum($amtCol);
+        $dailyByUpi   = $dailyRows->whereIn('payment_mode', ['UPI','NEFT','IMPS'])->sum($amtCol);
+        $dailyByCheque= $dailyRows->where('payment_mode', 'CHEQUE')->sum($amtCol);
+
+        // Monthly: group by date
+        [$year, $mon] = explode('-', $month);
+        $monthStart = Carbon::create($year, $mon, 1)->startOfMonth()->toDateString();
+        $monthEnd   = Carbon::create($year, $mon, 1)->endOfMonth()->toDateString();
+
+        $monthlyRows = FeeCollectDetail::with(['courseBook.course', 'courseBook.student.profile'])
+            ->where('institute_id', $iid)
+            ->whereBetween('date', [$monthStart, $monthEnd])
+            ->whereNull('cancelled_at')
+            ->orderBy('date')
+            ->get();
+
+        $monthlyTotal    = $monthlyRows->sum($amtCol);
+        $monthlyByMode   = $monthlyRows->groupBy('payment_mode')
+            ->map(fn ($g) => round($g->sum($amtCol), 2));
+        $monthlyByDate   = $monthlyRows->groupBy('date')
+            ->map(fn ($g) => round($g->sum($amtCol), 2));
+
+        // Available months (for month picker)
+        $availableMonths = FeeCollectDetail::where('institute_id', $iid)
+            ->whereNull('cancelled_at')
+            ->selectRaw("DATE_FORMAT(date, '%Y-%m') as ym")
+            ->distinct()
+            ->orderByDesc('ym')
+            ->limit(24)
+            ->pluck('ym');
+
+        return view('institute.fees.collection-report', compact(
+            'dailyRows', 'dailyTotal', 'dailyByCash', 'dailyByUpi', 'dailyByCheque',
+            'monthlyRows', 'monthlyTotal', 'monthlyByMode', 'monthlyByDate',
+            'month', 'availableMonths', 'today'
+        ));
     }
 
     private function calcLateFee(EnrollmentPaymentPlan $plan): float

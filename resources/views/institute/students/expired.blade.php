@@ -106,7 +106,7 @@
             </td>
             <td class="col-mobile" style="color:var(--text-2);">{{ $stu?->mobile ?? '—' }}</td>
             <td class="col-course">{{ $enr->course?->name ?? '—' }}</td>
-            <td class="col-booked" style="color:var(--text-2);font-size:12px;">{{ $enr->created_at?->format('d M Y') ?? '—' }}</td>
+            <td class="col-booked" style="color:var(--text-2);font-size:12px;">{{ $enr->book_date ? \Carbon\Carbon::parse($enr->book_date)->format('d M Y') : '—' }}</td>
             <td class="col-reason">
               <span style="font-size:11px;background:#fef2f2;color:#ef4444;padding:2px 10px;border-radius:20px;border:1px solid #fecaca;font-weight:600;">
                 EXPIRED
@@ -114,7 +114,7 @@
             </td>
             <td class="col-action">
               @if($stu)
-              <a href="{{ route('institute.students.show', $stu) }}" class="btn btn-outline btn-sm" style="font-size:11px;">View</a>
+                <a href="{{ route('institute.students.show', $stu) }}" class="btn btn-outline btn-sm">View</a>
               @endif
             </td>
           </tr>

@@ -103,6 +103,10 @@ Route::prefix('dashboard')
         
         Route::get('/', [InstituteDashboard::class, 'index'])->name('dashboard');
         Route::get('students/expired', [StudentController::class, 'expired'])->name('students.expired');
+        Route::get('students/closed', [StudentController::class, 'closed'])->name('students.closed');
+        Route::get('students/cancelled', [StudentController::class, 'cancelled'])->name('students.cancelled');
+        Route::get('students/academic', [StudentController::class, 'academic'])->name('students.academic');
+        Route::get('students/suggest', [StudentController::class, 'suggest'])->name('students.suggest');
         Route::resource('students', StudentController::class);
         Route::get('students/{student}/ledger', [StudentController::class, 'ledger'])->name('students.ledger');
         Route::get('students/{student}/enrollments/{courseBook}/edit', [EnrollmentController::class, 'editBooking'])->name('students.enrollments.edit');
@@ -193,6 +197,7 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
 // Fees Dashboard
 Route::get('fees-dashboard', [FeesDashboardController::class, 'index'])->name('fees-dashboard');
 Route::get('fees-search', [FeesDashboardController::class, 'search'])->name('fees-search');
+Route::get('fees/collection-report', [FeesDashboardController::class, 'collectionReport'])->name('fees.collection-report');
 
 // Enrollment
 Route::get('enrollment/monthly-fees', [EnrollmentController::class, 'monthlyFees'])->name('enrollment.monthly-fees');
@@ -215,6 +220,8 @@ Route::get('enrollment/{courseBook}/receipt/{fee}/a4', [EnrollmentController::cl
 Route::get('enrollment/{courseBook}/receipt/{fee}/thermal', [EnrollmentController::class, 'receiptThermal'])->name('enrollment.receipt.thermal');
 Route::post('enrollment/{courseBook}/receipt/{fee}/cancel', [EnrollmentController::class, 'cancelFee'])->name('enrollment.receipt.cancel');
 Route::post('enrollment/{courseBook}/payment', [EnrollmentController::class, 'addPayment'])->name('enrollment.add-payment');
+Route::post('enrollment/{courseBook}/renew', [EnrollmentController::class, 'renewBooking'])->name('enrollment.renew');
+Route::post('enrollment/{courseBook}/cancel', [EnrollmentController::class, 'cancelBooking'])->name('enrollment.cancel');
 
 // Education (AJAX)
 Route::post('enrollment/education/add', [EnrollmentController::class, 'addEducation'])->name('enrollment.education.add');

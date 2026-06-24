@@ -133,6 +133,15 @@ class FeeCollectController extends Controller
                 if ($courseBook->status === 'OPEN' && ! $courseBook->paymentPlan && (float) $courseBook->final_fee <= 0) {
                     abort(422, 'Fee setup is required before collecting admission payment.');
                 }
+            } else {
+                // Auto-link only when the student has exactly ONE active RUN enrollment.
+                $runBooks = $user->enrollments()
+                    ->where('institute_id', $iid)
+                    ->where('status', 'RUN')
+                    ->get();
+                if ($runBooks->count() === 1) {
+                    $courseBook = $runBooks->first();
+                }
             }
 
             // 1. fee_collect_details
