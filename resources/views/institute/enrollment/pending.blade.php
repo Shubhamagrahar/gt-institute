@@ -180,8 +180,8 @@
             </a>
             <span style="font-size:11px;color:#ef4444;font-weight:600;">Details pending</span>
           @else
-            <a href="{{ route('institute.fee-collect.show', $book->student) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
-              Collect Fee →
+            <a href="{{ route('institute.enrollment.fee', $book) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
+              Proceed to Payment →
             </a>
             <span style="font-size:11px;color:#f59e0b;font-weight:600;">Payment pending</span>
           @endif
