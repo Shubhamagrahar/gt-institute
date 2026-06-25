@@ -86,47 +86,101 @@ class EnrollmentController extends Controller
         return view('franchise.enrollment.pending', compact('openBooks', 'admittedBooks'));
     }
 
+    // ── Choose ───────────────────────────────────────────────────────────────
+
+    public function choose()
+    {
+        return view('franchise.enrollment.choose');
+    }
+
     // ── New Admission ────────────────────────────────────────────────────────
 
-    public function newStudent()
+    private function buildCatalog(int $iid, int $fid): \Illuminate\Support\Collection
     {
-        $iid     = $this->instituteId();
         $courses = CourseDetail::with(['courseType', 'feeStructures.feeType'])
             ->where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
+
+        // Franchise-specific pricing
+        $franchiseCharges = FranchiseCourseCharge::where('franchise_id', $fid)
+            ->where('enabled', true)->get()->keyBy('course_id');
+        $franchiseFees = FranchiseFeeStructure::where('franchise_id', $fid)
+            ->where('enabled', true)->get()->groupBy('course_id');
+
+        return $courses->map(function ($c) use ($franchiseCharges, $franchiseFees) {
+            $charge    = $franchiseCharges[$c->id] ?? null;
+            $baseFee   = $charge && $charge->student_fee > 0
+                ? round((float) $charge->student_fee, 2)
+                : round((float) $c->fee, 2);
+            $extraFees = ($franchiseFees[$c->id] ?? collect())->map(fn ($fs) => [
+                'fee_type_id'   => $fs->fee_type_id,
+                'fee_type_name' => $fs->fee_type_name,
+                'amount'        => round((float) $fs->amount, 2),
+                'is_mandatory'  => false,
+            ]);
+            $feeItems = collect([[
+                'fee_type_id'   => null,
+                'fee_type_name' => 'Course Fee',
+                'amount'        => $baseFee,
+                'is_mandatory'  => true,
+            ]])->merge($extraFees)->values()->all();
+
+            return [
+                'id'             => $c->id,
+                'name'           => $c->name,
+                'duration'       => $c->duration_months ?? $c->duration,
+                'course_type_id' => $c->course_type_id,
+                'total_fee'      => collect($feeItems)->sum('amount'),
+                'fee_items'      => $feeItems,
+            ];
+        })->values();
+    }
+
+    private function sharedNewData(int $iid): array
+    {
         $batches = BatchDetail::where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
         $states  = State::orderBy('name')->pluck('name');
-
         $districtsByState = Schema::hasTable('districts')
             ? \App\Models\District::select('districts.name as district_name', 'states.name as state_name')
                 ->join('states', 'states.id', '=', 'districts.state_id')
                 ->orderBy('states.name')->orderBy('districts.name')->get()
                 ->groupBy('state_name')
-                ->map(fn ($rows) => $rows->pluck('district_name')->values())->toArray()
+                ->map(fn ($r) => $r->pluck('district_name')->values())->toArray()
             : [];
+        $courseTypes = \App\Models\CourseType::where('institute_id', $iid)->orderBy('name')->get();
+        return compact('batches', 'states', 'districtsByState', 'courseTypes');
+    }
 
-        $courseCatalog = $courses->map(fn ($c) => [
-            'id'         => $c->id,
-            'name'       => $c->name,
-            'total_fee'  => round((float) $c->fee + $c->feeStructures->sum('amount'), 2),
-            'fee_items'  => collect([[
-                'fee_type_id'   => null,
-                'fee_type_name' => 'Course Fee',
-                'amount'        => round((float) $c->fee, 2),
-                'is_mandatory'  => true,
-            ]])->merge($c->feeStructures->map(fn ($fs) => [
-                'fee_type_id'   => $fs->fee_type_id,
-                'fee_type_name' => $fs->fee_type_name,
-                'amount'        => round((float) $fs->amount, 2),
-                'is_mandatory'  => (bool) $fs->feeType?->is_mandatory,
-            ]))->values()->all(),
-        ])->values();
+    public function newStudent()
+    {
+        $iid = $this->instituteId();
+        $fid = $this->franchiseId();
+        $courseCatalog = $this->buildCatalog($iid, $fid);
+        return view('franchise.enrollment.new',
+            array_merge($this->sharedNewData($iid), compact('courseCatalog')));
+    }
 
-        return view('franchise.enrollment.new', compact(
-            'courses', 'batches', 'states', 'districtsByState', 'courseCatalog'
-        ));
+    public function quick()
+    {
+        $iid = $this->instituteId();
+        $fid = $this->franchiseId();
+        $courseCatalog = $this->buildCatalog($iid, $fid);
+        return view('franchise.enrollment.quick',
+            array_merge($this->sharedNewData($iid), compact('courseCatalog')));
+    }
+
+    public function storeQuick(Request $request)
+    {
+        // Delegate to storeNew — quick booking uses same backend,
+        // booking_mode distinguishes it
+        return $this->storeNewInternal($request, 'quick');
     }
 
     public function storeNew(Request $request)
+    {
+        return $this->storeNewInternal($request, 'full');
+    }
+
+    private function storeNewInternal(Request $request, string $bookingMode)
     {
         $iid       = $this->instituteId();
         $fid       = $this->franchiseId();
@@ -150,7 +204,7 @@ class EnrollmentController extends Controller
             'pin_code'   => 'nullable|string|max:10',
         ]);
 
-        DB::transaction(function () use ($data, $iid, $fid, $sessionId) {
+        DB::transaction(function () use ($data, $iid, $fid, $sessionId, $bookingMode) {
             $userId = 'S' . $iid . now()->format('ymdHis') . strtoupper(Str::random(4));
             $user = User::create([
                 'institute_id'  => $iid,
@@ -182,7 +236,7 @@ class EnrollmentController extends Controller
                 'issue_date'  => now()->toDateString(),
             ]);
 
-            $courseBook = CourseBook::create([
+            CourseBook::create([
                 'institute_id'        => $iid,
                 'franchise_id'        => $fid,
                 'session_id'          => $sessionId,
@@ -194,7 +248,7 @@ class EnrollmentController extends Controller
                 'final_fee'           => 0,
                 'book_date'           => now()->toDateString(),
                 'status'              => 'OPEN',
-                'booking_mode'        => 'full',
+                'booking_mode'        => $bookingMode,
                 'profile_completed_at'=> now(),
                 'admission_by'        => Auth::guard('institute')->id(),
             ]);
@@ -203,12 +257,85 @@ class EnrollmentController extends Controller
                 ['user_id' => $user->id],
                 ['institute_id' => $iid, 'franchise_id' => $fid, 'owner_type' => 'franchise', 'balance' => 0]
             );
-
-            return $courseBook->fresh(['student.profile', 'course']);
         });
 
         return redirect()->route('franchise.enrollment.pending')
-            ->with('success', 'Seat booked successfully for ' . $data['name'] . '. Complete profile and payment to finalize.');
+            ->with('success', 'Seat booked for ' . $data['name'] . '. Complete fee setup to finalize admission.');
+    }
+
+    // ── Find Existing Student ────────────────────────────────────────────────
+
+    public function findStudent(Request $request)
+    {
+        if ($request->isMethod('GET')) {
+            return redirect()->route('franchise.enrollment.choose');
+        }
+        $search = trim($request->input('search', ''));
+        $iid    = $this->instituteId();
+
+        $student = User::where('institute_id', $iid)
+            ->where('role', 'student')
+            ->where(fn ($q) => $q->where('mobile', $search)->orWhere('user_id', $search))
+            ->with('profile')
+            ->first();
+
+        if (!$student) {
+            return redirect()->route('franchise.enrollment.choose')
+                ->withInput()->with('error', 'No student found with mobile/ID "' . $search . '".');
+        }
+
+        $iid  = $this->instituteId();
+        $fid  = $this->franchiseId();
+        $courseCatalog = $this->buildCatalog($iid, $fid);
+        return view('franchise.enrollment.existing',
+            array_merge($this->sharedNewData($iid), compact('student', 'courseCatalog')));
+    }
+
+    // ── Enroll Existing Student ───────────────────────────────────────────────
+
+    public function storeExisting(Request $request)
+    {
+        $iid       = $this->instituteId();
+        $fid       = $this->franchiseId();
+        $sessionId = $this->activeSessionId();
+
+        $data = $request->validate([
+            'student_id' => 'required|exists:users,id',
+            'course_id'  => ['required', \Illuminate\Validation\Rule::exists('course_details', 'id')
+                ->where(fn ($q) => $q->where('institute_id', $iid))],
+            'batch_id'   => ['nullable', \Illuminate\Validation\Rule::exists('batch_details', 'id')
+                ->where(fn ($q) => $q->where('institute_id', $iid))],
+        ]);
+
+        $student = User::where('id', $data['student_id'])->where('institute_id', $iid)
+            ->where('role', 'student')->firstOrFail();
+
+        $alreadyEnrolled = CourseBook::where('user_id', $student->id)
+            ->where('course_id', $data['course_id'])
+            ->whereIn('status', ['OPEN', 'RUN'])->exists();
+        if ($alreadyEnrolled) {
+            return back()->with('error', 'Student is already enrolled in this course.');
+        }
+
+        CourseBook::create([
+            'institute_id'        => $iid,
+            'franchise_id'        => $fid,
+            'session_id'          => $sessionId,
+            'user_id'             => $student->id,
+            'course_id'           => $data['course_id'],
+            'batch_id'            => $data['batch_id'] ?? null,
+            'enrollment_no'       => null,
+            'fee'                 => 0,
+            'final_fee'           => 0,
+            'book_date'           => now()->toDateString(),
+            'status'              => 'OPEN',
+            'booking_mode'        => 'existing',
+            'profile_completed_at'=> now(),
+            'admission_by'        => Auth::guard('institute')->id(),
+        ]);
+
+        return redirect()->route('franchise.enrollment.pending')
+            ->with('success', 'New course enrolled for ' . ($student->profile?->name ?? $student->user_id) . '.');
     }
 
     // ── Profile ──────────────────────────────────────────────────────────────

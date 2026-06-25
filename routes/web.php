@@ -294,8 +294,13 @@ Route::prefix('franchise')
         // ── Enrollment ──────────────────────────────────────────────────────
         Route::prefix('enrollment')->name('enrollment.')->group(function () {
             Route::get('/pending',           [FranchiseEnrollment::class, 'pending'])->name('pending');
+            Route::get('/choose',            [FranchiseEnrollment::class, 'choose'])->name('choose');
             Route::get('/new',               [FranchiseEnrollment::class, 'newStudent'])->name('new');
             Route::post('/new',              [FranchiseEnrollment::class, 'storeNew'])->name('store-new');
+            Route::get('/quick',             [FranchiseEnrollment::class, 'quick'])->name('quick');
+            Route::post('/quick',            [FranchiseEnrollment::class, 'storeQuick'])->name('store-quick');
+            Route::match(['GET','POST'], '/find-student', [FranchiseEnrollment::class, 'findStudent'])->name('find-student');
+            Route::post('/existing',         [FranchiseEnrollment::class, 'storeExisting'])->name('store-existing');
 
             Route::get('/{courseBook}/profile',  [FranchiseEnrollment::class, 'profileForm'])->name('profile');
             Route::post('/{courseBook}/profile', [FranchiseEnrollment::class, 'saveProfile'])->name('save-profile');

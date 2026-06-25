@@ -26,7 +26,7 @@
 @endpush
 
 @section('topbar-actions')
-  <a href="{{ route('franchise.enrollment.new') }}" class="btn btn-primary btn-sm">+ New Admission</a>
+  <a href="{{ route('franchise.enrollment.choose') }}" class="btn btn-primary btn-sm">+ New Admission</a>
 @endsection
 
 @section('content')
@@ -77,7 +77,7 @@
         <div class="gt-card-title">Seat Booked — Pending Admission</div>
         <div class="text-xs text-muted">Click "Process Admission" to complete profile and fee setup.</div>
       </div>
-      <a href="{{ route('franchise.enrollment.new') }}" class="btn btn-primary btn-sm">+ New Booking</a>
+      <a href="{{ route('franchise.enrollment.choose') }}" class="btn btn-primary btn-sm">+ New Booking</a>
     </div>
 
     @if($openBooks->isEmpty())
