@@ -111,6 +111,7 @@
 
     <form method="POST" action="{{ route('login.post') }}">
       @csrf
+      <input type="hidden" name="portal" value="franchise">
 
       <div class="gt-form-group">
         <div class="login-input-wrap">

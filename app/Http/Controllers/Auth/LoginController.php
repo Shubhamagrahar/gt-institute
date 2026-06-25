@@ -59,8 +59,10 @@ class LoginController extends Controller
         if (!$request->session()->has('otp_pending')) {
             return redirect()->route('login');
         }
+        $pending = $request->session()->get('otp_pending');
         return view('auth.otp-verify', [
-            'maskedEmail' => $this->maskEmail($request->session()->get('otp_pending.email')),
+            'maskedEmail' => $this->maskEmail($pending['email']),
+            'portal'      => $pending['portal'] ?? '',
         ]);
     }
 
@@ -169,6 +171,7 @@ class LoginController extends Controller
             'account_id' => $user->getKey(),
             'email'      => $email,
             'remember'   => $remember,
+            'portal'     => $request->input('portal', ''),
         ]);
 
         return redirect()->route('login.otp.show');
