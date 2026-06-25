@@ -38,17 +38,12 @@ class PricingController extends Controller
 
         $charges = FranchiseCourseCharge::where('franchise_id', $fid)
             ->where('enabled', true)
-            ->with('courseType', 'course.feeStructures.feeType')
+            ->with('courseType')
             ->orderBy('course_type_id')
             ->orderBy('course_name')
             ->get();
 
-        // Load all franchise fee structures keyed by course_id
-        $feeStructures = FranchiseFeeStructure::where('franchise_id', $fid)
-            ->get()
-            ->groupBy('course_id');
-
-        return view('franchise.pricing.index', compact('franchise', 'charges', 'feeStructures'));
+        return view('franchise.pricing.index', compact('franchise', 'charges'));
     }
 
     // Update student_fee for a course

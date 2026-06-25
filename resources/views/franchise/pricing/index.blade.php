@@ -31,21 +31,6 @@
 .pr-save-btn{padding:7px 16px;background:linear-gradient(135deg,#ea580c,#f97316);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .pr-save-btn:hover{opacity:.9;}
 
-/* Fee structures section */
-.pr-fee-section{border-top:1px solid var(--border);padding:14px 20px;background:var(--bg-3);}
-.pr-fee-section-title{font-size:11.5px;font-weight:700;color:var(--text-2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em;}
-.pr-fee-row{display:grid;grid-template-columns:1fr 100px 120px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border-2);}
-.pr-fee-row:last-child{border-bottom:none;}
-.pr-fee-row-head{display:grid;grid-template-columns:1fr 100px 120px;gap:10px;padding:5px 0 8px;border-bottom:1px solid var(--border);}
-.pr-fee-row-head span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);}
-
-.pr-toggle{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-2);cursor:pointer;}
-.pr-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#ea580c;cursor:pointer;}
-
-.pr-fee-save-btn{padding:5px 12px;background:rgba(234,88,12,.12);color:#ea580c;border:1px solid rgba(234,88,12,.25);border-radius:7px;font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;}
-.pr-fee-save-btn:hover{background:rgba(234,88,12,.2);}
-
-.no-fee-note{font-size:12px;color:var(--text-3);font-style:italic;padding:8px 0;}
 </style>
 @endpush
 
@@ -73,11 +58,9 @@
 
 @foreach($typeCharges as $ch)
 @php
-  $cap      = (float) ($ch->course?->fee ?? 0);
-  $stuFee   = (float) ($ch->student_fee ?? 0);
-  $margin   = $stuFee - $ch->admission_charge;
-  $instFees = $ch->course?->feeStructures ?? collect();
-  $myFees   = ($feeStructures[$ch->course_id] ?? collect())->keyBy('fee_type_id');
+  $cap    = (float) ($ch->course?->fee ?? 0);
+  $stuFee = (float) ($ch->student_fee ?? 0);
+  $margin = $stuFee - $ch->admission_charge;
 @endphp
 
 <div class="pr-course-card">
@@ -114,55 +97,6 @@
     </div>
   </div>
 
-  {{-- Additional fee structures --}}
-  <div class="pr-fee-section">
-    <div class="pr-fee-section-title">Additional Fee Types (optional)</div>
-
-    @if($instFees->isEmpty())
-      <div class="no-fee-note">No additional fee types configured for this course by the institute.</div>
-    @else
-      <form method="POST" action="{{ route('franchise.pricing.fee-structures', $ch) }}">
-        @csrf
-        <div class="pr-fee-row-head">
-          <span>Fee Type</span>
-          <span>Amount (₹)</span>
-          <span>Apply to students</span>
-        </div>
-        @foreach($instFees as $fs)
-        @php
-          $existing = $myFees[$fs->fee_type_id] ?? null;
-          $isEnabled = $existing !== null && $existing->enabled;
-          $myAmount  = $existing ? $existing->amount : $fs->amount;
-        @endphp
-        <div class="pr-fee-row">
-          <div>
-            <div style="font-size:13px;font-weight:600;color:var(--text-1);">{{ $fs->fee_type_name }}</div>
-            <div style="font-size:11px;color:var(--text-3);">Institute rate: ₹{{ number_format($fs->amount, 2) }}</div>
-            <input type="hidden" name="fees[{{ $loop->index }}][fee_type_id]" value="{{ $fs->fee_type_id }}">
-            <input type="hidden" name="fees[{{ $loop->index }}][fee_type_name]" value="{{ $fs->fee_type_name }}">
-            <input type="hidden" name="fees[{{ $loop->index }}][sort_order]" value="{{ $loop->index }}">
-          </div>
-          <div>
-            <input type="number" name="fees[{{ $loop->index }}][amount]"
-              class="pr-fee-input" style="width:90px;"
-              value="{{ number_format($myAmount, 2, '.', '') }}"
-              step="0.01" min="0">
-          </div>
-          <div>
-            <label class="pr-toggle">
-              <input type="checkbox" name="fees[{{ $loop->index }}][enabled]" value="1"
-                {{ $isEnabled ? 'checked' : '' }}>
-              Enable
-            </label>
-          </div>
-        </div>
-        @endforeach
-        <div style="margin-top:12px;">
-          <button type="submit" class="pr-fee-save-btn">Save Fee Types for {{ $ch->course_name }}</button>
-        </div>
-      </form>
-    @endif
-  </div>
 </div>
 @endforeach
 
