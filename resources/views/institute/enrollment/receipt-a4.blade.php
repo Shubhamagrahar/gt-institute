@@ -260,6 +260,19 @@ body { font-family: Arial, Helvetica, sans-serif; background: #bbb; }
   $useStamp = $institute?->use_stamp   && $institute?->stamp;
   $useSig   = $institute?->use_signature && $institute?->signature;
 
+  // Collected by: staff name or institute name
+  $collectorName = $iName;
+  if ($fee->received_by) {
+      try {
+          $collectorUser = \App\Models\User::find($fee->received_by);
+          $collectorName = ($collectorUser && $collectorUser->role !== 'institute_head')
+              ? ($collectorUser->profile?->name ?? $collectorUser->user_id ?? $iName)
+              : $iName;
+      } catch (\Throwable) {
+          $collectorName = $iName;
+      }
+  }
+
   // Amount in words
   $toWords = function(float $amount) use (&$toWords): string {
       $n = (int) round($amount);
@@ -403,7 +416,7 @@ body { font-family: Arial, Helvetica, sans-serif; background: #bbb; }
               <div class="sign-cell-inner">
                 <div class="sign-box">
                   <div class="sign-line"></div>
-                  <div>Student's Signature</div>
+                  <div>Collected by: {{ $collectorName }}</div>
                 </div>
                 <div class="sign-box">
                   @if($useStamp)

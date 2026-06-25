@@ -881,7 +881,7 @@ class EnrollmentController extends Controller
         $fees = FeeCollectDetail::where('course_book_id', $courseBook->id)->orderByDesc('id')->paginate(15);
         $transactions = StudentTransaction::where('user_id', $courseBook->user_id)
             ->where('institute_id', $courseBook->institute_id)
-            ->orderBy('id')
+            ->orderByDesc('id')
             ->get();
 
         $plan    = $courseBook->paymentPlan;
@@ -909,41 +909,47 @@ class EnrollmentController extends Controller
             return back()->withErrors(['amount' => 'Payment plan not configured yet.']);
         }
 
+        $utrRule = in_array($request->payment_mode, ['UPI', 'NEFT', 'IMPS', 'CHEQUE'])
+            ? 'required|string|max:80'
+            : 'nullable|string|max:80';
+
         $request->validate([
             'amount'       => 'required|numeric|min:0.01',
             'payment_mode' => 'required|in:CASH,UPI,NEFT,IMPS,CHEQUE',
             'payment_date' => 'required|date',
-            'utr'          => 'nullable|string|max:80',
+            'utr'          => $utrRule,
             'payment_note' => 'nullable|string|max:255',
         ]);
 
         $amount = (float) $request->amount;
 
-        $this->recordPayment(
-            $courseBook->student,
-            $courseBook,
-            $amount,
-            $request->payment_mode,
-            $request->payment_date,
-            $request->utr ?? null,
-            $request->payment_note ?? null
-        );
+        DB::transaction(function () use ($request, $courseBook, $amount) {
+            $this->recordPayment(
+                $courseBook->student,
+                $courseBook,
+                $amount,
+                $request->payment_mode,
+                $request->payment_date,
+                $request->utr ?? null,
+                $request->payment_note ?? null
+            );
 
-        $fresh = $courseBook->fresh(['student.profile', 'paymentPlan', 'course']);
-        $this->finalizeAdmissionIfEligible($fresh);
+            $fresh = $courseBook->fresh(['student.profile', 'paymentPlan', 'course']);
+            $this->finalizeAdmissionIfEligible($fresh);
 
-        // Advance next_due_date for MONTHLY plan after sufficient payment
-        $fresh = $fresh->fresh(['paymentPlan']);
-        if ($fresh->paymentPlan && $fresh->paymentPlan->plan_type === 'MONTHLY') {
-            $plan       = $fresh->paymentPlan;
-            $lateFee    = $this->calculateLateFee($plan);
-            $totalDue   = round(($plan->monthly_amount ?? 0) + $lateFee, 2);
-            if ($amount >= $totalDue - 0.01 && $plan->next_due_date) {
-                $plan->update([
-                    'next_due_date' => \Carbon\Carbon::parse($plan->next_due_date)->addMonth()->toDateString(),
-                ]);
+            // Advance next_due_date for MONTHLY plan after sufficient payment
+            $fresh = $fresh->fresh(['paymentPlan']);
+            if ($fresh->paymentPlan && $fresh->paymentPlan->plan_type === 'MONTHLY') {
+                $plan     = $fresh->paymentPlan;
+                $lateFee  = $this->calculateLateFee($plan);
+                $totalDue = round(($plan->monthly_amount ?? 0) + $lateFee, 2);
+                if ($amount >= $totalDue - 0.01 && $plan->next_due_date) {
+                    $plan->update([
+                        'next_due_date' => \Carbon\Carbon::parse($plan->next_due_date)->addMonth()->toDateString(),
+                    ]);
+                }
             }
-        }
+        });
 
         return redirect()->route('institute.enrollment.payment-complete', $courseBook)
             ->with('success', 'Payment of ₹' . number_format($amount, 2) . ' recorded successfully.');

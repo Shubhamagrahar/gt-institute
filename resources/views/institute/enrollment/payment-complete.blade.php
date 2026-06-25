@@ -34,11 +34,16 @@
 .cr{color:#16a34a;font-weight:700}
 
 /* Modals */
-.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9999;align-items:center;justify-content:center;padding:16px}
 .modal-bg.open{display:flex}
-.modal-box{background:var(--bg-1);border-radius:18px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25)}
-.modal-title{font-size:18px;font-weight:800;margin-bottom:4px}
-.modal-sub{font-size:13px;color:var(--text-2);margin-bottom:20px}
+.modal-box{background:#ffffff;border-radius:18px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.modal-title{font-size:18px;font-weight:800;margin-bottom:4px;color:#111827}
+.modal-sub{font-size:13px;color:#6b7280;margin-bottom:16px}
+.modal-due-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.modal-due-label{font-size:12px;font-weight:600;color:#b91c1c;text-transform:uppercase;letter-spacing:.05em}
+.modal-due-amount{font-size:22px;font-weight:900;color:#dc2626}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:6px}
 </style>
 @endpush
 
@@ -285,27 +290,44 @@
     <div class="modal-title">Collect Payment</div>
     <div class="modal-sub">
       {{ $courseBook->student->profile?->name ?? $courseBook->student->user_id }}
-      &middot; {{ $plan?->plan_type }}
-      @if($due > 0) &middot; Due: ₹{{ number_format($due + $lateFee, 2) }} @endif
+      &middot; {{ $plan?->plan_type ?? 'PART' }}
     </div>
-    <form method="POST" action="{{ route('institute.enrollment.add-payment', $courseBook) }}">
+
+    {{-- Due Amount Banner --}}
+    @if($due > 0 || $lateFee > 0)
+    <div class="modal-due-box">
+      <div>
+        <div class="modal-due-label">Amount Due</div>
+        @if($lateFee > 0)
+          <div style="font-size:11px;color:#b91c1c;margin-top:2px">Includes ₹{{ number_format($lateFee,2) }} late fee</div>
+        @endif
+      </div>
+      <div class="modal-due-amount">₹{{ number_format($due + $lateFee, 2) }}</div>
+    </div>
+    @else
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 16px;margin-bottom:18px;font-size:13px;font-weight:700;color:#15803d">
+      Fully Paid — Recording extra/advance payment
+    </div>
+    @endif
+
+    <form id="pay-form" method="POST" action="{{ route('institute.enrollment.add-payment', $courseBook) }}">
       @csrf
       <div class="gt-form-group">
-        <label class="gt-label">Amount (₹) <span style="color:var(--danger)">*</span></label>
+        <label class="gt-label">Amount (₹) <span style="color:#dc2626">*</span></label>
         <input type="number" name="amount" id="pay-amount-input" class="gt-input"
                step="0.01" min="0.01"
                value="{{ $modalDefaultAmount ?? '' }}"
                placeholder="{{ $plan?->plan_type === 'PART' ? 'Enter amount' : number_format($modalDefaultAmount ?? 0, 2) }}"
                required>
         @if($lateFee > 0)
-          <div class="text-xs" style="margin-top:4px;color:#dc2626">
+          <div style="margin-top:4px;font-size:12px;color:#dc2626">
             Includes ₹{{ number_format($lateFee, 2) }} late fee
           </div>
         @endif
       </div>
       <div class="gt-form-group">
-        <label class="gt-label">Payment Mode <span style="color:var(--danger)">*</span></label>
-        <select name="payment_mode" class="gt-select" required>
+        <label class="gt-label">Payment Mode <span style="color:#dc2626">*</span></label>
+        <select name="payment_mode" id="pay-mode-select" class="gt-select" required>
           <option value="">Select Mode</option>
           <option value="CASH">Cash</option>
           <option value="UPI">UPI</option>
@@ -314,22 +336,24 @@
           <option value="CHEQUE">Cheque</option>
         </select>
       </div>
-      <div class="gt-form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
         <div class="gt-form-group">
-          <label class="gt-label">Payment Date <span style="color:var(--danger)">*</span></label>
+          <label class="gt-label">Payment Date <span style="color:#dc2626">*</span></label>
           <input type="date" name="payment_date" class="gt-input" value="{{ now()->toDateString() }}" required>
         </div>
         <div class="gt-form-group">
-          <label class="gt-label">UTR / Reference</label>
-          <input type="text" name="utr" class="gt-input" placeholder="Optional">
+          <label class="gt-label" id="utr-label">UTR / Reference</label>
+          <input type="text" name="utr" id="pay-utr-input" class="gt-input" placeholder="Optional">
         </div>
       </div>
       <div class="gt-form-group">
         <label class="gt-label">Note</label>
         <input type="text" name="payment_note" class="gt-input" placeholder="Optional note">
       </div>
-      <div style="display:flex;gap:10px;margin-top:8px">
-        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center">Record Payment</button>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button type="submit" id="pay-submit-btn" class="btn btn-primary" style="flex:1;justify-content:center">
+          Record Payment
+        </button>
         <button type="button" class="btn btn-outline" onclick="closePayModal()">Cancel</button>
       </div>
     </form>
@@ -367,8 +391,36 @@
 @push('scripts')
 <script>
 // Pay modal
-function openPayModal()  { document.getElementById('pay-modal').classList.add('open'); }
+function openPayModal()  {
+  document.getElementById('pay-modal').classList.add('open');
+  // Reset submit button in case modal was closed mid-submit
+  const btn = document.getElementById('pay-submit-btn');
+  btn.disabled = false;
+  btn.innerHTML = 'Record Payment';
+}
 function closePayModal() { document.getElementById('pay-modal').classList.remove('open'); }
+
+// UTR required toggle based on payment mode
+const _modeSelect = document.getElementById('pay-mode-select');
+const _utrInput   = document.getElementById('pay-utr-input');
+const _utrLabel   = document.getElementById('utr-label');
+const _utrRequiredModes = ['UPI','NEFT','IMPS','CHEQUE'];
+
+_modeSelect && _modeSelect.addEventListener('change', function () {
+  const needsUtr = _utrRequiredModes.includes(this.value);
+  _utrInput.required = needsUtr;
+  _utrInput.placeholder = needsUtr ? ('Required for ' + this.value) : 'Optional';
+  _utrLabel.innerHTML = needsUtr
+    ? 'UTR / Reference <span style="color:#dc2626">*</span>'
+    : 'UTR / Reference';
+});
+
+// Spinner on submit to prevent duplicate entry
+document.getElementById('pay-form') && document.getElementById('pay-form').addEventListener('submit', function () {
+  const btn = document.getElementById('pay-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="btn-spinner"></span> Processing…';
+});
 
 // Cancel modal
 const _cancelBase = '{{ route("institute.enrollment.receipt.cancel", [$courseBook, "__ID__"]) }}';
