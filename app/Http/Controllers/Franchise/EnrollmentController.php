@@ -400,8 +400,15 @@ class EnrollmentController extends Controller
             default   => null,
         };
 
+        // Wallet info for confirm admission panel
+        $fid             = $this->franchiseId();
+        $walletBalance   = (float) (FranchiseWallet::where('franchise_id', $fid)->value('balance') ?? 0);
+        $admissionCharge = (float) (FranchiseCourseCharge::where('franchise_id', $fid)
+            ->where('course_id', $courseBook->course_id)->where('enabled', true)->value('admission_charge') ?? 0);
+
         return view('franchise.enrollment.payment-complete', compact(
-            'courseBook', 'fees', 'paidTotal', 'transactions', 'due', 'lateFee', 'modalDefaultAmount'
+            'courseBook', 'fees', 'paidTotal', 'transactions', 'due', 'lateFee', 'modalDefaultAmount',
+            'walletBalance', 'admissionCharge'
         ));
     }
 

@@ -304,6 +304,7 @@ Route::prefix('franchise')
             Route::post('/{courseBook}/fee', [FranchiseEnrollment::class, 'saveFee'])->name('save-fee');
 
             Route::get('/{courseBook}/payment-complete',   [FranchiseEnrollment::class, 'paymentComplete'])->name('payment-complete');
+            Route::post('/{courseBook}/confirm',           [FranchiseEnrollment::class, 'confirm'])->name('confirm');
             Route::post('/{courseBook}/add-payment',       [FranchiseEnrollment::class, 'addPayment'])->name('add-payment');
 
             Route::get('/{courseBook}/receipt/{fee}/a4',      [FranchiseEnrollment::class, 'receiptA4'])->name('receipt.a4');

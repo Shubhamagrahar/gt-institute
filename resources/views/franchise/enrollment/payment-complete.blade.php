@@ -115,16 +115,54 @@
   </div>
 </div>
 
+{{-- Confirm Admission Panel (only when OPEN) --}}
+@if(!$isAdmitted)
+@php $canConfirm = $walletBalance >= $admissionCharge; @endphp
+<div style="background:{{ $canConfirm ? 'rgba(234,88,12,.06)' : 'rgba(220,38,38,.06)' }};border:1px solid {{ $canConfirm ? 'rgba(234,88,12,.25)' : 'rgba(220,38,38,.25)' }};border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+  <div>
+    <div style="font-size:14px;font-weight:700;color:var(--text-1);margin-bottom:4px;">
+      {{ $canConfirm ? 'Ready to Confirm Admission' : 'Insufficient Wallet Balance' }}
+    </div>
+    <div style="font-size:12.5px;color:var(--text-3);line-height:1.6;">
+      Admission charge: <strong style="color:#ea580c;">₹{{ number_format($admissionCharge, 2) }}</strong>
+      &nbsp;·&nbsp; Wallet balance: <strong style="{{ $canConfirm ? 'color:#16a34a' : 'color:#dc2626' }};">₹{{ number_format($walletBalance, 2) }}</strong>
+      @if($canConfirm)
+        &nbsp;·&nbsp; After confirm: <strong>₹{{ number_format($walletBalance - $admissionCharge, 2) }}</strong>
+      @else
+        &nbsp;·&nbsp; Need ₹{{ number_format($admissionCharge - $walletBalance, 2) }} more — <a href="{{ route('franchise.wallet') }}" style="color:#ea580c;">Recharge Wallet →</a>
+      @endif
+    </div>
+  </div>
+  @if($canConfirm)
+  <form method="POST" action="{{ route('franchise.enrollment.confirm', $courseBook) }}">
+    @csrf
+    <button type="submit" style="background:linear-gradient(135deg,#ea580c,#f97316);color:#fff;border:none;padding:11px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;"
+      onclick="return confirm('Confirm admission? ₹{{ number_format($admissionCharge, 2) }} will be deducted from your wallet.')">
+      ✓ Confirm Admission
+    </button>
+  </form>
+  @endif
+</div>
+@endif
+
 {{-- Actions --}}
 <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
-  @if($plan)
-    <button type="button" class="btn btn-primary" onclick="openPayModal()">
-      + Collect Payment
-    </button>
+  @if($isAdmitted)
+    @if($plan)
+      <button type="button" class="btn btn-primary" onclick="openPayModal()">
+        + Collect Payment
+      </button>
+    @else
+      <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-primary">
+        Setup Payment Plan
+      </a>
+    @endif
   @else
-    <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-primary">
-      Setup Payment Plan
-    </a>
+    @if(!$plan)
+      <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-primary">
+        Setup Payment Plan
+      </a>
+    @endif
   @endif
   <a href="{{ route('franchise.enrollment.profile', $courseBook) }}" class="btn btn-outline">Edit Profile</a>
   <a href="{{ route('franchise.enrollment.pending') }}" class="btn btn-outline">← Back</a>
