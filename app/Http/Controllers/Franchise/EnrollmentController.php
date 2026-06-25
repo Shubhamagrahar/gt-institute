@@ -106,7 +106,7 @@ class EnrollmentController extends Controller
         $franchiseFees = FranchiseFeeStructure::where('franchise_id', $fid)
             ->where('enabled', true)->get()->groupBy('course_id');
 
-        return $courses->map(function ($c) use ($franchiseCharges, $franchiseFees) {
+        return $courses->filter(fn ($c) => isset($franchiseCharges[$c->id]))->map(function ($c) use ($franchiseCharges, $franchiseFees) {
             $charge    = $franchiseCharges[$c->id] ?? null;
             $baseFee   = $charge && $charge->student_fee > 0
                 ? round((float) $charge->student_fee, 2)
@@ -135,7 +135,7 @@ class EnrollmentController extends Controller
         })->values();
     }
 
-    private function sharedNewData(int $iid): array
+    private function sharedNewData(int $iid, \Illuminate\Support\Collection $catalog): array
     {
         $batches = BatchDetail::where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
         $states  = State::orderBy('name')->pluck('name');
@@ -146,7 +146,9 @@ class EnrollmentController extends Controller
                 ->groupBy('state_name')
                 ->map(fn ($r) => $r->pluck('district_name')->values())->toArray()
             : [];
-        $courseTypes = \App\Models\CourseType::where('institute_id', $iid)->orderBy('name')->get();
+        // Only course types that have at least one course assigned to this franchise
+        $assignedTypeIds = $catalog->pluck('course_type_id')->unique()->filter()->values();
+        $courseTypes = \App\Models\CourseType::whereIn('id', $assignedTypeIds)->orderBy('name')->get();
         return compact('batches', 'states', 'districtsByState', 'courseTypes');
     }
 
@@ -156,7 +158,7 @@ class EnrollmentController extends Controller
         $fid = $this->franchiseId();
         $courseCatalog = $this->buildCatalog($iid, $fid);
         return view('franchise.enrollment.new',
-            array_merge($this->sharedNewData($iid), compact('courseCatalog')));
+            array_merge($this->sharedNewData($iid, $courseCatalog), compact('courseCatalog')));
     }
 
     public function quick()
@@ -165,7 +167,7 @@ class EnrollmentController extends Controller
         $fid = $this->franchiseId();
         $courseCatalog = $this->buildCatalog($iid, $fid);
         return view('franchise.enrollment.quick',
-            array_merge($this->sharedNewData($iid), compact('courseCatalog')));
+            array_merge($this->sharedNewData($iid, $courseCatalog), compact('courseCatalog')));
     }
 
     public function storeQuick(Request $request)
@@ -288,7 +290,7 @@ class EnrollmentController extends Controller
         $fid  = $this->franchiseId();
         $courseCatalog = $this->buildCatalog($iid, $fid);
         return view('franchise.enrollment.existing',
-            array_merge($this->sharedNewData($iid), compact('student', 'courseCatalog')));
+            array_merge($this->sharedNewData($iid, $courseCatalog), compact('student', 'courseCatalog')));
     }
 
     // ── Enroll Existing Student ───────────────────────────────────────────────
