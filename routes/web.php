@@ -41,6 +41,7 @@ use App\Http\Controllers\Franchise\EnrollmentController as FranchiseEnrollment;
 use App\Http\Controllers\Franchise\WalletController as FranchiseWallet;
 use App\Http\Controllers\Franchise\StudentController as FranchiseStudent;
 use App\Http\Controllers\Franchise\CertificateController as FranchiseCertificate;
+use App\Http\Controllers\Franchise\PricingController as FranchisePricing;
 
 // Home page — portal selection
 Route::get('/', fn() => view('home'));
@@ -315,6 +316,10 @@ Route::prefix('franchise')
 
         // ── Wallet ──────────────────────────────────────────────────────────
         Route::get('/wallet',               [FranchiseWallet::class, 'index'])->name('wallet');
+
+        // ── Course Pricing ──────────────────────────────────────────────────
+        Route::get('/course-pricing',               [FranchisePricing::class, 'index'])->name('pricing.index');
+        Route::patch('/course-pricing/{charge}',    [FranchisePricing::class, 'update'])->name('pricing.update');
 
         // ── Certificate ─────────────────────────────────────────────────────
         Route::get('/certificate',          [FranchiseCertificate::class, 'index'])->name('certificate.index');

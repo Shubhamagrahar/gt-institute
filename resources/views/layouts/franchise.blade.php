@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,7 +7,11 @@
   <title>@yield('title', 'Franchise Panel') — {{ Auth::guard('institute')->user()->franchise?->name ?? 'Franchise' }}</title>
   <link rel="icon" href="{{ asset('images/gt-favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-  <style>:root{--sidebar-w:210px;}</style>
+  <style>
+    :root{--sidebar-w:210px;}
+    .gt-nav-item.active{background:rgba(234,88,12,.15)!important;color:#fb923c!important;border-left:3px solid #ea580c!important;}
+    .gt-nav-item.active svg{stroke:#fb923c!important;}
+  </style>
   @stack('styles')
 </head>
 <body>
@@ -27,20 +31,20 @@
       {{-- Franchise Identity --}}
       <div style="margin:12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;">
         <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#16a34a22,#15803d33);border:1px solid rgba(22,163,74,.3);display:flex;align-items:center;justify-content:center;color:#4ade80;font-weight:900;font-size:13px;flex-shrink:0;">
+          <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(234,88,12,.2),rgba(194,65,12,.25));border:1px solid rgba(234,88,12,.35);display:flex;align-items:center;justify-content:center;color:#fb923c;font-weight:900;font-size:13px;flex-shrink:0;">
             {{ strtoupper(substr(Auth::guard('institute')->user()->franchise?->name ?? 'FR', 0, 2)) }}
           </div>
           <div style="min-width:0;">
             <div style="font-size:13px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
               {{ Str::limit(Auth::guard('institute')->user()->franchise?->name ?? 'Franchise', 18) }}
             </div>
-            <div style="font-size:10px;color:#4ade80;font-weight:600;">Franchise Partner</div>
+            <div style="font-size:10px;color:#fb923c;font-weight:600;">Franchise Partner</div>
           </div>
         </div>
         @php $frBalance = Auth::guard('institute')->user()->franchise?->wallet?->balance ?? 0; @endphp
         <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;">
           <span style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;">Wallet</span>
-          <span style="font-size:14px;font-weight:800;color:#4ade80;font-family:monospace;">₹{{ number_format($frBalance, 2) }}</span>
+          <span style="font-size:14px;font-weight:800;color:#fb923c;font-family:monospace;">₹{{ number_format($frBalance, 2) }}</span>
         </div>
       </div>
 
@@ -70,7 +74,7 @@
         </a>
 
         <div class="gt-sidebar-section">Fee</div>
-        <a href="{{ route('franchise.students.index') }}?status=RUN" class="gt-nav-item {{ false ? 'active' : '' }}">
+        <a href="{{ route('franchise.students.index') }}?status=RUN" class="gt-nav-item">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
           Collect Fee
         </a>
@@ -79,6 +83,12 @@
         <a href="{{ route('franchise.wallet') }}" class="gt-nav-item {{ request()->routeIs('franchise.wallet') ? 'active' : '' }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
           My Wallet
+        </a>
+
+        <div class="gt-sidebar-section">Charges</div>
+        <a href="{{ route('franchise.pricing.index') }}" class="gt-nav-item {{ request()->routeIs('franchise.pricing.*') ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          Course Pricing
         </a>
 
         <div class="gt-sidebar-section">Certificate</div>

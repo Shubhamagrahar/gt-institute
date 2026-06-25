@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{
     AdmissionFormField, BatchDetail, CourseBook, CourseDetail,
     EnrollmentFeeSnapshot, EnrollmentPaymentPlan, FeeCollectDetail,
+    FranchiseCourseCharge, FranchiseTransaction, FranchiseWallet,
     InstituteEnrollmentCounter, InstituteSession, InstituteStudentTransaction,
     InstituteStudentWallet, PaymentPlanType, State, StudentTransaction,
     StudentWallet, User, UserProfile
@@ -307,29 +308,77 @@ class EnrollmentController extends Controller
     public function confirm(Request $request, CourseBook $courseBook)
     {
         $this->authorizeCourseBook($courseBook);
-        $controller = app(\App\Http\Controllers\Institute\EnrollmentController::class);
-        // Override redirect after confirm
-        $courseBook->update(['profile_completed_at' => $courseBook->profile_completed_at ?? now()]);
 
-        // Force finalize
-        if ($courseBook->status !== 'RUN') {
-            if (! $courseBook->enrollment_no) {
-                $counter = InstituteEnrollmentCounter::where('institute_id', $courseBook->institute_id)->lockForUpdate()->first();
-                if (! $counter) {
-                    InstituteEnrollmentCounter::create(['institute_id' => $courseBook->institute_id, 'last_enrollment_no' => 0]);
-                    $counter = InstituteEnrollmentCounter::where('institute_id', $courseBook->institute_id)->lockForUpdate()->firstOrFail();
-                }
-                $counter->last_enrollment_no++;
-                $counter->save();
-                $code = Auth::guard('institute')->user()->institute?->unique_id ?? 'INST';
-                $enrollmentNo = $code . '/ENR/' . str_pad((string) $counter->last_enrollment_no, 4, '0', STR_PAD_LEFT);
-                $courseBook->update(['enrollment_no' => $enrollmentNo]);
+        $fid = $this->franchiseId();
+        $iid = $this->instituteId();
+
+        // Check wallet balance before committing status change
+        $charge = FranchiseCourseCharge::where('franchise_id', $fid)
+            ->where('course_id', $courseBook->course_id)
+            ->where('enabled', true)
+            ->first();
+
+        $admissionCost = $charge ? (float) $charge->admission_charge : 0;
+
+        if ($admissionCost > 0) {
+            $wallet = FranchiseWallet::where('franchise_id', $fid)->first();
+            if (!$wallet || (float) $wallet->balance < $admissionCost) {
+                $available = $wallet ? number_format($wallet->balance, 2) : '0.00';
+                return redirect()->route('franchise.wallet')
+                    ->with('error', "Insufficient wallet balance. Required: ₹{$admissionCost}, Available: ₹{$available}. Please recharge your wallet and try again.");
             }
-            $courseBook->update(['status' => 'RUN', 'start_date' => $courseBook->start_date ?? now()->toDateString()]);
         }
 
+        DB::transaction(function () use ($courseBook, $fid, $iid, $admissionCost, $charge) {
+            $courseBook->update(['profile_completed_at' => $courseBook->profile_completed_at ?? now()]);
+
+            if ($courseBook->status !== 'RUN') {
+                if (! $courseBook->enrollment_no) {
+                    $counter = InstituteEnrollmentCounter::where('institute_id', $courseBook->institute_id)->lockForUpdate()->first();
+                    if (! $counter) {
+                        InstituteEnrollmentCounter::create(['institute_id' => $courseBook->institute_id, 'last_enrollment_no' => 0]);
+                        $counter = InstituteEnrollmentCounter::where('institute_id', $courseBook->institute_id)->lockForUpdate()->firstOrFail();
+                    }
+                    $counter->last_enrollment_no++;
+                    $counter->save();
+                    $code         = Auth::guard('institute')->user()->institute?->unique_id ?? 'INST';
+                    $enrollmentNo = $code . '/ENR/' . str_pad((string) $counter->last_enrollment_no, 4, '0', STR_PAD_LEFT);
+                    $courseBook->update(['enrollment_no' => $enrollmentNo]);
+                }
+                $courseBook->update(['status' => 'RUN', 'start_date' => $courseBook->start_date ?? now()->toDateString()]);
+            }
+
+            // Deduct admission charge from franchise wallet
+            if ($admissionCost > 0) {
+                $wallet = FranchiseWallet::where('franchise_id', $fid)->lockForUpdate()->first();
+                $opBal  = (float) $wallet->balance;
+                $clBal  = $opBal - $admissionCost;
+                $wallet->decrement('balance', $admissionCost);
+
+                $fresh       = $courseBook->fresh(['student.profile', 'course']);
+                $studentName = $fresh->student?->profile?->name ?? 'Student';
+                $courseName  = $fresh->course?->name ?? 'Course';
+
+                FranchiseTransaction::create([
+                    'franchise_id' => $fid,
+                    'institute_id' => $iid,
+                    'txn_no'       => $this->invoiceService->generateFranchiseTxnNo($iid, $fid),
+                    'description'  => "Admission: {$studentName} | Course: {$courseName} | Enroll: " . $fresh->enrollment_no,
+                    'type'         => 'debit',
+                    'credit'       => 0,
+                    'debit'        => $admissionCost,
+                    'op_bal'       => $opBal,
+                    'cl_bal'       => $clBal,
+                    'date'         => now()->toDateString(),
+                    'c_date'       => now(),
+                    'by_userid'    => Auth::guard('institute')->id(),
+                ]);
+            }
+        });
+
         return redirect()->route('franchise.enrollment.pending')
-            ->with('success', 'Admission confirmed! Enrollment No: ' . $courseBook->fresh()->enrollment_no);
+            ->with('success', 'Admission confirmed! Enrollment No: ' . $courseBook->fresh()->enrollment_no
+                . ($admissionCost > 0 ? " | ₹{$admissionCost} deducted from wallet." : ''));
     }
 
     // ── Payment Complete ─────────────────────────────────────────────────────
