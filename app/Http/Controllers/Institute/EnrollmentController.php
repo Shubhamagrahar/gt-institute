@@ -393,6 +393,9 @@ class EnrollmentController extends Controller
                 ]);
             }
 
+            $courseSummary = $this->courseCatalogItem($course);
+            $totalFee = (float) $courseSummary['total_fee'];
+
             $courseBook = CourseBook::create([
                 'institute_id' => $iid,
                 'franchise_id' => null,
@@ -403,8 +406,8 @@ class EnrollmentController extends Controller
                 'course_code' => $courseShortCode,
                 'batch_id' => $data['batch_id'] ?? null,
                 'enrollment_no' => null,
-                'fee' => 0,
-                'final_fee' => 0,
+                'fee' => $totalFee,
+                'final_fee' => $totalFee,
                 'book_date' => now()->toDateString(),
                 'start_date' => null,
                 'status' => 'OPEN',
@@ -413,7 +416,42 @@ class EnrollmentController extends Controller
                 'admission_by' => Auth::guard('institute')->id(),
             ]);
 
-            $this->ensureStudentWallet($user);
+            foreach ($courseSummary['fee_items'] as $item) {
+                EnrollmentFeeSnapshot::create([
+                    'institute_id'    => $iid,
+                    'course_book_id'  => $courseBook->id,
+                    'fee_type_id'     => $item['fee_type_id'],
+                    'fee_type_name'   => $item['fee_type_name'],
+                    'original_amount' => $item['amount'],
+                    'discount_percent'=> 0,
+                    'discount_amount' => 0,
+                    'final_amount'    => $item['amount'],
+                ]);
+            }
+
+            $wallet = $this->ensureStudentWallet($user);
+            if ($totalFee > 0) {
+                $opBal = (float) $wallet->balance;
+                $clBal = $opBal - $totalFee;
+                $wallet->update(['balance' => $clBal]);
+                StudentTransaction::create([
+                    'user_id'      => $user->id,
+                    'institute_id' => $iid,
+                    'franchise_id' => null,
+                    'owner_type'   => 'institute',
+                    'description'  => 'Course Booked: ' . $course->name,
+                    'credit'       => 0,
+                    'debit'        => $totalFee,
+                    'type'         => 1,
+                    'ref_type'     => 'course_book',
+                    'ref_id'       => $courseBook->id,
+                    'date'         => now()->toDateString(),
+                    'c_date'       => now(),
+                    'op_bal'       => $opBal,
+                    'cl_bal'       => $clBal,
+                    'by_user_id'   => Auth::guard('institute')->id(),
+                ]);
+            }
 
             return [
                 'courseBook' => $courseBook->fresh(['student.profile', 'course']),
@@ -460,7 +498,7 @@ class EnrollmentController extends Controller
                 'status' => 'active',
             ]);
 
-            $this->ensureStudentWallet($user);
+            $wallet = $this->ensureStudentWallet($user);
 
             $profileData = [
                 'user_id' => $user->id,
@@ -502,6 +540,43 @@ class EnrollmentController extends Controller
                 'profile_completed_at' => null,
                 'admission_by' => Auth::guard('institute')->id(),
             ]);
+
+            foreach ($courseSummary['fee_items'] as $item) {
+                EnrollmentFeeSnapshot::create([
+                    'institute_id'    => $iid,
+                    'course_book_id'  => $courseBook->id,
+                    'fee_type_id'     => $item['fee_type_id'],
+                    'fee_type_name'   => $item['fee_type_name'],
+                    'original_amount' => $item['amount'],
+                    'discount_percent'=> 0,
+                    'discount_amount' => 0,
+                    'final_amount'    => $item['amount'],
+                ]);
+            }
+
+            $quickTotalFee = (float) $courseSummary['total_fee'];
+            if ($quickTotalFee > 0) {
+                $opBal = (float) $wallet->balance;
+                $clBal = $opBal - $quickTotalFee;
+                $wallet->update(['balance' => $clBal]);
+                StudentTransaction::create([
+                    'user_id'      => $user->id,
+                    'institute_id' => $iid,
+                    'franchise_id' => null,
+                    'owner_type'   => 'institute',
+                    'description'  => 'Course Booked: ' . $course->name,
+                    'credit'       => 0,
+                    'debit'        => $quickTotalFee,
+                    'type'         => 1,
+                    'ref_type'     => 'course_book',
+                    'ref_id'       => $courseBook->id,
+                    'date'         => now()->toDateString(),
+                    'c_date'       => now(),
+                    'op_bal'       => $opBal,
+                    'cl_bal'       => $clBal,
+                    'by_user_id'   => Auth::guard('institute')->id(),
+                ]);
+            }
 
             $user = $user->fresh(['profile']);
 
@@ -1187,36 +1262,73 @@ class EnrollmentController extends Controller
         $user = User::findOrFail($data['user_id']);
         $this->assertCourseBookingAllowed($user->id, (int) $data['course_id'], $data['batch_id'] ?? null);
 
-        $course = \App\Models\CourseDetail::findOrFail($data['course_id']);
+        $course = CourseDetail::with(['feeStructures.feeType'])
+            ->where('institute_id', $iid)
+            ->findOrFail($data['course_id']);
 
-        $courseBookData = [
-            'institute_id' => $iid,
-            'user_id'      => $user->id,
-            'course_id'    => $data['course_id'],
-            'batch_id'     => $data['batch_id'] ?? null,
-            'course_code'  => $this->toCourseCode($request->input('course_short_code', ''), $course->name),
-            'enrollment_no' => null,
-            'status'       => 'OPEN',
-            'booking_mode' => 'existing',
-            'book_date'    => now()->toDateString(),
-            'profile_completed_at' => $user->profile ? now() : null,
-        ];
+        $existingSummary = $this->courseCatalogItem($course);
+        $existingTotalFee = (float) $existingSummary['total_fee'];
 
-        if (Schema::hasColumn('course_books', 'session_id')) {
-            $courseBookData['session_id'] = $sessionId;
-        }
-        if (Schema::hasColumn('course_books', 'final_fee')) {
-            $courseBookData['final_fee'] = 0;
-        }
-        if (Schema::hasColumn('course_books', 'fee')) {
-            $courseBookData['fee'] = 0;
-        }
-        if (Schema::hasColumn('course_books', 'admission_by')) {
-            $courseBookData['admission_by'] = Auth::guard('institute')->id();
-        }
+        $courseBook = DB::transaction(function () use (
+            $iid, $sessionId, $data, $course, $existingSummary, $existingTotalFee, $user, $request
+        ) {
+            $courseBook = CourseBook::create([
+                'institute_id'         => $iid,
+                'user_id'              => $user->id,
+                'course_id'            => $course->id,
+                'session_id'           => $sessionId,
+                'batch_id'             => $data['batch_id'] ?? null,
+                'course_code'          => $this->toCourseCode($request->input('course_short_code', ''), $course->name),
+                'enrollment_no'        => null,
+                'fee'                  => $existingTotalFee,
+                'final_fee'            => $existingTotalFee,
+                'status'               => 'OPEN',
+                'booking_mode'         => 'existing',
+                'book_date'            => now()->toDateString(),
+                'profile_completed_at' => $user->profile ? now() : null,
+                'admission_by'         => Auth::guard('institute')->id(),
+            ]);
 
-        $courseBook = CourseBook::create($courseBookData);
-        $this->ensureStudentWallet($user);
+            foreach ($existingSummary['fee_items'] as $item) {
+                EnrollmentFeeSnapshot::create([
+                    'institute_id'    => $iid,
+                    'course_book_id'  => $courseBook->id,
+                    'fee_type_id'     => $item['fee_type_id'],
+                    'fee_type_name'   => $item['fee_type_name'],
+                    'original_amount' => $item['amount'],
+                    'discount_percent'=> 0,
+                    'discount_amount' => 0,
+                    'final_amount'    => $item['amount'],
+                ]);
+            }
+
+            $wallet = $this->ensureStudentWallet($user);
+            if ($existingTotalFee > 0) {
+                $opBal = (float) $wallet->balance;
+                $clBal = $opBal - $existingTotalFee;
+                $wallet->update(['balance' => $clBal]);
+                StudentTransaction::create([
+                    'user_id'      => $user->id,
+                    'institute_id' => $iid,
+                    'franchise_id' => null,
+                    'owner_type'   => 'institute',
+                    'description'  => 'Course Booked: ' . $course->name,
+                    'credit'       => 0,
+                    'debit'        => $existingTotalFee,
+                    'type'         => 1,
+                    'ref_type'     => 'course_book',
+                    'ref_id'       => $courseBook->id,
+                    'date'         => now()->toDateString(),
+                    'c_date'       => now(),
+                    'op_bal'       => $opBal,
+                    'cl_bal'       => $clBal,
+                    'by_user_id'   => Auth::guard('institute')->id(),
+                ]);
+            }
+
+            return $courseBook;
+        });
+
         $this->sendSeatBookingEmail($user, $courseBook->fresh(['student.profile', 'course', 'batch']), null);
 
         return redirect()->route('institute.enrollment.profile', $courseBook);

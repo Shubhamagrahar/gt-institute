@@ -271,6 +271,12 @@ Route::get('fee-collect', [FeeCollectController::class, 'index'])->name('fee-col
 Route::get('fee-collect/{user}', [FeeCollectController::class, 'show'])->name('fee-collect.show');
 Route::post('fee-collect/{user}/collect', [FeeCollectController::class, 'collect'])->name('fee-collect.collect');
 Route::get('fee-collect/{user}/receipt/{fee}', [FeeCollectController::class, 'receipt'])->name('fee-collect.receipt');
+
+// Wallet Adjustment
+Route::get('wallet-adjustment', [\App\Http\Controllers\Institute\WalletAdjustmentController::class, 'index'])->name('wallet-adjustment.index');
+Route::get('wallet-adjustment/search', [\App\Http\Controllers\Institute\WalletAdjustmentController::class, 'search'])->name('wallet-adjustment.search');
+Route::post('wallet-adjustment/{user}/credit', [\App\Http\Controllers\Institute\WalletAdjustmentController::class, 'credit'])->name('wallet-adjustment.credit');
+Route::post('wallet-adjustment/{user}/debit', [\App\Http\Controllers\Institute\WalletAdjustmentController::class, 'debit'])->name('wallet-adjustment.debit');
     });
 
 Route::prefix('franchise')

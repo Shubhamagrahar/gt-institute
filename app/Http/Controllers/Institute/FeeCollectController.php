@@ -163,39 +163,37 @@ class FeeCollectController extends Controller
 
             $fee = FeeCollectDetail::create($feePayload);
 
-            if (! $courseBook || $courseBook->status === 'RUN') {
-                // Existing admitted student payment immediately affects student due ledger.
-                $sw    = StudentWallet::firstOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'institute_id' => $iid,
-                        'franchise_id' => $user->franchise_id,
-                        'owner_type' => $user->franchise_id ? 'franchise' : 'institute',
-                        'balance' => 0,
-                    ]
-                );
-                $opBal = $sw->balance;
-                $clBal = $opBal + $amount;
-                $sw->update(['balance' => $clBal]);
-
-                StudentTransaction::create([
-                    'user_id'      => $user->id,
+            // Always credit student wallet on fee collection (debit-first architecture)
+            $sw = StudentWallet::firstOrCreate(
+                ['user_id' => $user->id],
+                [
                     'institute_id' => $iid,
                     'franchise_id' => $user->franchise_id,
                     'owner_type'   => $user->franchise_id ? 'franchise' : 'institute',
-                    'description'  => $data['payment_mode'] . ' payment received. Invoice: ' . $invoice,
-                    'credit'       => $amount,
-                    'debit'        => 0,
-                    'type'         => 2,
-                    'ref_type'     => 'fee_collect_detail',
-                    'ref_id'       => null,
-                    'date'         => $data['date'],
-                    'c_date'       => $now,
-                    'op_bal'       => $opBal,
-                    'cl_bal'       => $clBal,
-                    'by_user_id'   => $byUser,
-                ]);
-            }
+                    'balance'      => 0,
+                ]
+            );
+            $opBal = (float) $sw->balance;
+            $clBal = $opBal + $amount;
+            $sw->update(['balance' => $clBal]);
+
+            StudentTransaction::create([
+                'user_id'      => $user->id,
+                'institute_id' => $iid,
+                'franchise_id' => $user->franchise_id,
+                'owner_type'   => $user->franchise_id ? 'franchise' : 'institute',
+                'description'  => $data['payment_mode'] . ' received | Invoice: ' . $invoice,
+                'credit'       => $amount,
+                'debit'        => 0,
+                'type'         => 2,
+                'ref_type'     => 'fee_collect_detail',
+                'ref_id'       => null,
+                'date'         => $data['date'],
+                'c_date'       => $now,
+                'op_bal'       => $opBal,
+                'cl_bal'       => $clBal,
+                'by_user_id'   => $byUser,
+            ]);
 
             // 4. Institute student wallet credit
             $iw = InstituteStudentWallet::firstOrCreate(
@@ -222,14 +220,12 @@ class FeeCollectController extends Controller
                 'by_user_id'   => $byUser,
             ]);
 
-            if (! $courseBook || $courseBook->status === 'RUN') {
-                StudentTransaction::where('user_id', $user->id)
-                    ->where('ref_type', 'fee_collect_detail')
-                    ->whereNull('ref_id')
-                    ->latest('id')
-                    ->limit(1)
-                    ->update(['ref_id' => $fee->id]);
-            }
+            StudentTransaction::where('user_id', $user->id)
+                ->where('ref_type', 'fee_collect_detail')
+                ->whereNull('ref_id')
+                ->latest('id')
+                ->limit(1)
+                ->update(['ref_id' => $fee->id]);
 
             if ($courseBook) {
                 $this->finalizeAdmissionIfEligible($courseBook->fresh(['course']));

@@ -119,7 +119,7 @@
       Dashboard
     </a>
 
-    <div class="gt-sidebar-section">Master</div>
+    <div class="gt-sidebar-section">Academic Setup</div>
     <a href="{{ route('institute.accounts.profile') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.profile') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/><circle cx="12" cy="14" r="2"/></svg>
       Institute Profile
@@ -140,6 +140,12 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4"/><path d="M16 2v4"/><path d="M3 10h18"/><path d="M8 15h.01"/><path d="M12 15h.01"/><path d="M16 15h.01"/></svg>
       Batches
     </a>
+    <a href="{{ route('institute.form-builder.index') }}" class="gt-nav-item {{ request()->routeIs('institute.form-builder.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Form Builder
+    </a>
+
+    <div class="gt-sidebar-section">Fee Configuration</div>
     <a href="{{ route('institute.fee-types.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-types.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Fee Types
@@ -151,10 +157,6 @@
     <a href="{{ route('institute.franchise-levels.index') }}" class="gt-nav-item {{ request()->routeIs('institute.franchise-levels.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l4 7h-8l4-7z"/><path d="M5 22h14"/><path d="M7 22V10h10v12"/></svg>
       Franchise Levels
-    </a>
-    <a href="{{ route('institute.form-builder.index') }}" class="gt-nav-item {{ request()->routeIs('institute.form-builder.*') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-      Form Builder
     </a>
 
     <div class="gt-sidebar-section">Enquiries</div>
@@ -185,34 +187,34 @@
       Converted
     </a>
 
-    <div class="gt-sidebar-section">Students</div>
+    <div class="gt-sidebar-section">Admissions</div>
     <a href="{{ route('institute.enrollment.choose') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.new') || request()->routeIs('institute.enrollment.quick') || request()->routeIs('institute.enrollment.choose') || request()->routeIs('institute.enrollment.find-student') || request()->routeIs('institute.enrollment.profile') || request()->routeIs('institute.enrollment.preview') || request()->routeIs('institute.enrollment.fee') || request()->routeIs('institute.enrollment.save-fee') || request()->routeIs('institute.enrollment.payment-complete') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      New Admission
+      Enroll Student
     </a>
     <a href="{{ route('institute.enrollment.pending') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.pending') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-      Pending
+      Pending Admission
     </a>
     <a href="{{ route('institute.students.index') }}" class="gt-nav-item {{ request()->routeIs('institute.students.index') || request()->routeIs('institute.students.show') || request()->routeIs('institute.students.edit') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      Running
+      Active Students
     </a>
     <a href="{{ route('institute.students.closed') }}" class="gt-nav-item {{ request()->routeIs('institute.students.closed') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Closed
+      Course Completed
     </a>
     <a href="{{ route('institute.students.expired') }}" class="gt-nav-item {{ request()->routeIs('institute.students.expired') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Expired
+      Lapsed
     </a>
     <a href="{{ route('institute.students.cancelled') }}" class="gt-nav-item {{ request()->routeIs('institute.students.cancelled') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      Cancelled
+      Withdrawn
     </a>
     <a href="{{ route('institute.students.academic') }}" class="gt-nav-item {{ request()->routeIs('institute.students.academic') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-      Academic History
+      Academic Records
     </a>
 
     <div class="gt-sidebar-section">Attendance</div>
@@ -229,75 +231,79 @@
       Student Report
     </a>
 
-    <div class="gt-sidebar-section">Fees</div>
-    <a href="{{ route('institute.enrollment.monthly-fees') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.monthly-fees') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
-      Monthly Due
-    </a>
-    <a href="{{ route('institute.fees.collection-report') }}" class="gt-nav-item {{ request()->routeIs('institute.fees.collection-report') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Collection Report
+    <div class="gt-sidebar-section">Finance</div>
+    <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Collect Fees
     </a>
     <a href="{{ route('institute.quick-pay') }}" class="gt-nav-item {{ request()->routeIs('institute.quick-pay*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       Quick Pay
     </a>
+    <a href="{{ route('institute.wallet-adjustment.index') }}" class="gt-nav-item {{ request()->routeIs('institute.wallet-adjustment.*') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/><path d="M8 12h.01"/></svg>
+      Wallet Adjustment
+    </a>
     <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard','institute.fees-search') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h.01"/><path d="M12 8h5"/><path d="M7 12h.01"/><path d="M12 12h5"/></svg>
-      Fees Dashboard
+      Fee Dashboard
     </a>
-    <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-      Fee Collection
+    <a href="{{ route('institute.fees.collection-report') }}" class="gt-nav-item {{ request()->routeIs('institute.fees.collection-report') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Collection Report
+    </a>
+    <a href="{{ route('institute.enrollment.monthly-fees') }}" class="gt-nav-item {{ request()->routeIs('institute.enrollment.monthly-fees') ? 'active' : '' }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/></svg>
+      Monthly Dues
     </a>
 
     <div class="gt-sidebar-section">Certificates</div>
     <a href="{{ route('institute.certificates.index') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.index') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 11 12 14 22 4"/></svg>
-      Overview
+      Certificate Overview
     </a>
     <a href="{{ route('institute.certificates.generate') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.generate') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-      Generate
+      Generate Certificate
     </a>
     <a href="{{ route('institute.certificates.walkin') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.walkin') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      Walk-in
+      Walk-in Certificate
     </a>
     <a href="{{ route('institute.certificates.requests') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.requests') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
-      Requests
+      Pending Requests
     </a>
     <a href="{{ route('institute.certificates.history') }}" class="gt-nav-item {{ request()->routeIs('institute.certificates.history') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-      History
+      Issue History
     </a>
 
-    <div class="gt-sidebar-section">Channel Partners</div>
+    <div class="gt-sidebar-section">Distribution</div>
     <a href="{{ route('institute.channel-partners.create') }}" class="gt-nav-item {{ request()->routeIs('institute.channel-partners.create') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11h4"/><path d="M19 9v4"/><path d="M2 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-      Add Channel Partner
+      Add Partner
     </a>
     <a href="{{ route('institute.channel-partners.index') }}" class="gt-nav-item {{ request()->routeIs('institute.channel-partners.index') || request()->routeIs('institute.channel-partners.edit') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="8" r="4"/><path d="M2 21c0-4 3-7 6-7"/><circle cx="17" cy="9" r="3"/><path d="M14 21c0-3 2.5-5 5.5-5"/></svg>
-      Channel Partner List
+      All Partners
     </a>
 
-    <div class="gt-sidebar-section">Franchise</div>
+    <div class="gt-sidebar-section">Franchise Network</div>
     <a href="{{ route('institute.franchises.create') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.create') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>
       Add Franchise
     </a>
     <a href="{{ route('institute.franchises.index') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.index') || request()->routeIs('institute.franchises.show') || request()->routeIs('institute.franchises.edit') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M9 13h.01"/><path d="M15 13h.01"/><path d="M10 21v-4h4v4"/></svg>
-      Franchise List
+      All Franchises
     </a>
     <a href="{{ route('institute.franchises.wallets') }}" class="gt-nav-item {{ request()->routeIs('institute.franchises.wallets') || request()->routeIs('institute.franchises.transactions') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/></svg>
       Franchise Wallets
     </a>
 
-    <div class="gt-sidebar-section">Team & Account</div>
+    <div class="gt-sidebar-section">Team</div>
     <a href="{{ route('institute.staff.index') }}" class="gt-nav-item {{ request()->routeIs('institute.staff.index','institute.staff.create','institute.staff.show','institute.staff.edit') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Staff Members
@@ -310,6 +316,8 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
       Staff Attendance
     </a>
+
+    <div class="gt-sidebar-section">Account</div>
     <a href="{{ route('institute.accounts.billing') }}" class="gt-nav-item {{ request()->routeIs('institute.accounts.billing') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h3"/></svg>
       Billing & Subscription
