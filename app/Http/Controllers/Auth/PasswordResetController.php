@@ -169,7 +169,16 @@ class PasswordResetController extends Controller
             ->where('email', $data['email'])
             ->delete();
 
-        return redirect()->route('login')->with('success', 'Your password has been reset successfully. You can now sign in.');
+        // Redirect back to the correct login portal based on user role
+        $loginRoute = 'login';
+        if ($account instanceof User) {
+            if (in_array($account->role, ['franchise_head', 'franchise_staff'])) {
+                $loginRoute = 'franchise.login';
+            }
+            // future: student portal etc.
+        }
+
+        return redirect()->route($loginRoute)->with('success', 'Your password has been reset successfully. You can now sign in.');
     }
 
     private function findAccount(string $lookup): ?array
