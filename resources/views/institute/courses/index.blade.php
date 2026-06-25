@@ -107,6 +107,76 @@
   margin-top: 6px;
 }
 
+.course-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-filter-select-wrap,
+.course-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.course-filter-icon,
+.course-search-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  color: var(--text-3);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+.course-filter-select {
+  height: 36px;
+  padding: 0 12px 0 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  min-width: 170px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2394a3b8'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 30px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.course-filter-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108,93,211,.12);
+}
+
+.course-search-input {
+  height: 36px;
+  padding: 0 12px 0 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  width: 220px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.course-search-input::placeholder { color: var(--text-3); }
+
+.course-search-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108,93,211,.12);
+}
+
 .desc-view-btn {
   min-width: 72px;
   justify-content: center;
@@ -199,14 +269,20 @@ document.addEventListener('DOMContentLoaded', function () {
 <div class="gt-card">
   <div class="gt-card-header">
     <div class="gt-card-title">All Courses (<span id="visible-count">{{ $courses->count() }}</span>)</div>
-    <div class="flex gap-2 align-center" style="flex-wrap:wrap;">
-      <select id="type-filter" class="gt-input" style="max-width:200px;">
-        <option value="">All Course Types</option>
-        @foreach($courseTypes as $type)
-          <option value="{{ $type->id }}">{{ $type->name }}</option>
-        @endforeach
-      </select>
-      <input type="text" id="table-search" class="gt-input" style="max-width:240px;" placeholder="Search course, code, type...">
+    <div class="course-filter-bar">
+      <div class="course-filter-select-wrap">
+        <svg class="course-filter-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 01.707 1.707L13 11.414V16a1 1 0 01-.553.894l-4 2A1 1 0 017 18v-6.586L3.293 4.707A1 1 0 013 4z" clip-rule="evenodd"/></svg>
+        <select id="type-filter" class="course-filter-select">
+          <option value="">All Course Types</option>
+          @foreach($courseTypes as $type)
+            <option value="{{ $type->id }}">{{ $type->name }}</option>
+          @endforeach
+        </select>
+      </div>
+      <div class="course-search-wrap">
+        <svg class="course-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>
+        <input type="text" id="table-search" class="course-search-input" placeholder="Search course, code, type...">
+      </div>
     </div>
   </div>
   <div class="gt-table-wrap">
