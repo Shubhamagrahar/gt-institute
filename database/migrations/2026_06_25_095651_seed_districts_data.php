@@ -1,29 +1,15 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('districts', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('state_id')->nullable()->constrained('states')->nullOnDelete();
-            $table->string('name', 255);
-        });
+        if (DB::table('districts')->count() > 0) {
+            return;
+        }
 
-        $this->seedDistricts();
-    }
-
-    public function down(): void
-    {
-        Schema::dropIfExists('districts');
-    }
-
-    private function seedDistricts(): void
-    {
         $data = [
             1  => ['Nicobar', 'North and Middle Andaman', 'South Andaman'],
             2  => ['Alluri Sitharama Raju', 'Anakapalli', 'Ananthapuramu', 'Bapatla', 'Chittoor', 'East Godavari', 'Eluru', 'Guntur', 'Kakinada', 'Konaseema', 'Krishna', 'Kurnool', 'Nandyal', 'Nellore', 'NTR', 'Palnadu', 'Parvathipuram Manyam', 'Prakasam', 'Sri Potti Sriramulu Nellore', 'Sri Sathya Sai', 'Srikakulam', 'Tirupati', 'Visakhapatnam', 'Vizianagaram', 'West Godavari', 'YSR Kadapa'],
@@ -73,5 +59,10 @@ return new class extends Migration {
         foreach (array_chunk($rows, 100) as $chunk) {
             DB::table('districts')->insert($chunk);
         }
+    }
+
+    public function down(): void
+    {
+        DB::table('districts')->truncate();
     }
 };
