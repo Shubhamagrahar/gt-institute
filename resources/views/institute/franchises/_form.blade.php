@@ -67,7 +67,8 @@
   </div>
   <div class="gt-form-group">
     <label class="gt-label">Mobile <span style="color:var(--danger)">*</span></label>
-    <input type="text" name="mobile" class="gt-input" value="{{ old('mobile', $franchise->mobile ?? '') }}" required>
+    <input type="tel" name="mobile" class="gt-input" value="{{ old('mobile', $franchise->mobile ?? '') }}"
+           maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="10-digit mobile" required>
     @error('mobile')<div class="gt-error">{{ $message }}</div>@enderror
   </div>
 </div>
@@ -103,7 +104,8 @@
   </div>
   <div class="gt-form-group">
     <label class="gt-label">Owner Mobile <span style="color:var(--danger)">*</span></label>
-    <input type="text" name="owner_mobile" class="gt-input" value="{{ old('owner_mobile', $franchise->owner_mobile ?? '') }}" required>
+    <input type="tel" name="owner_mobile" class="gt-input" value="{{ old('owner_mobile', $franchise->owner_mobile ?? '') }}"
+           maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="10-digit mobile" required>
     @error('owner_mobile')<div class="gt-error">{{ $message }}</div>@enderror
   </div>
   <div class="gt-form-group">
@@ -203,15 +205,46 @@
   @error('address')<div class="gt-error">{{ $message }}</div>@enderror
 </div>
 
-<div class="gt-form-grid-3">
+@php
+  $selectedStateName = old('state', $franchise->state ?? '');
+  $selectedDistrict  = old('district', $franchise->district ?? '');
+  $selectedStateObj  = ($states ?? collect())->firstWhere('name', $selectedStateName);
+  $selectedStateId   = $selectedStateObj?->id ?? '';
+@endphp
+
+<div class="gt-form-grid-2">
   <div class="gt-form-group">
     <label class="gt-label">State</label>
-    <input type="text" name="state" class="gt-input" value="{{ old('state', $franchise->state ?? '') }}">
+    <select name="state" id="frm-state" class="gt-select" onchange="frmLoadDistricts(this)">
+      <option value="">Select State</option>
+      @foreach($states ?? [] as $st)
+        <option value="{{ $st->name }}" data-state-id="{{ $st->id }}"
+          {{ $selectedStateName === $st->name ? 'selected' : '' }}>
+          {{ $st->name }}
+        </option>
+      @endforeach
+    </select>
     @error('state')<div class="gt-error">{{ $message }}</div>@enderror
   </div>
   <div class="gt-form-group">
+    <label class="gt-label">District</label>
+    <select name="district" id="frm-district" class="gt-select">
+      <option value="">Select District</option>
+      @if($selectedStateId && isset($districtsMap[$selectedStateId]))
+        @foreach($districtsMap[$selectedStateId] as $d)
+          <option value="{{ $d }}" {{ $selectedDistrict === $d ? 'selected' : '' }}>{{ $d }}</option>
+        @endforeach
+      @endif
+    </select>
+    @error('district')<div class="gt-error">{{ $message }}</div>@enderror
+  </div>
+</div>
+
+<div class="gt-form-grid-2">
+  <div class="gt-form-group">
     <label class="gt-label">PIN Code</label>
-    <input type="text" name="pin_code" class="gt-input" value="{{ old('pin_code', $franchise->pin_code ?? '') }}">
+    <input type="text" name="pin_code" class="gt-input" value="{{ old('pin_code', $franchise->pin_code ?? '') }}"
+           maxlength="6" inputmode="numeric" placeholder="6-digit PIN">
     @error('pin_code')<div class="gt-error">{{ $message }}</div>@enderror
   </div>
   <div class="gt-form-group">
@@ -436,6 +469,35 @@
 @endpush
 
 @push('scripts')
+<script>
+// District data map: state_id → [district names]
+const FRM_DISTRICTS = @json(($districtsMap ?? collect())->toArray());
+
+function frmLoadDistricts(stateSelect) {
+  const stateId   = stateSelect.selectedOptions[0]?.dataset?.stateId || '';
+  const distSel   = document.getElementById('frm-district');
+  const current   = distSel.value;
+  distSel.innerHTML = '<option value="">Select District</option>';
+
+  if (stateId && FRM_DISTRICTS[stateId]) {
+    FRM_DISTRICTS[stateId].forEach(function (name) {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      if (name === current) opt.selected = true;
+      distSel.appendChild(opt);
+    });
+  }
+}
+
+// Only allow digits in mobile fields
+document.querySelectorAll('input[name="mobile"], input[name="owner_mobile"]').forEach(function (inp) {
+  inp.addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '').slice(0, 10);
+  });
+});
+</script>
+
 <script>
 (function () {
   const logoInput = document.getElementById('logo-input');

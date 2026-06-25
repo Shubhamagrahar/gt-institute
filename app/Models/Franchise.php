@@ -23,6 +23,7 @@ class Franchise extends Model
         'logo',
         'address',
         'state',
+        'district',
         'pin_code',
         'website',
         'commission_percent',

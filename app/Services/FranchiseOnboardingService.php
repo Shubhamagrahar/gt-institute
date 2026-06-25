@@ -44,6 +44,7 @@ class FranchiseOnboardingService
                 'logo' => $data['logo'] ?? 'images/default-institute.png',
                 'address' => $data['address'] ?? null,
                 'state' => $data['state'] ?? null,
+                'district' => $data['district'] ?? null,
                 'pin_code' => $data['pin_code'] ?? null,
                 'website' => $data['website'] ?? null,
                 'commission_percent' => $data['commission_percent'] ?? 0,
@@ -102,7 +103,7 @@ class FranchiseOnboardingService
 
                 // If specific types were selected, only copy those; otherwise copy all from level
                 $levelQuery = LevelCourseCharge::where('franchise_level_id', $data['franchise_level_id'])
-                    ->where('status', 'active')
+                    ->where('level_course_charges.status', 'active')
                     ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
                     ->select('level_course_charges.*', 'course_details.course_type_id as ct_id');
 

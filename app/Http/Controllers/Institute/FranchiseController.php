@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Mail\FranchiseWelcomeMail;
 use App\Models\CourseDetail;
 use App\Models\CourseType;
+use App\Models\District;
 use App\Models\Franchise;
+use App\Models\State;
 use App\Models\FranchiseCourseCharge;
 use App\Models\FranchiseFeeCollection;
 use App\Models\FranchiseLevel;
@@ -59,13 +61,18 @@ class FranchiseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'course_short_name', 'duration']);
 
+        $states       = State::orderBy('name')->get(['id', 'name']);
+        $districtsMap = District::all(['state_id', 'name'])
+            ->groupBy('state_id')
+            ->map(fn ($d) => $d->pluck('name'));
+
         // Restore session data into old() so all form fields repopulate when coming back from preview
         $prefill = session('franchise_create_data');
         if ($prefill) {
             session()->flashInput($prefill);
         }
 
-        return view('institute.franchises.create', compact('levels', 'courses', 'prefill'));
+        return view('institute.franchises.create', compact('levels', 'courses', 'prefill', 'states', 'districtsMap'));
     }
 
     // ─── Create: Step 1 POST — Validate & Branch ─────────────────────────────
@@ -76,9 +83,9 @@ class FranchiseController extends Controller
             'name'               => 'required|string|max:150',
             'short_name'         => 'nullable|string|max:50',
             'email'              => 'required|email|unique:franchises,email|unique:users,email',
-            'mobile'             => 'required|string|max:15',
+            'mobile'             => 'required|digits:10',
             'owner_name'         => 'required|string|max:100',
-            'owner_mobile'       => 'required|string|max:15',
+            'owner_mobile'       => 'required|digits:10',
             'franchise_level_id' => 'required|exists:franchise_levels,id',
             'commission_percent' => 'required|numeric|min:0|max:100',
             'management_type'    => 'required|in:independent,wallet',
@@ -87,7 +94,8 @@ class FranchiseController extends Controller
             'onboarding_fee'     => 'nullable|numeric|min:0',
             'has_sub_franchise'  => 'required|boolean',
             'address'            => 'nullable|string',
-            'state'              => 'nullable|string|max:60',
+            'state'              => 'nullable|string|max:100',
+            'district'           => 'nullable|string|max:100',
             'pin_code'           => 'nullable|string|max:10',
             'website'            => 'nullable|url|max:150',
             'opening_balance'    => 'nullable|numeric|min:0',
@@ -144,7 +152,7 @@ class FranchiseController extends Controller
         $levelChargesByType = [];
         if ($levelId) {
             $rows = LevelCourseCharge::where('franchise_level_id', $levelId)
-                ->where('status', 'active')
+                ->where('level_course_charges.status', 'active')
                 ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
                 ->selectRaw('course_details.course_type_id,
                              COUNT(*) as configured_count,
@@ -302,7 +310,12 @@ class FranchiseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'course_short_name', 'duration']);
 
-        return view('institute.franchises.edit', compact('franchise', 'levels', 'courses'));
+        $states       = State::orderBy('name')->get(['id', 'name']);
+        $districtsMap = District::all(['state_id', 'name'])
+            ->groupBy('state_id')
+            ->map(fn ($d) => $d->pluck('name'));
+
+        return view('institute.franchises.edit', compact('franchise', 'levels', 'courses', 'states', 'districtsMap'));
     }
 
     public function update(Request $request, Franchise $franchise)
@@ -315,9 +328,9 @@ class FranchiseController extends Controller
             'name'               => 'required|string|max:150',
             'short_name'         => 'nullable|string|max:50',
             'email'              => 'required|email|unique:franchises,email,' . $franchise->id . '|unique:users,email,' . ($head?->id ?? 'NULL'),
-            'mobile'             => 'required|string|max:15',
+            'mobile'             => 'required|digits:10',
             'owner_name'         => 'required|string|max:100',
-            'owner_mobile'       => 'required|string|max:15',
+            'owner_mobile'       => 'required|digits:10',
             'franchise_level_id' => 'required|exists:franchise_levels,id',
             'commission_percent' => 'required|numeric|min:0|max:100',
             'management_type'    => 'required|in:independent,wallet',
@@ -326,7 +339,8 @@ class FranchiseController extends Controller
             'onboarding_fee'     => 'nullable|numeric|min:0',
             'has_sub_franchise'  => 'required|boolean',
             'address'            => 'nullable|string',
-            'state'              => 'nullable|string|max:60',
+            'state'              => 'nullable|string|max:100',
+            'district'           => 'nullable|string|max:100',
             'pin_code'           => 'nullable|string|max:10',
             'website'            => 'nullable|url|max:150',
             'logo'               => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
