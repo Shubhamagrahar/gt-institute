@@ -200,7 +200,34 @@ class FranchiseController extends Controller
                 ->with('error', 'Session expired. Please fill in the details again.');
         }
 
-        return view('institute.franchises.create-preview', compact('data'));
+        $levelId         = (int) ($data['franchise_level_id'] ?? 0);
+        $selectedTypeIds = $data['_course_type_access'] ?? [];
+
+        $courseTypes = CourseType::whereIn('id', $selectedTypeIds)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $levelChargesByType = [];
+        if ($levelId && ! empty($selectedTypeIds)) {
+            $rows = LevelCourseCharge::where('franchise_level_id', $levelId)
+                ->where('level_course_charges.status', 'active')
+                ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
+                ->whereIn('course_details.course_type_id', $selectedTypeIds)
+                ->selectRaw('course_details.course_type_id,
+                             COUNT(*) as course_count,
+                             MIN(student_admission_charge) as min_adm,
+                             MAX(student_admission_charge) as max_adm,
+                             MIN(student_certificate_charge) as min_cert,
+                             MAX(student_certificate_charge) as max_cert')
+                ->groupBy('course_details.course_type_id')
+                ->get();
+
+            foreach ($rows as $row) {
+                $levelChargesByType[$row->course_type_id] = $row;
+            }
+        }
+
+        return view('institute.franchises.create-preview', compact('data', 'courseTypes', 'levelChargesByType'));
     }
 
     // ─── Create: Step 3 POST — Confirm & Create ──────────────────────────────

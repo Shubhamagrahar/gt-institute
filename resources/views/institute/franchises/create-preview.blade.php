@@ -19,11 +19,11 @@
   <div class="frn-wizard-step done"><span class="frn-step-dot">✓</span><span class="frn-step-lbl">Franchise Details</span></div>
   <div class="frn-wizard-line done"></div>
   @if($isWallet)
-  <div class="frn-wizard-step done"><span class="frn-step-dot">✓</span><span class="frn-step-lbl">Duration Charges</span></div>
+  <div class="frn-wizard-step done"><span class="frn-step-dot">✓</span><span class="frn-step-lbl">Course Access</span></div>
   <div class="frn-wizard-line done"></div>
-  <div class="frn-wizard-step active"><span class="frn-step-dot">3</span><span class="frn-step-lbl">Review & Payment</span></div>
+  <div class="frn-wizard-step active"><span class="frn-step-dot">3</span><span class="frn-step-lbl">Review & Confirm</span></div>
   <div class="frn-wizard-line"></div>
-  <div class="frn-wizard-step"><span class="frn-step-dot">4</span><span class="frn-step-lbl">Wallet Ledger</span></div>
+  <div class="frn-wizard-step"><span class="frn-step-dot">4</span><span class="frn-step-lbl">Fee Collection</span></div>
   @else
   <div class="frn-wizard-step active"><span class="frn-step-dot">2</span><span class="frn-step-lbl">Review & Payment</span></div>
   <div class="frn-wizard-line"></div>
@@ -78,7 +78,7 @@
         @if(!empty($data['address']))
         <div class="frn-detail-item frn-detail-full">
           <span class="frn-detail-label">Address</span>
-          <span class="frn-detail-value">{{ $data['address'] }}{{ !empty($data['state']) ? ', '.$data['state'] : '' }}{{ !empty($data['pin_code']) ? ' — '.$data['pin_code'] : '' }}</span>
+          <span class="frn-detail-value">{{ $data['address'] }}{{ !empty($data['district']) ? ', '.$data['district'] : '' }}{{ !empty($data['state']) ? ', '.$data['state'] : '' }}{{ !empty($data['pin_code']) ? ' — '.$data['pin_code'] : '' }}</span>
         </div>
         @endif
         @if($isWallet)
@@ -90,43 +90,57 @@
       </div>
     </div>
 
-    {{-- Duration Charges Summary (wallet only) --}}
+    {{-- Course Access Summary (wallet only) --}}
     @if($isWallet)
     <div class="gt-card frn-payment-card" style="margin-top:16px;">
       <div class="gt-card-header" style="border-bottom:1px solid var(--border-1); padding-bottom:12px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
-        <div class="gt-card-title">Duration Charges</div>
+        <div class="gt-card-title">Course Access</div>
         <a href="{{ route('institute.franchises.charges') }}" style="font-size:12px; color:var(--accent);">Edit</a>
       </div>
-      @php $durationCharges = array_values($data['_duration_charges'] ?? []); @endphp
-      @if(count($durationCharges))
+      @if($courseTypes->isEmpty())
+        <div style="font-size:12px; color:var(--text-3); text-align:center; padding:14px 0;">
+          No course types selected — franchise will have no admission access.
+        </div>
+      @else
         <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
           <thead>
             <tr>
-              <th style="text-align:left; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Duration</th>
+              <th style="text-align:left; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Course Type</th>
+              <th style="text-align:center; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Courses</th>
               <th style="text-align:right; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Admission</th>
               <th style="text-align:right; color:var(--text-3); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:0 0 8px; border-bottom:1px solid var(--border-1);">Certificate</th>
             </tr>
           </thead>
           <tbody>
-            @foreach($durationCharges as $dc)
+            @foreach($courseTypes as $ct)
+            @php $ch = $levelChargesByType[$ct->id] ?? null; @endphp
             <tr>
-              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); color:var(--text-1);">
-                <span style="font-size:11.5px; font-weight:700; background:rgba(138,115,245,.12); color:rgba(138,115,245,.9); border:1px solid rgba(138,115,245,.25); border-radius:20px; padding:2px 9px;">
-                  {{ $dc['duration'] }} month{{ $dc['duration'] > 1 ? 's' : '' }}
-                </span>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); color:var(--text-1); font-weight:600; font-size:13px;">
+                {{ $ct->name }}
               </td>
-              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:right; color:var(--text-1);" class="mono">₹{{ number_format($dc['admission_charge'], 2) }}</td>
-              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:right; color:var(--text-1);" class="mono">₹{{ number_format($dc['certificate_charge'], 2) }}</td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:center; color:var(--text-3);">
+                {{ $ch->course_count ?? 0 }}
+              </td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:right;" class="mono">
+                @if($ch && $ch->min_adm > 0)
+                  ₹{{ number_format($ch->min_adm, 0) }}{{ $ch->min_adm != $ch->max_adm ? '–'.number_format($ch->max_adm, 0) : '' }}
+                @else
+                  <span style="color:var(--text-3);">₹0</span>
+                @endif
+              </td>
+              <td style="padding:8px 0; border-bottom:1px solid var(--border-1); text-align:right;" class="mono">
+                @if($ch && $ch->min_cert > 0)
+                  ₹{{ number_format($ch->min_cert, 0) }}{{ $ch->min_cert != $ch->max_cert ? '–'.number_format($ch->max_cert, 0) : '' }}
+                @else
+                  <span style="color:var(--text-3);">₹0</span>
+                @endif
+              </td>
             </tr>
             @endforeach
           </tbody>
         </table>
         <div style="font-size:11.5px; color:var(--text-3); margin-top:10px;">
-          These charges will be applied to all courses of the matching duration.
-        </div>
-      @else
-        <div style="font-size:12px; color:var(--text-3); text-align:center; padding:14px 0;">
-          No duration charges set — ₹0 will be deducted per admission/certificate.
+          Charges inherited from <strong>{{ $data['_level']['name'] ?? 'level' }}</strong> configuration. Fine-tune per course after creation.
         </div>
       @endif
     </div>
