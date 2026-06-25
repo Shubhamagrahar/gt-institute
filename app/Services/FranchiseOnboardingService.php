@@ -100,8 +100,8 @@ class FranchiseOnboardingService
             // Copy level course charges → franchise course charges for selected course types
             if ($isWalletMode && ! empty($data['franchise_level_id'])) {
                 $selectedTypeIds = $data['_course_type_access'] ?? [];
+                $customCharges   = $data['_course_charges'] ?? [];
 
-                // If specific types were selected, only copy those; otherwise copy all from level
                 $levelQuery = LevelCourseCharge::where('franchise_level_id', $data['franchise_level_id'])
                     ->where('level_course_charges.status', 'active')
                     ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
@@ -112,6 +112,8 @@ class FranchiseOnboardingService
                 }
 
                 foreach ($levelQuery->get() as $lcc) {
+                    $override = $customCharges[$lcc->course_id] ?? null;
+
                     FranchiseCourseCharge::updateOrCreate(
                         ['franchise_id' => $franchise->id, 'course_id' => $lcc->course_id],
                         [
@@ -119,8 +121,8 @@ class FranchiseOnboardingService
                             'course_type_id'     => $lcc->ct_id,
                             'course_name'        => $lcc->course_name,
                             'duration'           => $lcc->duration,
-                            'admission_charge'   => $lcc->student_admission_charge,
-                            'certificate_charge' => $lcc->student_certificate_charge,
+                            'admission_charge'   => $override ? $override['admission'] : $lcc->student_admission_charge,
+                            'certificate_charge' => $override ? $override['certificate'] : $lcc->student_certificate_charge,
                             'student_fee'        => null,
                             'enabled'            => true,
                         ]

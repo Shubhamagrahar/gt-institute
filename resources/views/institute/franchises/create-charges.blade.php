@@ -114,13 +114,91 @@
         <div style="font-size:12px;color:var(--text-3);">
           <span id="ca-selected-count">{{ count($selected) }}</span> course type(s) selected
         </div>
-        <button type="submit" class="btn btn-primary">
-          Continue to Review
+        <button type="submit" class="btn btn-primary" id="ca-submit-btn">
+          Save & Continue to Review
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
     @endif
   </div>
+
+  {{-- ── Charge Editor ─────────────────────────────────────────────────── --}}
+  @if(!$courseTypes->isEmpty())
+  <div id="charge-editor-wrap" style="{{ count($selected) === 0 ? 'display:none;' : '' }}margin-top:16px;">
+    <div class="gt-card">
+      <div class="gt-card-header" style="border-bottom:1px solid var(--border-1);padding-bottom:14px;">
+        <div>
+          <div class="gt-card-title">Configure Charges</div>
+          <div style="font-size:12.5px;color:var(--text-3);margin-top:3px;">
+            Pre-filled from <strong>{{ $data['_level']['name'] ?? 'level' }}</strong> defaults. Edit to customise for this franchise.
+          </div>
+        </div>
+      </div>
+
+      @foreach($courseTypes as $ct)
+        @php $courses = $coursesByType[$ct->id] ?? []; @endphp
+        @if(count($courses))
+        <div class="ce-type-section" data-type-id="{{ $ct->id }}"
+             style="{{ !in_array($ct->id, $selected) ? 'display:none;' : '' }}">
+          <div class="ce-type-header">
+            <span class="ce-type-name">{{ $ct->name }}</span>
+            <span class="ce-type-count">{{ count($courses) }} course{{ count($courses) != 1 ? 's' : '' }}</span>
+          </div>
+          <div class="ce-table-wrap">
+            <table class="ce-table">
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th style="width:90px;">Duration</th>
+                  <th style="width:150px;">Admission (₹) <span style="color:#dc2626">*</span></th>
+                  <th style="width:150px;">Certificate (₹) <span style="color:#dc2626">*</span></th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($courses as $course)
+                @php
+                  $savedAdm  = $savedCharges[$course->course_id]['admission']   ?? $course->default_adm;
+                  $savedCert = $savedCharges[$course->course_id]['certificate']  ?? $course->default_cert;
+                @endphp
+                <tr>
+                  <td class="ce-course-name">{{ $course->course_name }}</td>
+                  <td style="color:var(--text-3);font-size:12px;">
+                    {{ $course->duration ? $course->duration.' mo' : '—' }}
+                  </td>
+                  <td>
+                    <div class="ce-input-wrap">
+                      <span class="ce-rupee">₹</span>
+                      <input type="number" class="ce-input"
+                             name="course_charges[{{ $course->course_id }}][admission]"
+                             value="{{ $savedAdm }}"
+                             min="0" step="0.01" placeholder="0.00">
+                    </div>
+                  </td>
+                  <td>
+                    <div class="ce-input-wrap">
+                      <span class="ce-rupee">₹</span>
+                      <input type="number" class="ce-input"
+                             name="course_charges[{{ $course->course_id }}][certificate]"
+                             value="{{ $savedCert }}"
+                             min="0" step="0.01" placeholder="0.00">
+                    </div>
+                  </td>
+                </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+        @endif
+      @endforeach
+
+      <div id="ce-empty" style="{{ count($selected) > 0 ? 'display:none;' : '' }}padding:28px;text-align:center;color:var(--text-3);font-size:13px;">
+        Select course types above to configure charges.
+      </div>
+    </div>
+  </div>
+  @endif
+
 </form>
 
 @endsection
@@ -168,6 +246,26 @@
 .ca-cpill-cert{background:rgba(234,179,8,.1);color:#a16207;border:1px solid rgba(234,179,8,.2)}
 .ca-cpill-info{background:var(--bg-3);color:var(--text-3);border:1px solid var(--border-2)}
 .ca-no-charges{font-size:11px;color:#b45309;background:rgba(234,179,8,.08);border:1px solid rgba(234,179,8,.2);border-radius:6px;padding:5px 10px;display:flex;align-items:center;gap:5px}
+
+/* Charge Editor */
+.ce-type-section{border-top:1px solid var(--border-1)}
+.ce-type-section:first-child{border-top:none}
+.ce-type-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg-3)}
+.ce-type-name{font-size:13px;font-weight:700;color:var(--text-1)}
+.ce-type-count{font-size:11.5px;color:var(--text-3);background:var(--bg-2);border:1px solid var(--border-2);border-radius:20px;padding:2px 10px}
+.ce-table-wrap{overflow-x:auto}
+.ce-table{width:100%;border-collapse:collapse;font-size:13px}
+.ce-table thead th{background:var(--bg-2);color:var(--text-3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;padding:8px 14px;text-align:left;border-bottom:1px solid var(--border-1)}
+.ce-table tbody tr{border-bottom:1px solid var(--border-1)}
+.ce-table tbody tr:last-child{border-bottom:none}
+.ce-table tbody tr:hover{background:var(--bg-3)}
+.ce-table td{padding:10px 14px;vertical-align:middle}
+.ce-course-name{font-weight:500;color:var(--text-1)}
+.ce-input-wrap{display:flex;align-items:center;gap:4px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:var(--radius-sm);padding:0 8px;transition:border-color .15s}
+.ce-input-wrap:focus-within{border-color:var(--accent)}
+.ce-rupee{font-size:12px;color:var(--text-3);flex-shrink:0}
+.ce-input{border:none;background:transparent;color:var(--text-1);font-size:13px;width:100%;padding:7px 4px;outline:none}
+.ce-input::-webkit-outer-spin-button,.ce-input::-webkit-inner-spin-button{-webkit-appearance:none}
 </style>
 @endpush
 
@@ -184,6 +282,7 @@ function caToggle(cb) {
     check.classList.remove('checked');
   }
   caUpdateCount();
+  caSyncEditor();
 }
 
 function caSelectAll() {
@@ -193,6 +292,7 @@ function caSelectAll() {
     cb.closest('.ca-card').querySelector('.ca-card-check').classList.add('checked');
   });
   caUpdateCount();
+  caSyncEditor();
 }
 
 function caClearAll() {
@@ -202,11 +302,38 @@ function caClearAll() {
     cb.closest('.ca-card').querySelector('.ca-card-check').classList.remove('checked');
   });
   caUpdateCount();
+  caSyncEditor();
 }
 
 function caUpdateCount() {
   const n = document.querySelectorAll('.ca-checkbox:checked').length;
   document.getElementById('ca-selected-count').textContent = n;
 }
+
+function caSyncEditor() {
+  const selectedIds = [...document.querySelectorAll('.ca-checkbox:checked')].map(cb => cb.value);
+  const wrap = document.getElementById('charge-editor-wrap');
+  const empty = document.getElementById('ce-empty');
+
+  if (wrap) {
+    wrap.style.display = selectedIds.length > 0 ? '' : 'none';
+  }
+
+  document.querySelectorAll('.ce-type-section').forEach(function (sec) {
+    const show = selectedIds.includes(sec.dataset.typeId);
+    sec.style.display = show ? '' : 'none';
+    // Disable inputs of hidden sections so they don't submit
+    sec.querySelectorAll('input').forEach(function (inp) {
+      inp.disabled = !show;
+    });
+  });
+
+  if (empty) {
+    empty.style.display = selectedIds.length > 0 ? 'none' : '';
+  }
+}
+
+// Run on load to sync disabled state
+document.addEventListener('DOMContentLoaded', caSyncEditor);
 </script>
 @endpush

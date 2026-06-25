@@ -148,8 +148,11 @@ class FranchiseController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Level charge summary per course_type_id (from level_course_charges joined to course_details)
+        // Level charge summary per course_type_id (for card pills)
         $levelChargesByType = [];
+        // Per-course charges with level defaults (for the editable charge table)
+        $coursesByType = [];
+
         if ($levelId) {
             $rows = LevelCourseCharge::where('franchise_level_id', $levelId)
                 ->where('level_course_charges.status', 'active')
@@ -166,12 +169,32 @@ class FranchiseController extends Controller
             foreach ($rows as $row) {
                 $levelChargesByType[$row->course_type_id] = $row;
             }
+
+            // Per-course detail for charge editor
+            $courseRows = LevelCourseCharge::where('franchise_level_id', $levelId)
+                ->where('level_course_charges.status', 'active')
+                ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
+                ->select(
+                    'course_details.id as course_id',
+                    'course_details.name as course_name',
+                    'course_details.duration',
+                    'course_details.course_type_id',
+                    'level_course_charges.student_admission_charge as default_adm',
+                    'level_course_charges.student_certificate_charge as default_cert'
+                )
+                ->orderBy('course_details.name')
+                ->get();
+
+            foreach ($courseRows as $cr) {
+                $coursesByType[$cr->course_type_id][] = $cr;
+            }
         }
 
-        $selected = array_map('intval', $data['_course_type_access'] ?? []);
+        $selected       = array_map('intval', $data['_course_type_access'] ?? []);
+        $savedCharges   = $data['_course_charges'] ?? [];
 
         return view('institute.franchises.create-charges', compact(
-            'data', 'courseTypes', 'levelChargesByType', 'selected'
+            'data', 'courseTypes', 'levelChargesByType', 'coursesByType', 'selected', 'savedCharges'
         ));
     }
 
@@ -184,6 +207,18 @@ class FranchiseController extends Controller
         }
 
         $data['_course_type_access'] = array_map('intval', $request->input('course_type_ids', []));
+
+        // Per-course charge overrides from the charge editor
+        $rawCharges = $request->input('course_charges', []);
+        $parsed = [];
+        foreach ($rawCharges as $courseId => $charges) {
+            $parsed[(int) $courseId] = [
+                'admission'   => max(0, (float) ($charges['admission'] ?? 0)),
+                'certificate' => max(0, (float) ($charges['certificate'] ?? 0)),
+            ];
+        }
+        $data['_course_charges'] = $parsed;
+
         session(['franchise_create_data' => $data]);
 
         return redirect()->route('institute.franchises.preview');
