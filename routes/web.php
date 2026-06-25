@@ -319,8 +319,9 @@ Route::prefix('franchise')
         Route::get('/wallet',               [FranchiseWallet::class, 'index'])->name('wallet');
 
         // ── Course Pricing ──────────────────────────────────────────────────
-        Route::get('/course-pricing',               [FranchisePricing::class, 'index'])->name('pricing.index');
-        Route::patch('/course-pricing/{charge}',    [FranchisePricing::class, 'update'])->name('pricing.update');
+        Route::get('/course-pricing',                              [FranchisePricing::class, 'index'])->name('pricing.index');
+        Route::patch('/course-pricing/{charge}',                   [FranchisePricing::class, 'update'])->name('pricing.update');
+        Route::post('/course-pricing/{charge}/fee-structures',     [FranchisePricing::class, 'saveFeeStructures'])->name('pricing.fee-structures');
 
         // ── Certificate ─────────────────────────────────────────────────────
         Route::get('/certificate',          [FranchiseCertificate::class, 'index'])->name('certificate.index');

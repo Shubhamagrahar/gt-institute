@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\{
     AdmissionFormField, BatchDetail, CourseBook, CourseDetail,
     EnrollmentFeeSnapshot, EnrollmentPaymentPlan, FeeCollectDetail,
-    FranchiseCourseCharge, FranchiseTransaction, FranchiseWallet,
+    FranchiseCourseCharge, FranchiseFeeStructure, FranchiseTransaction, FranchiseWallet,
     InstituteEnrollmentCounter, InstituteSession, InstituteStudentTransaction,
     InstituteStudentWallet, PaymentPlanType, State, StudentTransaction,
     StudentWallet, User, UserProfile
@@ -259,24 +259,41 @@ class EnrollmentController extends Controller
             return redirect()->route('franchise.enrollment.payment-complete', $courseBook);
         }
 
-        $iid  = $this->instituteId();
-        $courseBook->loadMissing(['course.feeStructures.feeType']);
-        $feeStructure = collect($courseBook->course->feeStructures)->map(fn ($fs) => (object)[
-            'fee_type_id'   => $fs->fee_type_id,
-            'fee_type_name' => $fs->fee_type_name,
-            'amount'        => (float) $fs->amount,
-            'is_mandatory'  => (bool) $fs->feeType?->is_mandatory,
-        ]);
+        $iid = $this->instituteId();
+        $fid = $this->franchiseId();
 
-        // Add base course fee
-        $baseFee = (object)['fee_type_id' => null, 'fee_type_name' => 'Course Fee', 'amount' => (float) $courseBook->course->fee, 'is_mandatory' => true];
-        $feeStructure = collect([$baseFee])->merge($feeStructure)->values();
+        // Base fee: what franchise charges student (from FranchiseCourseCharge)
+        $chargeRow = FranchiseCourseCharge::where('franchise_id', $fid)
+            ->where('course_id', $courseBook->course_id)
+            ->where('enabled', true)
+            ->first();
 
-        $totalFee = $feeStructure->sum('amount');
-        if ($totalFee <= 0) {
-            $courseBook->update(['fee' => 0, 'final_fee' => 0]);
-            return redirect()->route('franchise.enrollment.preview', $courseBook);
-        }
+        $baseFeeAmount = $chargeRow && $chargeRow->student_fee > 0
+            ? (float) $chargeRow->student_fee
+            : (float) $courseBook->course->fee;
+
+        $baseFee = (object)[
+            'fee_type_id'   => null,
+            'fee_type_name' => 'Course Fee',
+            'amount'        => $baseFeeAmount,
+            'is_mandatory'  => true,
+        ];
+
+        // Additional fee structures franchise has enabled
+        $extraFees = FranchiseFeeStructure::where('franchise_id', $fid)
+            ->where('course_id', $courseBook->course_id)
+            ->where('enabled', true)
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn ($fs) => (object)[
+                'fee_type_id'   => $fs->fee_type_id,
+                'fee_type_name' => $fs->fee_type_name,
+                'amount'        => (float) $fs->amount,
+                'is_mandatory'  => false,
+            ]);
+
+        $feeStructure = collect([$baseFee])->merge($extraFees)->values();
+        $totalFee     = $feeStructure->sum('amount');
 
         $plans = $this->activePlans($iid);
 
