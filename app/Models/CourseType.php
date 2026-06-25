@@ -8,4 +8,9 @@ class CourseType extends Model
 {
     protected $table = 'course_types';
     protected $fillable = ['institute_id', 'name', 'status'];
+
+    public function courses()
+    {
+        return $this->hasMany(CourseDetail::class, 'course_type_id');
+    }
 }

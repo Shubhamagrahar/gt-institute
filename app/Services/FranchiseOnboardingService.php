@@ -96,54 +96,32 @@ class FranchiseOnboardingService
                 'balance'      => $levelFee,
             ]);
 
-            // Copy level course charges → franchise course charges (wallet mode only)
-            // Priority: level's LevelCourseCharge rows are the source of truth
+            // Copy level course charges → franchise course charges for selected course types
             if ($isWalletMode && ! empty($data['franchise_level_id'])) {
-                $levelCharges = LevelCourseCharge::where('franchise_level_id', $data['franchise_level_id'])
-                    ->where('status', 'active')
-                    ->get();
+                $selectedTypeIds = $data['_course_type_access'] ?? [];
 
-                foreach ($levelCharges as $lcc) {
+                // If specific types were selected, only copy those; otherwise copy all from level
+                $levelQuery = LevelCourseCharge::where('franchise_level_id', $data['franchise_level_id'])
+                    ->where('status', 'active')
+                    ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
+                    ->select('level_course_charges.*', 'course_details.course_type_id as ct_id');
+
+                if (! empty($selectedTypeIds)) {
+                    $levelQuery->whereIn('course_details.course_type_id', $selectedTypeIds);
+                }
+
+                foreach ($levelQuery->get() as $lcc) {
                     FranchiseCourseCharge::updateOrCreate(
-                        [
-                            'franchise_id' => $franchise->id,
-                            'course_id'    => $lcc->course_id,
-                        ],
+                        ['franchise_id' => $franchise->id, 'course_id' => $lcc->course_id],
                         [
                             'institute_id'       => $instituteId,
+                            'course_type_id'     => $lcc->ct_id,
                             'course_name'        => $lcc->course_name,
                             'duration'           => $lcc->duration,
                             'admission_charge'   => $lcc->student_admission_charge,
                             'certificate_charge' => $lcc->student_certificate_charge,
-                        ]
-                    );
-                }
-            }
-
-            // Fallback: also apply any manual _duration_charges from Step 2 (override level charges)
-            if ($isWalletMode && ! empty($data['_duration_charges'])) {
-                $durationMap = $data['_duration_charges'];
-
-                $courses = CourseDetail::where('institute_id', $instituteId)
-                    ->where('status', 'active')
-                    ->whereIn('duration', array_keys($durationMap))
-                    ->get(['id', 'name', 'duration']);
-
-                foreach ($courses as $course) {
-                    $chargeConfig = $durationMap[$course->duration] ?? null;
-                    if (! $chargeConfig) continue;
-
-                    FranchiseCourseCharge::updateOrCreate(
-                        [
-                            'franchise_id' => $franchise->id,
-                            'course_id'    => $course->id,
-                        ],
-                        [
-                            'institute_id'       => $instituteId,
-                            'course_name'        => $course->name,
-                            'duration'           => $course->duration,
-                            'admission_charge'   => $chargeConfig['admission_charge'],
-                            'certificate_charge' => $chargeConfig['certificate_charge'],
+                            'student_fee'        => null,
+                            'enabled'            => true,
                         ]
                     );
                 }

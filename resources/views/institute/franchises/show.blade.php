@@ -212,6 +212,134 @@
 
 </div>
 
+{{-- ── Course Access Management ─────────────────── --}}
+@if(($franchise->management_type ?? 'wallet') === 'wallet')
+<div class="gt-card" style="margin-top:20px;" id="course-access-section">
+  <div class="gt-card-header" style="border-bottom:1px solid var(--border-1);padding-bottom:14px;">
+    <div>
+      <div class="gt-card-title">Course Access</div>
+      <div style="font-size:12px;color:var(--text-3);margin-top:2px;">
+        Manage which course types this franchise can admit students for. Charges are deducted from the franchise wallet per admission/certificate.
+      </div>
+    </div>
+    <a href="{{ route('institute.franchise-levels.charges', $franchise->level ?? $franchise->franchise_level_id) }}"
+       class="btn btn-outline btn-sm" style="white-space:nowrap;">
+       Level Config →
+    </a>
+  </div>
+
+  @if($allCourseTypes->isEmpty())
+    <div style="text-align:center;padding:40px;color:var(--text-3);">No course types configured. Add from Academic Setup → Courses.</div>
+  @else
+    <div class="ca-type-list" id="ca-type-list">
+      @foreach($allCourseTypes as $ct)
+        @php
+          $granted  = $grantedTypeIds->contains($ct->id);
+          $charges  = $courseChargesByType[$ct->id] ?? collect();
+        @endphp
+        <div class="ca-type-row" id="cat-{{ $ct->id }}">
+          <div class="ca-type-header">
+            <div class="ca-type-left">
+              <div class="ca-type-name">{{ $ct->name }}</div>
+              <div class="ca-type-meta">
+                {{ $ct->active_courses }} course{{ $ct->active_courses != 1 ? 's' : '' }}
+                @if($granted) &nbsp;·&nbsp; {{ $charges->count() }} configured @endif
+              </div>
+            </div>
+            <div class="ca-type-right">
+              @if($granted)
+                <span class="ca-badge-granted">✓ Granted</span>
+                <button type="button" class="btn btn-xs ca-btn-revoke"
+                        data-franchise="{{ $franchise->id }}"
+                        data-type-id="{{ $ct->id }}"
+                        data-type-name="{{ $ct->name }}"
+                        onclick="caRevoke(this)">
+                  Revoke Access
+                </button>
+              @else
+                <span class="ca-badge-none">— Not Granted</span>
+                <button type="button" class="btn btn-xs ca-btn-grant"
+                        data-franchise="{{ $franchise->id }}"
+                        data-type-id="{{ $ct->id }}"
+                        data-type-name="{{ $ct->name }}"
+                        onclick="caGrant(this)">
+                  Grant Access
+                </button>
+              @endif
+            </div>
+          </div>
+
+          @if($granted && $charges->isNotEmpty())
+            <div class="ca-courses-table-wrap">
+              <table class="ca-courses-table">
+                <thead>
+                  <tr>
+                    <th>Course</th>
+                    <th style="width:70px;text-align:center;">Duration</th>
+                    <th style="width:160px;">Admission Charge (₹)</th>
+                    <th style="width:160px;">Certificate Charge (₹)</th>
+                    <th style="width:80px;">Student Fee</th>
+                    <th style="width:60px;text-align:right;">Save</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($charges as $charge)
+                  <tr data-charge-id="{{ $charge->id }}">
+                    <td>
+                      <div style="font-size:13px;font-weight:600;">{{ $charge->course_name }}</div>
+                    </td>
+                    <td style="text-align:center;">
+                      <span class="ca-dur-pill">{{ $charge->duration }}m</span>
+                    </td>
+                    <td>
+                      <div class="ca-inp-wrap">
+                        <span class="ca-inp-pre">₹</span>
+                        <input type="number" class="ca-inp" step="0.01" min="0"
+                               value="{{ number_format($charge->admission_charge, 2, '.', '') }}"
+                               data-field="admission_charge">
+                      </div>
+                    </td>
+                    <td>
+                      <div class="ca-inp-wrap">
+                        <span class="ca-inp-pre">₹</span>
+                        <input type="number" class="ca-inp" step="0.01" min="0"
+                               value="{{ number_format($charge->certificate_charge, 2, '.', '') }}"
+                               data-field="certificate_charge">
+                      </div>
+                    </td>
+                    <td style="font-size:12px;color:var(--text-3);">
+                      @if($charge->student_fee !== null)
+                        ₹{{ number_format($charge->student_fee, 0) }}
+                      @else
+                        <span style="color:var(--text-3);">Not set</span>
+                      @endif
+                    </td>
+                    <td style="text-align:right;">
+                      <button type="button" class="btn btn-xs btn-primary ca-save-btn"
+                              data-url="{{ route('institute.franchises.course-charges.update', [$franchise, $charge]) }}"
+                              onclick="caSaveCharge(this)">
+                        Save
+                      </button>
+                    </td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          @elseif($granted && $charges->isEmpty())
+            <div style="padding:12px 20px;font-size:12px;color:#b45309;background:rgba(234,179,8,.06);border-top:1px solid var(--border-1);">
+              Access granted but no courses found for this type. Add courses of type "{{ $ct->name }}" to configure charges.
+            </div>
+          @endif
+        </div>
+      @endforeach
+    </div>
+  @endif
+
+  <div id="ca-toast" style="display:none;position:fixed;bottom:24px;right:24px;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.15);"></div>
+</div>
+@endif
+
 @push('styles')
 <style>
 /* ─── Hero Card ─────────────────────────────── */
@@ -296,7 +424,172 @@
 .frn-info-row:last-child { border-bottom: none; }
 .frn-info-lbl { font-size: 12px; color: var(--text-3); white-space: nowrap; flex-shrink: 0; padding-top: 1px; }
 .frn-info-val { font-size: 13px; color: var(--text-1); text-align: right; }
+
+/* ─── Course Access ──────────────────────────── */
+.ca-type-list { display: flex; flex-direction: column; }
+.ca-type-row {
+  border-bottom: 1px solid var(--border-1);
+}
+.ca-type-row:last-child { border-bottom: none; }
+.ca-type-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 14px 20px;
+}
+.ca-type-left { flex: 1; min-width: 0; }
+.ca-type-name { font-size: 14px; font-weight: 700; color: var(--text-1); }
+.ca-type-meta { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
+.ca-type-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.ca-badge-granted {
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  background: rgba(22,163,74,.1); color: #16a34a;
+  border: 1px solid rgba(22,163,74,.25); border-radius: 20px;
+}
+.ca-badge-none {
+  font-size: 11px; font-weight: 600; color: var(--text-3); padding: 3px 10px;
+  background: var(--bg-3); border: 1px solid var(--border-2); border-radius: 20px;
+}
+.ca-btn-grant {
+  background: rgba(22,163,74,.1); color: #16a34a;
+  border: 1px solid rgba(22,163,74,.3) !important;
+}
+.ca-btn-revoke {
+  background: rgba(220,38,38,.08); color: #dc2626;
+  border: 1px solid rgba(220,38,38,.25) !important;
+}
+.ca-courses-table-wrap {
+  border-top: 1px solid var(--border-1);
+  background: var(--bg-3);
+  overflow-x: auto;
+}
+.ca-courses-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ca-courses-table thead th {
+  background: var(--bg-3); color: var(--text-3);
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  padding: 9px 14px; text-align: left;
+}
+.ca-courses-table tbody tr { border-top: 1px solid var(--border-1); }
+.ca-courses-table tbody tr:hover { background: var(--bg-2); }
+.ca-courses-table td { padding: 10px 14px; vertical-align: middle; }
+.ca-dur-pill {
+  font-size: 11px; font-weight: 700;
+  background: rgba(138,115,245,.12); color: rgba(138,115,245,.85);
+  border: 1px solid rgba(138,115,245,.25); border-radius: 20px;
+  padding: 2px 8px;
+}
+.ca-inp-wrap { display: flex; align-items: center; max-width: 140px; }
+.ca-inp-pre {
+  padding: 5px 8px; font-size: 12px; color: var(--text-3);
+  background: var(--bg-2); border: 1px solid var(--border-2);
+  border-right: none; border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+}
+.ca-inp {
+  flex: 1; background: var(--bg-1, #fff); border: 1px solid var(--border-2);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--text-1); font-size: 12px; padding: 5px 8px; outline: none;
+  transition: border-color .15s;
+}
+.ca-inp:focus { border-color: var(--accent); }
+.ca-save-btn { font-size: 11px !important; padding: 4px 10px !important; }
+@media(max-width:768px){.frn-detail-grid{grid-template-columns:1fr}.frn-stats{grid-template-columns:repeat(2,1fr)}}
 </style>
+@endpush
+
+@push('scripts')
+<script>
+const _grantBase  = '{{ route("institute.franchises.grant-course-type", [$franchise, "__CT__"]) }}';
+const _revokeBase = '{{ route("institute.franchises.revoke-course-type", [$franchise, "__CT__"]) }}';
+const _csrfToken  = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+function caShowToast(msg, ok) {
+  const t = document.getElementById('ca-toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  t.style.background = ok ? '#16a34a' : '#dc2626';
+  t.style.color = '#fff';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function caGrant(btn) {
+  const tid   = btn.dataset.typeId;
+  const tname = btn.dataset.typeName;
+  btn.disabled = true;
+  btn.textContent = 'Granting…';
+
+  fetch(_grantBase.replace('__CT__', tid), {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': _csrfToken, 'Accept': 'application/json' }
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      caShowToast(d.message, true);
+      setTimeout(() => location.reload(), 800);
+    } else {
+      caShowToast('Failed to grant access.', false);
+      btn.disabled = false; btn.textContent = 'Grant Access';
+    }
+  })
+  .catch(() => { caShowToast('Network error.', false); btn.disabled = false; btn.textContent = 'Grant Access'; });
+}
+
+function caRevoke(btn) {
+  const tid   = btn.dataset.typeId;
+  const tname = btn.dataset.typeName;
+  if (!confirm('Revoke access to "' + tname + '"?\n\nAll ' + tname + ' course charges will be removed for this franchise.')) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Revoking…';
+
+  fetch(_revokeBase.replace('__CT__', tid), {
+    method: 'DELETE',
+    headers: { 'X-CSRF-TOKEN': _csrfToken, 'Accept': 'application/json' }
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      caShowToast(d.message, true);
+      setTimeout(() => location.reload(), 800);
+    } else {
+      caShowToast('Failed to revoke access.', false);
+      btn.disabled = false; btn.textContent = 'Revoke Access';
+    }
+  })
+  .catch(() => { caShowToast('Network error.', false); btn.disabled = false; btn.textContent = 'Revoke Access'; });
+}
+
+function caSaveCharge(btn) {
+  const row  = btn.closest('tr');
+  const url  = btn.dataset.url;
+  const adm  = row.querySelector('[data-field="admission_charge"]').value;
+  const cert = row.querySelector('[data-field="certificate_charge"]').value;
+
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'X-CSRF-TOKEN': _csrfToken,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ admission_charge: adm, certificate_charge: cert }),
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      caShowToast('Charge saved.', true);
+      btn.textContent = '✓';
+      setTimeout(() => { btn.disabled = false; btn.textContent = 'Save'; }, 1500);
+    } else {
+      caShowToast('Save failed.', false);
+      btn.disabled = false; btn.textContent = 'Save';
+    }
+  })
+  .catch(() => { caShowToast('Network error.', false); btn.disabled = false; btn.textContent = 'Save'; });
+}
+</script>
 @endpush
 
 @endsection

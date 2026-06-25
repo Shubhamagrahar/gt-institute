@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Institute;
 use App\Http\Controllers\Controller;
 use App\Mail\FranchiseWelcomeMail;
 use App\Models\CourseDetail;
+use App\Models\CourseType;
 use App\Models\Franchise;
 use App\Models\FranchiseCourseCharge;
 use App\Models\FranchiseFeeCollection;
 use App\Models\FranchiseLevel;
 use App\Models\FranchiseTransaction;
 use App\Models\FranchiseWallet;
+use App\Models\LevelCourseCharge;
 use App\Services\FranchiseOnboardingService;
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
@@ -118,7 +120,7 @@ class FranchiseController extends Controller
         return redirect()->route('institute.franchises.preview');
     }
 
-    // ─── Create: Step 2 (wallet only) — Duration Charge Setup ──────────────
+    // ─── Create: Step 2 (wallet only) — Course Type Access ─────────────────
 
     public function chargesStep()
     {
@@ -128,19 +130,41 @@ class FranchiseController extends Controller
             return redirect()->route('institute.franchises.create');
         }
 
-        // Unique durations with course counts
-        $durations = CourseDetail::where('institute_id', $this->instituteId())
+        $iid     = $this->instituteId();
+        $levelId = (int) ($data['franchise_level_id'] ?? 0);
+
+        // All active course types with their active course count
+        $courseTypes = CourseType::where('institute_id', $iid)
             ->where('status', 'active')
-            ->whereNotNull('duration')
-            ->where('duration', '>', 0)
-            ->selectRaw('duration, count(*) as course_count')
-            ->groupBy('duration')
-            ->orderBy('duration')
+            ->withCount(['courses as active_courses' => fn ($q) => $q->where('status', 'active')->where('institute_id', $iid)])
+            ->orderBy('name')
             ->get();
 
-        $existing = $data['_duration_charges'] ?? [];
+        // Level charge summary per course_type_id (from level_course_charges joined to course_details)
+        $levelChargesByType = [];
+        if ($levelId) {
+            $rows = LevelCourseCharge::where('franchise_level_id', $levelId)
+                ->where('status', 'active')
+                ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
+                ->selectRaw('course_details.course_type_id,
+                             COUNT(*) as configured_count,
+                             MIN(student_admission_charge) as min_adm,
+                             MAX(student_admission_charge) as max_adm,
+                             MIN(student_certificate_charge) as min_cert,
+                             MAX(student_certificate_charge) as max_cert')
+                ->groupBy('course_details.course_type_id')
+                ->get();
 
-        return view('institute.franchises.create-charges', compact('data', 'durations', 'existing'));
+            foreach ($rows as $row) {
+                $levelChargesByType[$row->course_type_id] = $row;
+            }
+        }
+
+        $selected = array_map('intval', $data['_course_type_access'] ?? []);
+
+        return view('institute.franchises.create-charges', compact(
+            'data', 'courseTypes', 'levelChargesByType', 'selected'
+        ));
     }
 
     public function storeCharges(Request $request)
@@ -151,25 +175,7 @@ class FranchiseController extends Controller
             return redirect()->route('institute.franchises.create');
         }
 
-        // Build duration-keyed charges array from POST inputs
-        $durations    = $request->input('duration', []);
-        $admissions   = $request->input('admission_charge', []);
-        $certificates = $request->input('certificate_charge', []);
-
-        $charges = [];
-        foreach ($durations as $idx => $dur) {
-            $adm  = (float) ($admissions[$idx]   ?? 0);
-            $cert = (float) ($certificates[$idx] ?? 0);
-            if ($adm > 0 || $cert > 0) {
-                $charges[(int) $dur] = [
-                    'duration'           => (int) $dur,
-                    'admission_charge'   => $adm,
-                    'certificate_charge' => $cert,
-                ];
-            }
-        }
-
-        $data['_duration_charges'] = $charges;
+        $data['_course_type_access'] = array_map('intval', $request->input('course_type_ids', []));
         session(['franchise_create_data' => $data]);
 
         return redirect()->route('institute.franchises.preview');
@@ -243,7 +249,32 @@ class FranchiseController extends Controller
         $this->authorizeFranchise($franchise);
         $franchise->load(['wallet', 'head.profile', 'transactions', 'level']);
 
-        return view('institute.franchises.show', compact('franchise'));
+        $iid = $franchise->institute_id;
+
+        // All course types for course-access tab
+        $allCourseTypes = CourseType::where('institute_id', $iid)
+            ->where('status', 'active')
+            ->withCount(['courses as active_courses' => fn ($q) => $q->where('status', 'active')->where('institute_id', $iid)])
+            ->orderBy('name')
+            ->get();
+
+        // Which type IDs have at least one FranchiseCourseCharge record
+        $grantedTypeIds = FranchiseCourseCharge::where('franchise_id', $franchise->id)
+            ->whereNotNull('course_type_id')
+            ->pluck('course_type_id')
+            ->unique()
+            ->values();
+
+        // Charges grouped by course_type_id for the table
+        $courseChargesByType = FranchiseCourseCharge::where('franchise_id', $franchise->id)
+            ->orderBy('course_type_id')
+            ->orderBy('course_name')
+            ->get()
+            ->groupBy('course_type_id');
+
+        return view('institute.franchises.show', compact(
+            'franchise', 'allCourseTypes', 'grantedTypeIds', 'courseChargesByType'
+        ));
     }
 
     // ─── Transactions / Ledger ────────────────────────────────────────────────
@@ -483,6 +514,82 @@ class FranchiseController extends Controller
         $franchise->load(['institute', 'level']);
 
         return view('institute.franchises.certificate', compact('franchise'));
+    }
+
+    // ─── Course Type Access Management ───────────────────────────────────────
+
+    public function grantCourseType(Request $request, Franchise $franchise, CourseType $courseType)
+    {
+        $this->authorizeFranchise($franchise);
+        abort_if($courseType->institute_id !== $franchise->institute_id, 403);
+
+        $iid     = $franchise->institute_id;
+        $levelId = $franchise->franchise_level_id;
+
+        $courses = CourseDetail::where('institute_id', $iid)
+            ->where('course_type_id', $courseType->id)
+            ->where('status', 'active')
+            ->get(['id', 'name', 'duration']);
+
+        DB::transaction(function () use ($franchise, $courseType, $courses, $levelId, $iid) {
+            foreach ($courses as $course) {
+                $levelCharge = $levelId
+                    ? LevelCourseCharge::where('franchise_level_id', $levelId)
+                        ->where('course_id', $course->id)
+                        ->where('status', 'active')
+                        ->first()
+                    : null;
+
+                FranchiseCourseCharge::updateOrCreate(
+                    ['franchise_id' => $franchise->id, 'course_id' => $course->id],
+                    [
+                        'institute_id'       => $iid,
+                        'course_type_id'     => $courseType->id,
+                        'course_name'        => $course->name,
+                        'duration'           => $course->duration ?? 0,
+                        'admission_charge'   => $levelCharge?->student_admission_charge ?? 0,
+                        'certificate_charge' => $levelCharge?->student_certificate_charge ?? 0,
+                        'student_fee'        => null,
+                        'enabled'            => true,
+                    ]
+                );
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'count'   => $courses->count(),
+            'message' => $courseType->name . ' access granted (' . $courses->count() . ' courses).',
+        ]);
+    }
+
+    public function revokeCourseType(Franchise $franchise, CourseType $courseType)
+    {
+        $this->authorizeFranchise($franchise);
+
+        $deleted = FranchiseCourseCharge::where('franchise_id', $franchise->id)
+            ->where('course_type_id', $courseType->id)
+            ->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => $courseType->name . ' access revoked (' . $deleted . ' courses removed).',
+        ]);
+    }
+
+    public function updateCourseCharge(Request $request, Franchise $franchise, FranchiseCourseCharge $charge)
+    {
+        $this->authorizeFranchise($franchise);
+        abort_if($charge->franchise_id !== $franchise->id, 403);
+
+        $data = $request->validate([
+            'admission_charge'   => 'required|numeric|min:0',
+            'certificate_charge' => 'required|numeric|min:0',
+        ]);
+
+        $charge->update($data);
+
+        return response()->json(['success' => true]);
     }
 
     // ─── Course Charges JSON (for franchise list modal) ───────────────────────

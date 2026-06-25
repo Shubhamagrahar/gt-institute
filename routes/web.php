@@ -198,6 +198,9 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
         Route::get('franchises/{franchise}/certificate', [FranchiseController::class, 'certificate'])->name('franchises.certificate');
         Route::post('franchises/{franchise}/resend-credentials', [FranchiseController::class, 'resendCredentials'])->name('franchises.resend-credentials');
         Route::get('franchises/{franchise}/course-charges', [FranchiseController::class, 'courseCharges'])->name('franchises.course-charges');
+        Route::post('franchises/{franchise}/grant-course-type/{courseType}', [FranchiseController::class, 'grantCourseType'])->name('franchises.grant-course-type');
+        Route::delete('franchises/{franchise}/revoke-course-type/{courseType}', [FranchiseController::class, 'revokeCourseType'])->name('franchises.revoke-course-type');
+        Route::patch('franchises/{franchise}/course-charges/{charge}', [FranchiseController::class, 'updateCourseCharge'])->name('franchises.course-charges.update');
         Route::get('franchise-wallets', [FranchiseController::class, 'walletIndex'])->name('franchises.wallets');
         // Franchise onboarding fee collection (institute ↔ franchise, completely separate from wallet)
         Route::get('franchises/{franchise}/fee', [FranchiseFeeController::class, 'index'])->name('franchises.fee.index');
