@@ -47,7 +47,7 @@
     </div>
     <div style="margin-left:auto;display:flex;gap:8px;flex-shrink:0">
       <a href="{{ route('franchise.enrollment.pending') }}" class="btn btn-outline btn-sm" style="color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.2)">← Back</a>
-      <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-sm" style="background:#16a34a;color:#fff;border:none">💳 Go to Payment →</a>
+      <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-sm" style="background:#ea580c;color:#fff;border:none">💳 Go to Payment →</a>
     </div>
   </div>
 
@@ -185,7 +185,7 @@
 
         <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
           <button type="submit" class="btn btn-primary">Save Profile</button>
-          <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-outline" style="border-color:#16a34a;color:#16a34a">Skip → Payment</a>
+          <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-outline" style="border-color:#ea580c;color:#ea580c">Skip → Payment</a>
         </div>
       </form>
     </div>
@@ -262,7 +262,7 @@
   {{-- Quick nav --}}
   <div style="display:flex;gap:10px;justify-content:flex-end;margin-bottom:20px">
     <a href="{{ route('franchise.enrollment.pending') }}" class="btn btn-outline">← Back to List</a>
-    <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-primary" style="background:#16a34a;border-color:#16a34a">Proceed to Payment →</a>
+    <a href="{{ route('franchise.enrollment.fee', $courseBook) }}" class="btn btn-primary" style="background:#ea580c;border-color:#ea580c">Proceed to Payment →</a>
   </div>
 
 </div>

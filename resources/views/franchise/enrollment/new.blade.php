@@ -6,7 +6,7 @@
 <style>
 .new-shell{max-width:900px;margin:0 auto}
 .new-card{background:var(--bg-2);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:18px}
-.new-head{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:18px 24px}
+.new-head{background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;padding:18px 24px}
 .new-head h2{margin:0;font-size:20px;font-weight:900}
 .new-head p{margin:5px 0 0;opacity:.8;font-size:13px}
 .new-body{padding:22px}

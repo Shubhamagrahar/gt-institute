@@ -84,24 +84,27 @@ class PricingController extends Controller
 
         $incoming = collect($data['fees'] ?? []);
 
-        // Delete existing franchise fee structures for this course
-        FranchiseFeeStructure::where('franchise_id', $fid)
-            ->where('course_id', $charge->course_id)
-            ->delete();
+        \DB::transaction(function () use ($incoming, $fid, $iid, $charge) {
+            FranchiseFeeStructure::where('franchise_id', $fid)
+                ->where('course_id', $charge->course_id)
+                ->delete();
 
-        // Re-insert only enabled ones
-        foreach ($incoming->where('enabled', true) as $row) {
-            FranchiseFeeStructure::create([
-                'franchise_id'  => $fid,
-                'institute_id'  => $iid,
-                'course_id'     => $charge->course_id,
-                'fee_type_id'   => $row['fee_type_id'] ?? null,
-                'fee_type_name' => $row['fee_type_name'],
-                'amount'        => $row['amount'],
-                'enabled'       => true,
-                'sort_order'    => $row['sort_order'] ?? 0,
-            ]);
-        }
+            foreach ($incoming as $row) {
+                // checkbox only submits when checked — key absent means unchecked
+                if (empty($row['enabled'])) continue;
+
+                FranchiseFeeStructure::create([
+                    'franchise_id'  => $fid,
+                    'institute_id'  => $iid,
+                    'course_id'     => $charge->course_id,
+                    'fee_type_id'   => $row['fee_type_id'] ?? null,
+                    'fee_type_name' => $row['fee_type_name'],
+                    'amount'        => $row['amount'],
+                    'enabled'       => true,
+                    'sort_order'    => $row['sort_order'] ?? 0,
+                ]);
+            }
+        });
 
         return back()->with('success', 'Additional fees updated for "' . $charge->course_name . '".');
     }

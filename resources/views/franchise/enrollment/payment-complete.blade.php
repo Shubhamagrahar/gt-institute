@@ -22,7 +22,7 @@
 .tbl tbody tr.cancelled-row td:not(.no-strike){text-decoration:line-through;opacity:.5}
 .badge-mode{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:var(--bg-3);color:var(--text-1)}
 .badge-cancelled{background:#fef2f2;color:#b91c1c;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
-.badge-active{background:#f0fdf4;color:#15803d;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
+.badge-active{background:#fff7ed;color:#c2410c;display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700}
 .btn-xs{padding:3px 10px;font-size:11px;border-radius:6px}
 .dr{color:#dc2626;font-weight:700}
 .cr{color:#16a34a;font-weight:700}
@@ -101,10 +101,10 @@
       <div class="fc-info-row"><span class="text-muted">Monthly Amount</span><strong class="mono">₹{{ number_format($plan->monthly_amount, 2) }}</strong></div>
       @endif
       <div class="fc-info-row"><span class="text-muted">Collected</span>
-        <strong class="mono" style="color:#16a34a">₹{{ number_format($paidTotal, 2) }}</strong>
+        <strong class="mono" style="color:#ea580c">₹{{ number_format($paidTotal, 2) }}</strong>
       </div>
       <div class="fc-info-row"><span class="text-muted">Balance Due</span>
-        <strong class="mono" style="color:{{ $due > 0 ? '#dc2626' : '#16a34a' }}">₹{{ number_format($due, 2) }}</strong>
+        <strong class="mono" style="color:{{ $due > 0 ? '#dc2626' : '#ea580c' }}">₹{{ number_format($due, 2) }}</strong>
       </div>
       @if($plan?->next_due_date)
       <div class="fc-info-row"><span class="text-muted">Next Due</span>
@@ -125,7 +125,7 @@
     </div>
     <div style="font-size:12.5px;color:var(--text-3);line-height:1.6;">
       Admission charge: <strong style="color:#ea580c;">₹{{ number_format($admissionCharge, 2) }}</strong>
-      &nbsp;·&nbsp; Wallet balance: <strong style="{{ $canConfirm ? 'color:#16a34a' : 'color:#dc2626' }};">₹{{ number_format($walletBalance, 2) }}</strong>
+      &nbsp;·&nbsp; Wallet balance: <strong style="{{ $canConfirm ? 'color:#ea580c' : 'color:#dc2626' }};">₹{{ number_format($walletBalance, 2) }}</strong>
       @if($canConfirm)
         &nbsp;·&nbsp; After confirm: <strong>₹{{ number_format($walletBalance - $admissionCharge, 2) }}</strong>
       @else
@@ -347,7 +347,7 @@
         <input type="text" name="payment_note" class="gt-input" placeholder="Optional note">
       </div>
       <div style="display:flex;gap:10px;margin-top:8px">
-        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;background:#16a34a;border-color:#16a34a">Record Payment</button>
+        <button type="submit" class="btn btn-primary" style="flex:1;justify-content:center;background:#ea580c;border-color:#ea580c">Record Payment</button>
         <button type="button" class="btn btn-outline" onclick="closePayModal()">Cancel</button>
       </div>
     </form>

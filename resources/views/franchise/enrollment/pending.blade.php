@@ -44,7 +44,7 @@
     <div class="stat-label">Seat Booked (Pending)</div>
   </div>
   <div class="stat-box">
-    <div class="stat-num" style="color:#16a34a">{{ $totalAdmitted }}</div>
+    <div class="stat-num" style="color:#ea580c">{{ $totalAdmitted }}</div>
     <div class="stat-label">Admitted Students</div>
   </div>
   <div class="stat-box">

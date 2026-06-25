@@ -5,13 +5,13 @@
 @push('styles')
 <style>
 .pay-shell{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
-.pay-card{background:var(--bg-2);border:1px solid var(--border);border-radius:18px;overflow:hidden}.pay-head{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;padding:20px 24px}
+.pay-card{background:var(--bg-2);border:1px solid var(--border);border-radius:18px;overflow:hidden}.pay-head{background:linear-gradient(135deg,#ea580c,#c2410c);color:#fff;padding:20px 24px}
 .pay-head h2{margin:0;font-size:22px}.pay-head p{margin:5px 0 0;opacity:.82}.pay-body{padding:22px}
 .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}.type-card{border:1px solid var(--border);background:var(--bg-3);border-radius:16px;padding:16px;cursor:pointer;transition:.2s;position:relative}
-.type-card.active{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.18);background:rgba(22,163,74,.08)}.type-code{font-size:24px;font-weight:950;color:#16a34a}.type-name{font-weight:800;margin:4px 0}.type-desc{font-size:12px;color:var(--text-2);line-height:1.5}
+.type-card.active{border-color:#ea580c;box-shadow:0 0 0 3px rgba(234,88,12,.18);background:rgba(234,88,12,.08)}.type-code{font-size:24px;font-weight:950;color:#ea580c}.type-name{font-weight:800;margin:4px 0}.type-desc{font-size:12px;color:var(--text-2);line-height:1.5}
 .fee-row{background:var(--bg-3);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px}.fee-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:14px;align-items:end}
-.summary-card{position:sticky;top:18px;background:linear-gradient(180deg,#f0fdf4,#fff);border:1px solid #86efac;border-radius:18px;padding:20px;color:#1f2937;box-shadow:0 18px 44px rgba(15,23,42,.09)}
-.summary-title{font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;font-weight:900}.summary-total{font-size:34px;font-weight:950;color:#15803d;margin:6px 0 14px}.summary-line{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:13px}.pay-help{display:none;margin-top:14px;background:#f0fdf4;border:1px solid #86efac;color:#166534;border-radius:14px;padding:14px;font-size:13px;line-height:1.6}
+.summary-card{position:sticky;top:18px;background:linear-gradient(180deg,#fff7ed,#fff);border:1px solid #fed7aa;border-radius:18px;padding:20px;color:#1f2937;box-shadow:0 18px 44px rgba(15,23,42,.09)}
+.summary-title{font-size:13px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;font-weight:900}.summary-total{font-size:34px;font-weight:950;color:#c2410c;margin:6px 0 14px}.summary-line{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #e5e7eb;font-size:13px}.pay-help{display:none;margin-top:14px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:14px;padding:14px;font-size:13px;line-height:1.6}
 @media(max-width:1020px){.pay-shell{grid-template-columns:1fr}.summary-card{position:static}.type-grid{grid-template-columns:1fr}.fee-grid{grid-template-columns:1fr}}
 </style>
 @endpush
@@ -143,8 +143,8 @@
       <div class="summary-line"><span>Total Discount</span><strong id="total-discount">₹0.00</strong></div>
       <div class="summary-line"><span>Payment Type</span><strong id="summary-type">{{ $activeType === 'MONTHLY' ? 'MONTH' : $activeType }}</strong></div>
       <div class="summary-line" id="monthly-line" style="display:none;"><span>Approx Monthly</span><strong id="monthly-amount">₹0.00</strong></div>
-      <div class="summary-line" style="margin-top:8px;background:#f0fdf4;border-radius:8px;padding:10px;"><span style="font-weight:700;">To Pay Now</span><strong id="summary-pay-now" style="color:#15803d;font-size:18px;">₹0.00</strong></div>
-      <button type="submit" class="btn btn-primary w-full" style="justify-content:center;margin-top:18px;background:#16a34a;border-color:#16a34a;" {{ $plans->isEmpty() ? 'disabled' : '' }}>Complete &amp; Collect Payment</button>
+      <div class="summary-line" style="margin-top:8px;background:#fff7ed;border-radius:8px;padding:10px;"><span style="font-weight:700;">To Pay Now</span><strong id="summary-pay-now" style="color:#c2410c;font-size:18px;">₹0.00</strong></div>
+      <button type="submit" class="btn btn-primary w-full" style="justify-content:center;margin-top:18px;background:linear-gradient(135deg,#ea580c,#c2410c);border-color:#ea580c;" {{ $plans->isEmpty() ? 'disabled' : '' }}>Complete &amp; Collect Payment</button>
     </div>
   </div>
 </form>
