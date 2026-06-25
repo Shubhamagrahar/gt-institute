@@ -62,12 +62,18 @@ class InvoiceService
     public function generateFranchiseFeeInvoice(int $instituteId, int $franchiseId): string
     {
         $year = now()->year;
-        $count = FranchiseFeeCollection::where('institute_id', $instituteId)
-            ->where('franchise_id', $franchiseId)
+        // Institute-wide sequential count (not per-franchise) to avoid duplicates
+        // since invoice_no has a global unique constraint
+        $seq = FranchiseFeeCollection::where('institute_id', $instituteId)
             ->whereYear('created_at', $year)
-            ->count();
-        $next = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
-        return "FR-FEE/{$year}/{$next}";
+            ->count() + 1;
+
+        do {
+            $invoice = "FR-FEE/{$year}/" . str_pad($seq, 4, '0', STR_PAD_LEFT);
+            $seq++;
+        } while (FranchiseFeeCollection::where('invoice_no', $invoice)->exists());
+
+        return $invoice;
     }
 
     public function generateFranchiseTxnNo(int $instituteId, int $franchiseId): string

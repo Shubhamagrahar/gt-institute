@@ -53,9 +53,13 @@ class FranchiseFeeController extends Controller
         $outstanding = $wallet ? (float) $wallet->balance
                                : max(0, (float) $franchise->fee_total - $franchise->feePaid());
 
+        $utrRule = in_array($request->payment_mode, ['UPI', 'NEFT', 'IMPS', 'CHEQUE'])
+            ? 'required|string|max:80'
+            : 'nullable|string|max:80';
+
         $data = $request->validate([
             'payment_mode' => 'required|in:CASH,UPI,NEFT,IMPS,CHEQUE',
-            'utr'          => 'nullable|string|max:80',
+            'utr'          => $utrRule,
             'amount'       => "required|numeric|min:0.01|max:{$outstanding}",
             'date'         => 'required|date',
             'note'         => 'nullable|string|max:255',

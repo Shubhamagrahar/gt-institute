@@ -242,23 +242,33 @@ class FranchiseController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
+        $customCharges      = $data['_course_charges'] ?? [];
         $levelChargesByType = [];
+
         if ($levelId && ! empty($selectedTypeIds)) {
-            $rows = LevelCourseCharge::where('franchise_level_id', $levelId)
+            // Get per-course rows so we can apply custom charge overrides
+            $courseRows = LevelCourseCharge::where('franchise_level_id', $levelId)
                 ->where('level_course_charges.status', 'active')
                 ->join('course_details', 'course_details.id', '=', 'level_course_charges.course_id')
                 ->whereIn('course_details.course_type_id', $selectedTypeIds)
-                ->selectRaw('course_details.course_type_id,
-                             COUNT(*) as course_count,
-                             MIN(student_admission_charge) as min_adm,
-                             MAX(student_admission_charge) as max_adm,
-                             MIN(student_certificate_charge) as min_cert,
-                             MAX(student_certificate_charge) as max_cert')
-                ->groupBy('course_details.course_type_id')
+                ->select(
+                    'course_details.course_type_id',
+                    'course_details.id as course_id',
+                    'level_course_charges.student_admission_charge as def_adm',
+                    'level_course_charges.student_certificate_charge as def_cert'
+                )
                 ->get();
 
-            foreach ($rows as $row) {
-                $levelChargesByType[$row->course_type_id] = $row;
+            foreach ($courseRows->groupBy('course_type_id') as $typeId => $courses) {
+                $adms  = $courses->map(fn ($c) => (float) ($customCharges[$c->course_id]['admission']   ?? $c->def_adm));
+                $certs = $courses->map(fn ($c) => (float) ($customCharges[$c->course_id]['certificate'] ?? $c->def_cert));
+                $levelChargesByType[$typeId] = (object) [
+                    'course_count' => $courses->count(),
+                    'min_adm'      => $adms->min(),
+                    'max_adm'      => $adms->max(),
+                    'min_cert'     => $certs->min(),
+                    'max_cert'     => $certs->max(),
+                ];
             }
         }
 
