@@ -73,39 +73,38 @@ class PricingController extends Controller
         $iid = $this->instituteId();
         abort_if($charge->franchise_id !== $fid, 403);
 
-        $data = $request->validate([
-            'fees'              => 'nullable|array',
-            'fees.*.fee_type_id'   => 'nullable|integer',
-            'fees.*.fee_type_name' => 'required_with:fees.*|string|max:100',
-            'fees.*.amount'        => 'required_with:fees.*|numeric|min:0',
-            'fees.*.enabled'       => 'nullable|boolean',
-            'fees.*.sort_order'    => 'nullable|integer',
-        ]);
-
-        $incoming = collect($data['fees'] ?? []);
+        // Read raw fees array directly from request (bypasses boolean-cast issue)
+        $rawFees  = $request->input('fees', []);
+        $incoming = collect(is_array($rawFees) ? $rawFees : []);
 
         \DB::transaction(function () use ($incoming, $fid, $iid, $charge) {
             FranchiseFeeStructure::where('franchise_id', $fid)
                 ->where('course_id', $charge->course_id)
                 ->delete();
 
-            foreach ($incoming as $row) {
-                // checkbox only submits when checked — key absent means unchecked
-                if (empty($row['enabled'])) continue;
+            foreach ($incoming as $idx => $row) {
+                // Unchecked checkboxes send no key at all; treat absent/falsy as disabled
+                if (!isset($row['enabled']) || !$row['enabled']) {
+                    continue;
+                }
+
+                $name = trim((string) ($row['fee_type_name'] ?? ''));
+                if ($name === '') continue;
 
                 FranchiseFeeStructure::create([
                     'franchise_id'  => $fid,
                     'institute_id'  => $iid,
                     'course_id'     => $charge->course_id,
-                    'fee_type_id'   => $row['fee_type_id'] ?? null,
-                    'fee_type_name' => $row['fee_type_name'],
-                    'amount'        => $row['amount'],
+                    'fee_type_id'   => isset($row['fee_type_id']) && $row['fee_type_id'] !== '' ? (int) $row['fee_type_id'] : null,
+                    'fee_type_name' => $name,
+                    'amount'        => (float) ($row['amount'] ?? 0),
                     'enabled'       => true,
-                    'sort_order'    => $row['sort_order'] ?? 0,
+                    'sort_order'    => (int) ($row['sort_order'] ?? $idx),
                 ]);
             }
         });
 
-        return back()->with('success', 'Additional fees updated for "' . $charge->course_name . '".');
+        return redirect()->route('franchise.pricing.index')
+            ->with('success', 'Fee types saved for "' . $charge->course_name . '".');
     }
 }
