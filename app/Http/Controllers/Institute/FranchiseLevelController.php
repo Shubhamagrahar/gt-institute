@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Institute;
 use App\Http\Controllers\Controller;
 use App\Models\CourseDetail;
 use App\Models\CourseType;
+use App\Models\FranchiseCourseCharge;
 use App\Models\FranchiseLevel;
 use App\Models\LevelCourseCharge;
 use Illuminate\Http\Request;
@@ -235,6 +236,17 @@ class FranchiseLevelController extends Controller
         ]);
 
         $charge->update($data);
+
+        // Cascade to all franchises on this level — keep them in sync
+        FranchiseCourseCharge::where('course_id', $charge->course_id)
+            ->whereIn('franchise_id',
+                \App\Models\Franchise::where('franchise_level_id', $franchiseLevel->id)
+                    ->pluck('id')
+            )
+            ->update([
+                'admission_charge'   => $data['student_admission_charge'],
+                'certificate_charge' => $data['student_certificate_charge'],
+            ]);
 
         return response()->json(['success' => true]);
     }
