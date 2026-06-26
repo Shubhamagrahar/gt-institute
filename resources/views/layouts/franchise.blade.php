@@ -8,7 +8,6 @@
   <link rel="icon" href="{{ asset('images/gt-favicon.png') }}" type="image/png">
   <link rel="stylesheet" href="{{ asset('css/app.css') }}">
   <style>
-    :root{--sidebar-w:210px;}
     .gt-nav-item.active{background:rgba(234,88,12,.15)!important;color:#fb923c!important;border-left:3px solid #ea580c!important;}
     .gt-nav-item.active svg{stroke:#fb923c!important;}
   </style>
@@ -18,38 +17,36 @@
   <div class="gt-layout">
 
     {{-- Sidebar --}}
-    <aside class="gt-sidebar open">
+    <aside class="gt-sidebar open" id="sidebar">
 
-      {{-- Brand --}}
-      <div class="gt-sidebar-brand" style="border-bottom:1px solid rgba(255,255,255,.07);padding-bottom:14px;">
-        <img src="{{ asset('images/gt-icon.png') }}" alt="Gaurangi Technologies" class="brand-logo-img"
-             style="height:36px;"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="brand-icon" style="display:none;">GT</div>
-      </div>
-
-      {{-- Franchise Identity --}}
-      <div style="margin:12px;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,rgba(234,88,12,.2),rgba(194,65,12,.25));border:1px solid rgba(234,88,12,.35);display:flex;align-items:center;justify-content:center;color:#fb923c;font-weight:900;font-size:13px;flex-shrink:0;">
-            {{ strtoupper(substr(Auth::guard('institute')->user()->franchise?->name ?? 'FR', 0, 2)) }}
+      {{-- Brand: Franchise logo + name --}}
+      <div class="gt-sidebar-brand" style="display:block;padding:10px 12px 8px;">
+        <div class="gt-user-card" style="width:100%;padding:9px 10px;">
+          @php $frLogo = Auth::guard('institute')->user()->franchise?->logo; @endphp
+          <div style="width:36px;height:36px;border-radius:50%;background:#ea580c;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0;overflow:hidden;">
+            @if($frLogo && !in_array(trim($frLogo), ['', 'images/default-franchise.png', 'images/default-institute.png']))
+              <img src="{{ asset($frLogo) }}" alt="logo" style="width:100%;height:100%;object-fit:cover;">
+            @else
+              {{ strtoupper(substr(Auth::guard('institute')->user()->franchise?->name ?? 'FR', 0, 2)) }}
+            @endif
           </div>
-          <div style="min-width:0;">
-            <div style="font-size:13px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-              {{ Str::limit(Auth::guard('institute')->user()->franchise?->name ?? 'Franchise', 18) }}
-            </div>
-            <div style="font-size:10px;color:#fb923c;font-weight:600;">Franchise Partner</div>
+          <div class="user-info">
+            <div class="name">{{ Str::limit(Auth::guard('institute')->user()->franchise?->name ?? 'Franchise', 20) }}</div>
+            <div class="role">Franchise Panel</div>
+            <div class="role">{{ Auth::guard('institute')->user()->franchise?->unique_id ?? Auth::guard('institute')->user()->franchise?->franchise_id ?? '—' }}</div>
           </div>
-        </div>
-        @php $frBalance = Auth::guard('institute')->user()->franchise?->wallet?->balance ?? 0; @endphp
-        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;">
-          <span style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;">Wallet</span>
-          <span style="font-size:14px;font-weight:800;color:#fb923c;font-family:monospace;">₹{{ number_format($frBalance, 2) }}</span>
         </div>
       </div>
 
-      {{-- Nav --}}
-      <div style="flex:1;overflow-y:auto;padding:4px 0;">
+      {{-- Wallet chip --}}
+      @php $frBalance = Auth::guard('institute')->user()->franchise?->wallet?->balance ?? 0; @endphp
+      <div style="margin:0 12px 6px;background:rgba(234,88,12,.1);border:1px solid rgba(234,88,12,.2);border-radius:7px;padding:6px 10px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;">Wallet</span>
+        <span style="font-size:13px;font-weight:800;color:#fb923c;font-family:monospace;">₹{{ number_format($frBalance, 2) }}</span>
+      </div>
+
+      {{-- Nav (scrollbar hidden by gt-sidebar-nav CSS) --}}
+      <nav class="gt-sidebar-nav">
 
         <div class="gt-sidebar-section">Overview</div>
         <a href="{{ route('franchise.dashboard') }}" class="gt-nav-item {{ request()->routeIs('franchise.dashboard') ? 'active' : '' }}">
@@ -103,25 +100,21 @@
           My Certificate
         </a>
 
-      </div>
+      </nav>
 
       {{-- Footer --}}
-      <div style="padding:12px;border-top:1px solid rgba(255,255,255,.07);">
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-          <div style="width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--text-1);flex-shrink:0;">
-            {{ strtoupper(substr(Auth::guard('institute')->user()->profile?->name ?? Auth::guard('institute')->user()->user_id, 0, 1)) }}
-          </div>
-          <div style="min-width:0;">
-            <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-1);">
-              {{ Str::limit(Auth::guard('institute')->user()->profile?->name ?? Auth::guard('institute')->user()->user_id, 16) }}
-            </div>
-            <div style="font-size:10px;color:var(--text-3);">Franchise Head</div>
-          </div>
-        </div>
+      <div class="gt-sidebar-footer">
         <form action="{{ route('logout') }}" method="POST">
           @csrf
-          <button type="submit" class="btn btn-outline w-full" style="justify-content:center;font-size:12px;padding:7px 12px;">Sign Out</button>
+          <button type="submit" class="btn btn-outline w-full" style="justify-content:center;border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:12px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Sign Out
+          </button>
         </form>
+        <div class="gt-footer-brand">
+          <img src="{{ asset('images/gt-icon.png') }}" alt="" onerror="this.style.display='none'">
+          <span>Powered by Gaurangi Technologies</span>
+        </div>
       </div>
     </aside>
 

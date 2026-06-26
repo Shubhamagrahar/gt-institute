@@ -141,7 +141,8 @@
       ['title'=>'Education Details','keys'=>['education_details']],
   ];
   $reviewWideFields = ['address','permanent_address','education_details','photo'];
-  $institute = auth('institute')->user()->institute;
+  $institute  = auth('institute')->user()->institute;
+  $franchise  = auth('institute')->user()->franchise;
   $stepLabels = $educationEnabled
       ? ['Course','Basic','Address','Education','Review','Confirm']
       : ['Course','Basic','Address','Review','Confirm'];
@@ -493,19 +494,20 @@
 
             <div class="review-print-shell" id="review-print-area">
 
-              {{-- Institute Header --}}
+              {{-- Franchise Header --}}
               <div class="rf-inst-header">
-                @if($institute?->logo && !in_array(trim($institute->logo??''),['images/default-institute.png','']))
-                  <div class="rf-inst-logo"><img src="{{ asset($institute->logo) }}" alt="logo"></div>
+                @php $frLogo = $franchise?->logo; @endphp
+                @if($frLogo && !in_array(trim($frLogo), ['', 'images/default-franchise.png', 'images/default-institute.png']))
+                  <div class="rf-inst-logo"><img src="{{ asset($frLogo) }}" alt="logo"></div>
                 @endif
                 <div style="flex:1;">
-                  <div class="rf-inst-name">{{ $institute?->name ?? 'Institute Name' }}</div>
+                  <div class="rf-inst-name">{{ $franchise?->name ?? $institute?->name ?? 'Franchise Name' }}</div>
                   <div class="rf-inst-contact">
-                    @if($institute?->mobile)Ph: {{ $institute->mobile }}@endif
-                    @if($institute?->email)&nbsp;&nbsp;|&nbsp;&nbsp;{{ $institute->email }}@endif
-                    @if($institute?->website)&nbsp;&nbsp;|&nbsp;&nbsp;{{ $institute->website }}@endif
+                    @if($franchise?->mobile)Ph: {{ $franchise->mobile }}@endif
+                    @if($franchise?->email)&nbsp;&nbsp;|&nbsp;&nbsp;{{ $franchise->email }}@endif
+                    @if($franchise?->website)&nbsp;&nbsp;|&nbsp;&nbsp;{{ $franchise->website }}@endif
                   </div>
-                  <div class="rf-inst-addr">{{ $institute?->address ?? '' }}</div>
+                  <div class="rf-inst-addr">{{ $franchise?->address ?? '' }}</div>
                 </div>
               </div>
 
@@ -630,7 +632,7 @@
                       @endif
                     </div>
                     <div class="rf-auth-line"></div>
-                    <div class="rf-auth-label">For {{ $institute?->name ?? 'Institute' }}</div>
+                    <div class="rf-auth-label">For {{ $franchise?->name ?? $institute?->name ?? 'Franchise' }}</div>
                     <div class="rf-auth-sub">Auth. Signatory</div>
                   </div>
                 </div>
