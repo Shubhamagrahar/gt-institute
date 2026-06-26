@@ -614,7 +614,7 @@ class EnrollmentController extends Controller
                     'institute_id' => $iid,
                     'txn_no'       => $this->invoiceService->generateFranchiseTxnNo($iid, $fid),
                     'description'  => "Admission: {$studentName} | Course: {$courseName} | Enroll: " . $fresh->enrollment_no,
-                    'type'         => 'debit',
+                    'type'         => 4, // 4 = admission deduction
                     'credit'       => 0,
                     'debit'        => $admissionCost,
                     'op_bal'       => $opBal,
