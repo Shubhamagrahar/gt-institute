@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Franchise;
 
 use App\Http\Controllers\Controller;
 use App\Models\{
-    AdmissionFormField, BatchDetail, CourseBook, CourseDetail,
+    AdmissionFormField, BatchDetail, ChannelPartner, CourseBook, CourseDetail,
     EnrollmentFeeSnapshot, EnrollmentPaymentPlan, FeeCollectDetail,
     FranchiseCourseCharge, FranchiseFeeStructure, FranchiseTransaction, FranchiseWallet,
     InstituteEnrollmentCounter, InstituteSession, InstituteStudentTransaction,
     InstituteStudentWallet, PaymentPlanType, State, StudentTransaction,
-    StudentWallet, User, UserProfile
+    StudentWallet, User, UserEducation, UserProfile
 };
 use App\Services\InvoiceService;
 use Illuminate\Http\Request;
@@ -100,23 +100,24 @@ class EnrollmentController extends Controller
         $courses = CourseDetail::with(['courseType', 'feeStructures.feeType'])
             ->where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
 
-        // Franchise-specific pricing
         $franchiseCharges = FranchiseCourseCharge::where('franchise_id', $fid)
             ->where('enabled', true)->get()->keyBy('course_id');
         $franchiseFees = FranchiseFeeStructure::where('franchise_id', $fid)
             ->where('enabled', true)->get()->groupBy('course_id');
 
         return $courses->filter(fn ($c) => isset($franchiseCharges[$c->id]))->map(function ($c) use ($franchiseCharges, $franchiseFees) {
-            $charge    = $franchiseCharges[$c->id] ?? null;
-            $baseFee   = $charge && $charge->student_fee > 0
+            $charge  = $franchiseCharges[$c->id];
+            $baseFee = $charge->student_fee > 0
                 ? round((float) $charge->student_fee, 2)
                 : round((float) $c->fee, 2);
+
             $extraFees = ($franchiseFees[$c->id] ?? collect())->map(fn ($fs) => [
                 'fee_type_id'   => $fs->fee_type_id,
                 'fee_type_name' => $fs->fee_type_name,
                 'amount'        => round((float) $fs->amount, 2),
                 'is_mandatory'  => false,
             ]);
+
             $feeItems = collect([[
                 'fee_type_id'   => null,
                 'fee_type_name' => 'Course Fee',
@@ -124,13 +125,18 @@ class EnrollmentController extends Controller
                 'is_mandatory'  => true,
             ]])->merge($extraFees)->values()->all();
 
+            $totalFee    = collect($feeItems)->sum('amount');
+            $requiredFee = collect($feeItems)->where('is_mandatory', true)->sum('amount');
+
             return [
-                'id'             => $c->id,
-                'name'           => $c->name,
-                'duration'       => $c->duration_months ?? $c->duration,
-                'course_type_id' => $c->course_type_id,
-                'total_fee'      => collect($feeItems)->sum('amount'),
-                'fee_items'      => $feeItems,
+                'id'              => $c->id,
+                'name'            => $c->name,
+                'duration'        => (int) ($c->duration_months ?? $c->duration ?? 1),
+                'course_type_id'  => $c->course_type_id,
+                'course_type_name'=> $c->courseType?->name,
+                'total_fee'       => $totalFee,
+                'required_fee'    => $requiredFee,
+                'fee_items'       => $feeItems,
             ];
         })->values();
     }
@@ -146,10 +152,17 @@ class EnrollmentController extends Controller
                 ->groupBy('state_name')
                 ->map(fn ($r) => $r->pluck('district_name')->values())->toArray()
             : [];
-        // Only course types that have at least one course assigned to this franchise
+
         $assignedTypeIds = $catalog->pluck('course_type_id')->unique()->filter()->values();
         $courseTypes = \App\Models\CourseType::whereIn('id', $assignedTypeIds)->orderBy('name')->get();
-        return compact('batches', 'states', 'districtsByState', 'courseTypes');
+
+        $savedFields = AdmissionFormField::where('institute_id', $iid)->get()->keyBy('field_key');
+
+        $channelPartners = ChannelPartner::where('institute_id', $iid)
+            ->where('status', 'active')->orderBy('name')->get(['id', 'name', 'mobile']);
+
+        return compact('batches', 'states', 'districtsByState', 'courseTypes', 'savedFields', 'channelPartners')
+            + ['defaultPhotoPath' => 'images/user.svg'];
     }
 
     public function newStudent()
@@ -189,24 +202,61 @@ class EnrollmentController extends Controller
         $sessionId = $this->activeSessionId();
 
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
-            'mobile'     => 'required|string|max:15|unique:users,mobile',
-            'email'      => 'nullable|email|max:100|unique:users,email',
-            'course_id'  => ['required', \Illuminate\Validation\Rule::exists('course_details', 'id')
+            'name'                => 'required|string|max:100',
+            'mobile'              => 'required|string|max:15|unique:users,mobile',
+            'email'               => 'nullable|email|max:100|unique:users,email',
+            'photo'               => 'nullable|image|max:2048',
+            'course_id'           => ['required', \Illuminate\Validation\Rule::exists('course_details', 'id')
                 ->where(fn ($q) => $q->where('institute_id', $iid))],
-            'batch_id'   => ['nullable', \Illuminate\Validation\Rule::exists('batch_details', 'id')
+            'batch_id'            => ['nullable', \Illuminate\Validation\Rule::exists('batch_details', 'id')
                 ->where(fn ($q) => $q->where('institute_id', $iid))],
-            'dob'        => 'nullable|date',
-            'gender'     => 'nullable|in:Male,Female,Other',
-            'father_name'=> 'nullable|string|max:100',
-            'address'    => 'nullable|string',
-            'state'      => 'nullable|string|max:100',
-            'district'   => 'nullable|string|max:100',
-            'city'       => 'nullable|string|max:100',
-            'pin_code'   => 'nullable|string|max:10',
+            'admission_source'    => 'nullable|in:direct,channel_partner',
+            'dob'                 => 'nullable|date',
+            'gender'              => 'nullable|in:Male,Female,Other',
+            'category'            => 'nullable|string|max:20',
+            'religion'            => 'nullable|string|max:50',
+            'nationality'         => 'nullable|string|max:50',
+            'whatsapp_no'         => 'nullable|string|max:15',
+            'alternate_mobile'    => 'nullable|string|max:15',
+            'aadhar_no'           => 'nullable|string|max:16',
+            'pan_no'              => 'nullable|string|max:10',
+            'blood_group'         => 'nullable|string|max:5',
+            'employment_status'   => 'nullable|in:Employed,Unemployed',
+            'computer_literacy'   => 'nullable|in:Yes,No',
+            'qualification'       => 'nullable|string|max:80',
+            'father_name'         => 'nullable|string|max:100',
+            'mother_name'         => 'nullable|string|max:100',
+            'guardian_name'       => 'nullable|string|max:100',
+            'guardian_relation'   => 'nullable|string|max:50',
+            'guardian_mobile'     => 'nullable|string|max:15',
+            'guardian_occupation' => 'nullable|string|max:80',
+            'address'             => 'nullable|string',
+            'permanent_address'   => 'nullable|string',
+            'state'               => 'nullable|string|max:100',
+            'district'            => 'nullable|string|max:100',
+            'city'                => 'nullable|string|max:100',
+            'pin_code'            => 'nullable|string|max:10',
+            'permanent_state'     => 'nullable|string|max:100',
+            'permanent_district'  => 'nullable|string|max:100',
+            'permanent_city'      => 'nullable|string|max:100',
+            'permanent_pin_code'  => 'nullable|string|max:10',
+            'education'                      => 'nullable|array',
+            'education.*.examination'        => 'nullable|string|max:80',
+            'education.*.institute_name'     => 'nullable|string|max:150',
+            'education.*.board_university'   => 'nullable|string|max:150',
+            'education.*.passing_year'       => 'nullable|string|max:10',
+            'education.*.division'           => 'nullable|string|max:50',
+            'education.*.marks_percentage'   => 'nullable|string|max:10',
         ]);
 
-        DB::transaction(function () use ($data, $iid, $fid, $sessionId, $bookingMode) {
+        DB::transaction(function () use ($data, $request, $iid, $fid, $sessionId, $bookingMode) {
+            // Handle photo upload
+            $photoPath = 'images/user.svg';
+            if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
+                $photoPath = $request->file('photo')->store('student-photos', 'public');
+                $photoPath = 'storage/' . $photoPath;
+            }
+
             $userId = 'S' . $iid . now()->format('ymdHis') . strtoupper(Str::random(4));
             $user = User::create([
                 'institute_id'  => $iid,
@@ -222,21 +272,57 @@ class EnrollmentController extends Controller
             ]);
 
             UserProfile::create([
-                'user_id'     => $user->id,
-                'institute_id'=> $iid,
-                'name'        => $data['name'],
-                'photo'       => 'images/user.svg',
-                'father_name' => $data['father_name'] ?? null,
-                'dob'         => $data['dob'] ?? null,
-                'gender'      => $data['gender'] ?? null,
-                'address'     => $data['address'] ?? null,
-                'state'       => $data['state'] ?? null,
-                'district'    => $data['district'] ?? null,
-                'city'        => $data['city'] ?? null,
-                'pin_code'    => $data['pin_code'] ?? null,
-                'r_date'      => now()->toDateString(),
-                'issue_date'  => now()->toDateString(),
+                'user_id'             => $user->id,
+                'institute_id'        => $iid,
+                'name'                => $data['name'],
+                'photo'               => $photoPath,
+                'father_name'         => $data['father_name'] ?? null,
+                'mother_name'         => $data['mother_name'] ?? null,
+                'guardian_name'       => $data['guardian_name'] ?? null,
+                'guardian_relation'   => $data['guardian_relation'] ?? null,
+                'guardian_mobile'     => $data['guardian_mobile'] ?? null,
+                'guardian_occupation' => $data['guardian_occupation'] ?? null,
+                'dob'                 => $data['dob'] ?? null,
+                'gender'              => $data['gender'] ?? null,
+                'category'            => $data['category'] ?? null,
+                'religion'            => $data['religion'] ?? null,
+                'nationality'         => $data['nationality'] ?? null,
+                'whatsapp_no'         => $data['whatsapp_no'] ?? null,
+                'alternate_mobile'    => $data['alternate_mobile'] ?? null,
+                'aadhar_no'           => $data['aadhar_no'] ?? null,
+                'pan_no'              => $data['pan_no'] ?? null,
+                'blood_group'         => $data['blood_group'] ?? null,
+                'employment_status'   => $data['employment_status'] ?? null,
+                'computer_literacy'   => $data['computer_literacy'] ?? null,
+                'qualification'       => $data['qualification'] ?? null,
+                'address'             => $data['address'] ?? null,
+                'permanent_address'   => $data['permanent_address'] ?? null,
+                'state'               => $data['state'] ?? null,
+                'district'            => $data['district'] ?? null,
+                'city'                => $data['city'] ?? null,
+                'pin_code'            => $data['pin_code'] ?? null,
+                'permanent_state'     => $data['permanent_state'] ?? null,
+                'permanent_district'  => $data['permanent_district'] ?? null,
+                'permanent_city'      => $data['permanent_city'] ?? null,
+                'permanent_pin_code'  => $data['permanent_pin_code'] ?? null,
+                'r_date'              => now()->toDateString(),
+                'issue_date'          => now()->toDateString(),
             ]);
+
+            foreach ($data['education'] ?? [] as $edu) {
+                if (blank($edu['examination'] ?? null)) continue;
+                UserEducation::create([
+                    'user_id'          => $user->id,
+                    'institute_id'     => $iid,
+                    'franchise_id'     => $fid,
+                    'examination'      => $edu['examination'],
+                    'institute_name'   => $edu['institute_name'] ?? null,
+                    'board_university' => $edu['board_university'] ?? null,
+                    'passing_year'     => $edu['passing_year'] ?? null,
+                    'division'         => $edu['division'] ?? null,
+                    'marks_percentage' => $edu['marks_percentage'] ?? null,
+                ]);
+            }
 
             CourseBook::create([
                 'institute_id'        => $iid,
@@ -263,6 +349,15 @@ class EnrollmentController extends Controller
 
         return redirect()->route('franchise.enrollment.pending')
             ->with('success', 'Seat booked for ' . $data['name'] . '. Complete fee setup to finalize admission.');
+    }
+
+    public function validateField(\Illuminate\Http\Request $request)
+    {
+        $data = $request->validate([
+            'field' => 'required|in:mobile,email',
+            'value' => 'required|string|max:100',
+        ]);
+        return response()->json(['exists' => User::where($data['field'], trim($data['value']))->exists()]);
     }
 
     // ── Find Existing Student ────────────────────────────────────────────────

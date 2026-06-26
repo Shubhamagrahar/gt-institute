@@ -301,6 +301,7 @@ Route::prefix('franchise')
             Route::post('/quick',            [FranchiseEnrollment::class, 'storeQuick'])->name('store-quick');
             Route::match(['GET','POST'], '/find-student', [FranchiseEnrollment::class, 'findStudent'])->name('find-student');
             Route::post('/existing',         [FranchiseEnrollment::class, 'storeExisting'])->name('store-existing');
+            Route::get('/validate-field',    [FranchiseEnrollment::class, 'validateField'])->name('validate-field');
 
             Route::get('/{courseBook}/profile',  [FranchiseEnrollment::class, 'profileForm'])->name('profile');
             Route::post('/{courseBook}/profile', [FranchiseEnrollment::class, 'saveProfile'])->name('save-profile');
