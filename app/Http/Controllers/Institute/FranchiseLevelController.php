@@ -237,16 +237,27 @@ class FranchiseLevelController extends Controller
 
         $charge->update($data);
 
-        // Cascade to all franchises on this level — keep them in sync
-        FranchiseCourseCharge::where('course_id', $charge->course_id)
-            ->whereIn('franchise_id',
-                \App\Models\Franchise::where('franchise_level_id', $franchiseLevel->id)
-                    ->pluck('id')
-            )
-            ->update([
-                'admission_charge'   => $data['student_admission_charge'],
-                'certificate_charge' => $data['student_certificate_charge'],
-            ]);
+        // Cascade to all franchises on this level — updateOrCreate so missing rows are also created
+        $iid        = $this->instituteId();
+        $course     = CourseDetail::find($charge->course_id);
+        $franchises = \App\Models\Franchise::where('franchise_level_id', $franchiseLevel->id)
+            ->where('institute_id', $iid)
+            ->pluck('id');
+
+        foreach ($franchises as $franchiseId) {
+            FranchiseCourseCharge::updateOrCreate(
+                ['franchise_id' => $franchiseId, 'course_id' => $charge->course_id],
+                [
+                    'institute_id'       => $iid,
+                    'course_type_id'     => $course?->course_type_id,
+                    'course_name'        => $charge->course_name,
+                    'duration'           => $charge->duration,
+                    'admission_charge'   => $data['student_admission_charge'],
+                    'certificate_charge' => $data['student_certificate_charge'],
+                    'enabled'            => true,
+                ]
+            );
+        }
 
         return response()->json(['success' => true]);
     }
