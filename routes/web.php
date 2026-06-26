@@ -42,6 +42,7 @@ use App\Http\Controllers\Franchise\WalletController as FranchiseWallet;
 use App\Http\Controllers\Franchise\StudentController as FranchiseStudent;
 use App\Http\Controllers\Franchise\CertificateController as FranchiseCertificate;
 use App\Http\Controllers\Franchise\PricingController as FranchisePricing;
+use App\Http\Controllers\Franchise\BatchController as FranchiseBatch;
 
 // Home page — portal selection
 Route::get('/', fn() => view('home'));
@@ -323,6 +324,12 @@ Route::prefix('franchise')
 
         // ── Wallet ──────────────────────────────────────────────────────────
         Route::get('/wallet',               [FranchiseWallet::class, 'index'])->name('wallet');
+
+        // ── Batches ─────────────────────────────────────────────────────────
+        Route::get('/batches',                        [FranchiseBatch::class, 'index'])->name('batches.index');
+        Route::post('/batches',                       [FranchiseBatch::class, 'store'])->name('batches.store');
+        Route::patch('/batches/{batch}/toggle',       [FranchiseBatch::class, 'toggle'])->name('batches.toggle');
+        Route::delete('/batches/{batch}',             [FranchiseBatch::class, 'destroy'])->name('batches.destroy');
 
         // ── Course Pricing ──────────────────────────────────────────────────
         Route::get('/course-pricing',                                        [FranchisePricing::class, 'index'])->name('pricing.index');

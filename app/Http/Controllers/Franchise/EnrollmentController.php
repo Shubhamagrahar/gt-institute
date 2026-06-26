@@ -143,7 +143,7 @@ class EnrollmentController extends Controller
 
     private function sharedNewData(int $iid, \Illuminate\Support\Collection $catalog): array
     {
-        $batches = BatchDetail::where('institute_id', $iid)->where('status', 'active')->orderBy('name')->get();
+        $batches = BatchDetail::forFranchise($this->franchiseId())->where('status', 'active')->orderBy('name')->get();
         $states  = State::orderBy('name')->pluck('name');
         $districtsByState = Schema::hasTable('districts')
             ? \App\Models\District::select('districts.name as district_name', 'states.name as state_name')
@@ -209,7 +209,7 @@ class EnrollmentController extends Controller
             'course_id'           => ['required', \Illuminate\Validation\Rule::exists('course_details', 'id')
                 ->where(fn ($q) => $q->where('institute_id', $iid))],
             'batch_id'            => ['nullable', \Illuminate\Validation\Rule::exists('batch_details', 'id')
-                ->where(fn ($q) => $q->where('institute_id', $iid))],
+                ->where(fn ($q) => $q->where('franchise_id', $this->franchiseId()))],
             'admission_source'    => 'nullable|in:direct,channel_partner',
             'dob'                 => 'nullable|date',
             'gender'              => 'nullable|in:Male,Female,Other',

@@ -85,6 +85,12 @@
           My Wallet
         </a>
 
+        <div class="gt-sidebar-section">Setup</div>
+        <a href="{{ route('franchise.batches.index') }}" class="gt-nav-item {{ request()->routeIs('franchise.batches.*') ? 'active' : '' }}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          My Batches
+        </a>
+
         <div class="gt-sidebar-section">Charges</div>
         <a href="{{ route('franchise.pricing.index') }}" class="gt-nav-item {{ request()->routeIs('franchise.pricing.*') ? 'active' : '' }}">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>

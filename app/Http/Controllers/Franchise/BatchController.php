@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Institute;
+namespace App\Http\Controllers\Franchise;
 
 use App\Http\Controllers\Controller;
 use App\Models\BatchDetail;
@@ -9,18 +9,28 @@ use Illuminate\Support\Facades\Auth;
 
 class BatchController extends Controller
 {
+    private function franchiseUser()
+    {
+        return Auth::guard('institute')->user();
+    }
+
+    private function franchiseId(): int
+    {
+        return $this->franchiseUser()->franchise_id;
+    }
+
     private function instituteId(): int
     {
-        return Auth::guard('institute')->user()->institute_id;
+        return $this->franchiseUser()->institute_id;
     }
 
     public function index()
     {
-        $batches = BatchDetail::forInstitute($this->instituteId())
+        $batches = BatchDetail::forFranchise($this->franchiseId())
             ->latest()
             ->get();
 
-        return view('institute.batches.index', compact('batches'));
+        return view('franchise.batches.index', compact('batches'));
     }
 
     public function store(Request $request)
@@ -34,7 +44,7 @@ class BatchController extends Controller
 
         BatchDetail::create(array_merge($data, [
             'institute_id' => $this->instituteId(),
-            'franchise_id' => null,
+            'franchise_id' => $this->franchiseId(),
         ]));
 
         return back()->with('success', 'Batch created successfully.');
@@ -42,25 +52,20 @@ class BatchController extends Controller
 
     public function toggle(BatchDetail $batch)
     {
-        $this->authorizeBatch($batch);
-
-        $batch->update([
-            'status' => $batch->status === 'active' ? 'inactive' : 'active',
-        ]);
-
+        $this->authorize($batch);
+        $batch->update(['status' => $batch->status === 'active' ? 'inactive' : 'active']);
         return back()->with('success', 'Batch status updated.');
     }
 
     public function destroy(BatchDetail $batch)
     {
-        $this->authorizeBatch($batch);
+        $this->authorize($batch);
         $batch->delete();
-
-        return back()->with('success', 'Batch deleted successfully.');
+        return back()->with('success', 'Batch deleted.');
     }
 
-    private function authorizeBatch(BatchDetail $batch): void
+    private function authorize(BatchDetail $batch): void
     {
-        abort_unless((int) $batch->institute_id === $this->instituteId() && $batch->franchise_id === null, 403);
+        abort_unless((int) $batch->franchise_id === $this->franchiseId(), 403);
     }
 }
