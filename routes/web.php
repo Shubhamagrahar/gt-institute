@@ -325,9 +325,12 @@ Route::prefix('franchise')
         Route::get('/wallet',               [FranchiseWallet::class, 'index'])->name('wallet');
 
         // ── Course Pricing ──────────────────────────────────────────────────
-        Route::get('/course-pricing',                              [FranchisePricing::class, 'index'])->name('pricing.index');
-        Route::patch('/course-pricing/{charge}',                   [FranchisePricing::class, 'update'])->name('pricing.update');
-        Route::post('/course-pricing/{charge}/fee-structures',     [FranchisePricing::class, 'saveFeeStructures'])->name('pricing.fee-structures');
+        Route::get('/course-pricing',                                        [FranchisePricing::class, 'index'])->name('pricing.index');
+        Route::patch('/course-pricing/{charge}',                             [FranchisePricing::class, 'update'])->name('pricing.update');
+        Route::post('/course-pricing/{charge}/fee-structures',               [FranchisePricing::class, 'saveFeeStructures'])->name('pricing.fee-structures');
+        Route::get('/course-pricing/{charge}/fee-bindings',                  [FranchisePricing::class, 'feeBindingsEdit'])->name('pricing.fee-bindings.edit');
+        Route::post('/course-pricing/{charge}/fee-bindings',                 [FranchisePricing::class, 'feeBindingsSave'])->name('pricing.fee-bindings.save');
+        Route::delete('/course-pricing/fee-bindings/{binding}',              [FranchisePricing::class, 'feeBindingsRemove'])->name('pricing.fee-bindings.remove');
 
         // ── Certificate ─────────────────────────────────────────────────────
         Route::get('/certificate',          [FranchiseCertificate::class, 'index'])->name('certificate.index');

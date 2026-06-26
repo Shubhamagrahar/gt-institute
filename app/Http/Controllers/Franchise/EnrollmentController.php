@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Franchise;
 use App\Http\Controllers\Controller;
 use App\Models\{
     AdmissionFormField, BatchDetail, ChannelPartner, CourseBook, CourseDetail,
-    EnrollmentFeeSnapshot, EnrollmentPaymentPlan, FeeCollectDetail,
+    EnrollmentFeeSnapshot, EnrollmentPaymentPlan, FeeCollectDetail, FeeType,
     FranchiseCourseCharge, FranchiseFeeStructure, FranchiseTransaction, FranchiseWallet,
     InstituteEnrollmentCounter, InstituteSession, InstituteStudentTransaction,
     InstituteStudentWallet, PaymentPlanType, State, StudentTransaction,
@@ -249,7 +249,13 @@ class EnrollmentController extends Controller
             'education.*.marks_percentage'   => 'nullable|string|max:10',
         ]);
 
-        DB::transaction(function () use ($data, $request, $iid, $fid, $sessionId, $bookingMode) {
+        // Build fee catalog entry for this course (franchise-specific pricing)
+        $catalog     = $this->buildCatalog($iid, $fid);
+        $catalogItem = $catalog->firstWhere('id', (int) $data['course_id']);
+        $totalFee    = $catalogItem ? (float) $catalogItem['total_fee'] : 0.0;
+        $feeItems    = $catalogItem ? $catalogItem['fee_items'] : [];
+
+        DB::transaction(function () use ($data, $request, $iid, $fid, $sessionId, $bookingMode, $totalFee, $feeItems) {
             // Handle photo upload
             $photoPath = 'images/user.svg';
             if ($request->hasFile('photo') && $request->file('photo')->isValid()) {
@@ -324,7 +330,7 @@ class EnrollmentController extends Controller
                 ]);
             }
 
-            CourseBook::create([
+            $courseBook = CourseBook::create([
                 'institute_id'        => $iid,
                 'franchise_id'        => $fid,
                 'session_id'          => $sessionId,
@@ -332,14 +338,28 @@ class EnrollmentController extends Controller
                 'course_id'           => $data['course_id'],
                 'batch_id'            => $data['batch_id'] ?? null,
                 'enrollment_no'       => null,
-                'fee'                 => 0,
-                'final_fee'           => 0,
+                'fee'                 => $totalFee,
+                'final_fee'           => $totalFee,
                 'book_date'           => now()->toDateString(),
                 'status'              => 'OPEN',
                 'booking_mode'        => $bookingMode,
                 'profile_completed_at'=> now(),
                 'admission_by'        => Auth::guard('institute')->id(),
             ]);
+
+            // Snapshot of franchise fee structure at booking time
+            foreach ($feeItems as $item) {
+                EnrollmentFeeSnapshot::create([
+                    'institute_id'    => $iid,
+                    'course_book_id'  => $courseBook->id,
+                    'fee_type_id'     => $item['fee_type_id'],
+                    'fee_type_name'   => $item['fee_type_name'],
+                    'original_amount' => $item['amount'],
+                    'discount_percent'=> 0,
+                    'discount_amount' => 0,
+                    'final_amount'    => $item['amount'],
+                ]);
+            }
 
             StudentWallet::firstOrCreate(
                 ['user_id' => $user->id],
@@ -484,40 +504,29 @@ class EnrollmentController extends Controller
         }
 
         $iid = $this->instituteId();
-        $fid = $this->franchiseId();
 
-        // Base fee: what franchise charges student (from FranchiseCourseCharge)
-        $chargeRow = FranchiseCourseCharge::where('franchise_id', $fid)
-            ->where('course_id', $courseBook->course_id)
-            ->where('enabled', true)
-            ->first();
+        $courseBook->loadMissing(['feeSnapshots']);
+        $snapshots = $courseBook->feeSnapshots;
 
-        $baseFeeAmount = $chargeRow && $chargeRow->student_fee > 0
-            ? (float) $chargeRow->student_fee
-            : (float) $courseBook->course->fee;
-
-        $baseFee = (object)[
-            'fee_type_id'   => null,
-            'fee_type_name' => 'Course Fee',
-            'amount'        => $baseFeeAmount,
-            'is_mandatory'  => true,
-        ];
-
-        // Additional fee structures franchise has enabled
-        $extraFees = FranchiseFeeStructure::where('franchise_id', $fid)
-            ->where('course_id', $courseBook->course_id)
-            ->where('enabled', true)
-            ->orderBy('sort_order')
-            ->get()
-            ->map(fn ($fs) => (object)[
-                'fee_type_id'   => $fs->fee_type_id,
-                'fee_type_name' => $fs->fee_type_name,
-                'amount'        => (float) $fs->amount,
-                'is_mandatory'  => false,
-            ]);
-
-        $feeStructure = collect([$baseFee])->merge($extraFees)->values();
-        $totalFee     = $feeStructure->sum('amount');
+        // If no snapshot exists yet (edge case: booked before this fix), build from catalog
+        if ($snapshots->isEmpty()) {
+            $catalog     = $this->buildCatalog($iid, $this->franchiseId());
+            $catalogItem = $catalog->firstWhere('id', $courseBook->course_id);
+            $feeStructure = collect($catalogItem ? $catalogItem['fee_items'] : [])
+                ->map(fn ($item) => (object) [
+                    'fee_type_id'   => $item['fee_type_id'],
+                    'fee_type_name' => $item['fee_type_name'],
+                    'amount'        => (float) $item['amount'],
+                    'is_mandatory'  => (bool) $item['is_mandatory'],
+                ])->values();
+        } else {
+            $feeStructure = $snapshots->map(fn ($s) => (object) [
+                'fee_type_id'   => $s->fee_type_id,
+                'fee_type_name' => $s->fee_type_name,
+                'amount'        => (float) $s->final_amount,
+                'is_mandatory'  => $s->fee_type_id === null, // Course Fee row = mandatory
+            ])->values();
+        }
 
         $plans = $this->activePlans($iid);
 

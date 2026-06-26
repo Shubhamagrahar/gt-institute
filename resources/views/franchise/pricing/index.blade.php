@@ -58,13 +58,14 @@
 
 @foreach($typeCharges as $ch)
 @php
-  $cap    = (float) ($ch->course?->fee ?? 0);
-  $stuFee = (float) ($ch->student_fee ?? 0);
-  $margin = $stuFee - $ch->admission_charge;
+  $cap        = (float) ($ch->course?->fee ?? 0);
+  $stuFee     = (float) ($ch->student_fee ?? 0);
+  $margin     = $stuFee - $ch->admission_charge;
+  $myBindings = \App\Models\FranchiseFeeStructure::where('franchise_id', $franchise->id)
+      ->where('course_id', $ch->course_id)->where('enabled', true)->get();
 @endphp
 
 <div class="pr-course-card">
-  {{-- Course header: fee input --}}
   <div class="pr-course-head">
     <div>
       <div class="pr-course-name">{{ $ch->course_name }}</div>
@@ -78,8 +79,19 @@
           Margin: {{ $margin >= 0 ? '+' : '' }}₹{{ number_format($margin, 2) }}
         </span>
       </div>
+
+      {{-- Extra fee bindings chips --}}
+      @if($myBindings->count())
+        <div class="pr-charges-row" style="margin-top:8px;">
+          @foreach($myBindings as $b)
+            <span class="pr-pill" style="background:rgba(99,102,241,.1);color:#4f46e5;border:1px solid rgba(99,102,241,.2);">
+              {{ $b->fee_type_name }}: ₹{{ number_format($b->amount, 2) }}
+            </span>
+          @endforeach
+        </div>
+      @endif
     </div>
-    <div>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;">
       <form method="POST" action="{{ route('franchise.pricing.update', $ch) }}" style="display:flex;align-items:center;gap:8px;">
         @csrf @method('PATCH')
         <div style="text-align:right;margin-bottom:4px;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;">Your Student Fee</div>
@@ -94,6 +106,9 @@
           <button type="submit" class="pr-save-btn">Save</button>
         </div>
       </form>
+      <a href="{{ route('franchise.pricing.fee-bindings.edit', $ch) }}" class="pr-save-btn" style="text-decoration:none;background:linear-gradient(135deg,#4f46e5,#7c3aed);font-size:11px;padding:6px 12px;">
+        + Extra Fee Bindings {{ $myBindings->count() ? '('.$myBindings->count().')' : '' }}
+      </a>
     </div>
   </div>
 
