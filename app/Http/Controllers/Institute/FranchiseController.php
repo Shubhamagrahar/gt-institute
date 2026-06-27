@@ -10,7 +10,6 @@ use App\Models\District;
 use App\Models\Franchise;
 use App\Models\State;
 use App\Models\FranchiseCourseCharge;
-use App\Models\FranchiseFeeCollection;
 use App\Models\FranchiseLevel;
 use App\Models\FranchiseTransaction;
 use App\Models\FranchiseWallet;

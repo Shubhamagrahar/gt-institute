@@ -91,4 +91,19 @@ class Franchise extends Model
     {
         return $this->hasOne(FranchiseJoiningWallet::class);
     }
+
+    public function instituteWallet()
+    {
+        return $this->hasOne(FranchiseInstituteWallet::class);
+    }
+
+    public function instituteTransactions()
+    {
+        return $this->hasMany(FranchiseInstituteTransaction::class)->orderByDesc('id');
+    }
+
+    public function payDetails()
+    {
+        return $this->hasMany(FranchisePayDetail::class)->orderByDesc('id');
+    }
 }
