@@ -21,7 +21,7 @@ class LoginController extends Controller
     public function showLogin()
     {
         if (Auth::guard('institute')->check()) {
-            return redirect()->route('institute.dashboard');
+            return $this->redirectAfterLogin(Auth::guard('institute')->user());
         }
         return view('auth.login');
     }
