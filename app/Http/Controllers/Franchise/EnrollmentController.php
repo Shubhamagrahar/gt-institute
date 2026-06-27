@@ -564,8 +564,8 @@ class EnrollmentController extends Controller
     {
         $this->authorizeCourseBook($courseBook);
         $controller = app(\App\Http\Controllers\Institute\EnrollmentController::class);
-        // Pass franchise layout info via view share
         \Illuminate\Support\Facades\View::share('franchiseMode', true);
+        \Illuminate\Support\Facades\View::share('institute', $this->franchiseHeader());
         return $controller->preview($courseBook);
     }
 
@@ -692,7 +692,7 @@ class EnrollmentController extends Controller
     {
         $this->authorizeCourseBook($courseBook);
         $courseBook->loadMissing(['student.profile', 'course', 'batch']);
-        $institute = Auth::guard('institute')->user()->institute;
+        $institute = $this->franchiseHeader();
         return view('institute.enrollment.receipt-a4', compact('courseBook', 'fee', 'institute'));
     }
 
@@ -700,7 +700,7 @@ class EnrollmentController extends Controller
     {
         $this->authorizeCourseBook($courseBook);
         $courseBook->loadMissing(['student.profile', 'course', 'batch']);
-        $institute = Auth::guard('institute')->user()->institute;
+        $institute = $this->franchiseHeader();
         return view('institute.enrollment.receipt-thermal', compact('courseBook', 'fee', 'institute'));
     }
 
@@ -724,5 +724,24 @@ class EnrollmentController extends Controller
         }
         return PaymentPlanType::where('institute_id', $iid)->where('is_active', true)
             ->orderByRaw("CASE type WHEN 'OTP' THEN 1 WHEN 'PART' THEN 2 WHEN 'MONTHLY' THEN 3 ELSE 4 END")->get();
+    }
+
+    private function franchiseHeader(): object
+    {
+        $f = \App\Models\Franchise::find($this->franchiseId());
+        return (object) [
+            'name'          => $f?->name,
+            'short_name'    => $f?->short_name ?? $f?->name,
+            'address'       => $f?->address,
+            'city'          => $f?->district,
+            'mobile'        => $f?->mobile ?? $f?->owner_mobile,
+            'email'         => $f?->email,
+            'website'       => $f?->website ?? null,
+            'logo'          => $f?->logo,
+            'use_stamp'     => false,
+            'stamp'         => null,
+            'use_signature' => false,
+            'signature'     => null,
+        ];
     }
 }
