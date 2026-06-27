@@ -60,30 +60,54 @@
       <table class="gt-table fee-ledger-table">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>TXN No.</th>
-            <th>Description</th>
-            <th style="text-align:right;">Debit (₹)</th>
-            <th style="text-align:right;">Credit (₹)</th>
-            <th style="text-align:right;">Outstanding (₹)</th>
-            <th>Invoice</th>
-            <th>Type</th>
+            <th style="min-width:90px;">Date</th>
+            <th>Details</th>
+            <th style="text-align:right;white-space:nowrap;">Debit (₹)</th>
+            <th style="text-align:right;white-space:nowrap;">Credit (₹)</th>
+            <th style="text-align:right;white-space:nowrap;">Outstanding (₹)</th>
           </tr>
         </thead>
         <tbody>
           @forelse($transactions as $txn)
             @php
-              $outstanding_at_row = $txn->cl_bal < 0 ? abs($txn->cl_bal) : 0;
               $isOpening   = $txn->type === 1;
               $isPayment   = $txn->type === 2;
               $isCancelled = $txn->type === 3;
             @endphp
             <tr class="{{ $isOpening ? 'fee-opening-row' : ($isCancelled ? 'fee-cancelled-row' : '') }}">
-              <td style="font-size:12.5px;white-space:nowrap;">
-                {{ \Carbon\Carbon::parse($txn->date)->format('d M Y') }}
+
+              {{-- Date + TXN no. --}}
+              <td style="white-space:nowrap;">
+                <div style="font-size:12.5px;">{{ \Carbon\Carbon::parse($txn->date)->format('d M Y') }}</div>
+                <div class="mono" style="font-size:10.5px;color:var(--text-3);margin-top:2px;">{{ $txn->txn_no }}</div>
               </td>
-              <td><span class="mono" style="font-size:11px;color:var(--text-3);">{{ $txn->txn_no }}</span></td>
-              <td style="font-size:12.5px;max-width:220px;">{{ $txn->description }}</td>
+
+              {{-- Description + Invoice + Type badge --}}
+              <td>
+                <div style="font-size:12.5px;color:var(--text-1);">{{ $txn->description }}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap;">
+                  @if($txn->invoice_no)
+                    @php $pd = $payments->firstWhere('invoice_no', $txn->invoice_no); @endphp
+                    @if($pd && !$pd->cancelled_at)
+                      <a href="{{ route('institute.franchises.fee.receipt', [$franchise, $pd]) }}"
+                         target="_blank" class="fee-invoice-link mono" style="font-size:11px;">
+                        {{ $txn->invoice_no }}
+                      </a>
+                    @else
+                      <span class="mono" style="font-size:11px;color:var(--text-3);">{{ $txn->invoice_no }}</span>
+                    @endif
+                  @endif
+                  @if($isOpening)
+                    <span class="fee-type-badge fee-type-due">Opening Due</span>
+                  @elseif($isPayment)
+                    <span class="fee-type-badge fee-type-received">Received</span>
+                  @elseif($isCancelled)
+                    <span class="fee-type-badge fee-type-cancelled">Reversed</span>
+                  @endif
+                </div>
+              </td>
+
+              {{-- Debit --}}
               <td style="text-align:right;" class="mono">
                 @if($txn->debit > 0)
                   <span style="color:#dc2626;font-weight:600;">₹{{ number_format($txn->debit, 2) }}</span>
@@ -91,6 +115,8 @@
                   <span style="color:var(--text-3);">—</span>
                 @endif
               </td>
+
+              {{-- Credit --}}
               <td style="text-align:right;" class="mono">
                 @if($txn->credit > 0)
                   <span style="color:#16a34a;font-weight:600;">₹{{ number_format($txn->credit, 2) }}</span>
@@ -98,6 +124,8 @@
                   <span style="color:var(--text-3);">—</span>
                 @endif
               </td>
+
+              {{-- Outstanding balance --}}
               <td style="text-align:right;font-weight:700;" class="mono">
                 @if($txn->cl_bal >= 0)
                   <span style="color:#16a34a;">₹0.00 ✓</span>
@@ -105,36 +133,10 @@
                   <span style="color:#dc2626;">₹{{ number_format(abs($txn->cl_bal), 2) }}</span>
                 @endif
               </td>
-              <td>
-                @if($txn->invoice_no)
-                  @php
-                    $pd = $payments->firstWhere('invoice_no', $txn->invoice_no);
-                  @endphp
-                  @if($pd && !$pd->cancelled_at)
-                    <a href="{{ route('institute.franchises.fee.receipt', [$franchise, $pd]) }}"
-                       target="_blank" class="fee-invoice-link mono" style="font-size:11px;">
-                      {{ $txn->invoice_no }}
-                    </a>
-                  @else
-                    <span class="mono" style="font-size:11px;color:var(--text-3);">{{ $txn->invoice_no }}</span>
-                  @endif
-                @else
-                  <span style="color:var(--text-3);">—</span>
-                @endif
-              </td>
-              <td>
-                @if($isOpening)
-                  <span class="fee-type-badge fee-type-due">Opening Due</span>
-                @elseif($isPayment)
-                  <span class="fee-type-badge fee-type-received">Received</span>
-                @elseif($isCancelled)
-                  <span class="fee-type-badge fee-type-cancelled">Reversed</span>
-                @endif
-              </td>
             </tr>
           @empty
             <tr>
-              <td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);font-size:13px;">
+              <td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);font-size:13px;">
                 No transactions yet.
               </td>
             </tr>
@@ -291,8 +293,10 @@
 .fee-sum-val{font-size:22px;font-weight:800}
 .fee-sum-sub{font-size:11.5px;color:var(--text-3);margin-top:4px}
 
-.fee-layout{display:grid;grid-template-columns:1fr 310px;gap:20px;align-items:flex-start}
+.fee-layout{display:grid;grid-template-columns:1fr 310px;gap:20px;align-items:flex-start;min-width:0}
+.fee-layout > *{min-width:0;overflow:hidden}
 
+.fee-ledger-table{table-layout:auto;width:100%}
 .fee-ledger-table thead th{font-size:11px}
 .fee-opening-row td{background:var(--bg-3);font-size:12.5px}
 .fee-cancelled-row td{opacity:.55}
