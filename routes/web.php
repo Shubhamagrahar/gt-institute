@@ -99,6 +99,7 @@ Route::middleware('guest:institute')->group(function () {
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/logout',  [LoginController::class, 'logout'])->name('logout.get');
 
 // Owner Panel — guard: web
 Route::prefix('owner')
