@@ -536,9 +536,23 @@ class EnrollmentController extends Controller
     public function saveFee(Request $request, CourseBook $courseBook)
     {
         $this->authorizeCourseBook($courseBook);
+        $wasOpen = $courseBook->status === 'OPEN';
         $controller = app(\App\Http\Controllers\Institute\EnrollmentController::class);
         $result = $controller->saveFee($request, $courseBook);
         if ($result instanceof \Illuminate\Http\RedirectResponse) {
+            $fresh = $courseBook->fresh();
+            if ($wasOpen && $fresh->status === 'RUN') {
+                $fid = $this->franchiseId();
+                $admissionCharge = (float) (FranchiseCourseCharge::where('franchise_id', $fid)
+                    ->where('course_id', $courseBook->course_id)
+                    ->where('enabled', true)
+                    ->value('admission_charge') ?? 0);
+                $msg = 'Admission confirmed! Enrollment No: ' . $fresh->enrollment_no;
+                if ($admissionCharge > 0) {
+                    $msg .= ' | ₹' . number_format($admissionCharge, 2) . ' wallet se admission charge ke roop mein deduct hua.';
+                }
+                session()->flash('success', $msg);
+            }
             return redirect()->route('franchise.enrollment.payment-complete', $courseBook);
         }
         return $result;
