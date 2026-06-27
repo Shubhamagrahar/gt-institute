@@ -293,8 +293,9 @@
 .fee-sum-val{font-size:22px;font-weight:800}
 .fee-sum-sub{font-size:11.5px;color:var(--text-3);margin-top:4px}
 
-.fee-layout{display:grid;grid-template-columns:1fr 310px;gap:20px;align-items:flex-start;min-width:0}
-.fee-layout > *{min-width:0;overflow:hidden}
+.fee-layout{display:grid;grid-template-columns:1fr 310px;gap:20px;align-items:flex-start}
+.fee-layout > *{min-width:0}
+.fee-layout .gt-table-wrap{overflow-x:auto;max-width:100%}
 
 .fee-ledger-table{table-layout:auto;width:100%}
 .fee-ledger-table thead th{font-size:11px}
