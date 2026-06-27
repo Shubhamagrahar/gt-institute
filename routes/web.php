@@ -47,6 +47,33 @@ use App\Http\Controllers\Franchise\BatchController as FranchiseBatch;
 // Home page — portal selection
 Route::get('/', fn() => view('home'));
 
+// Session expired page — public, no auth required
+Route::get('/session-expired', function (\Illuminate\Http\Request $request) {
+    $allowed = ['institute', 'owner', 'student', 'staff', 'franchise'];
+    $guard   = in_array($request->query('guard'), $allowed) ? $request->query('guard') : 'institute';
+
+    $loginUrls = [
+        'institute' => url('/login'),
+        'owner'     => url('/owner/login'),
+        'student'   => url('/student/login'),
+        'staff'     => url('/staff/login'),
+        'franchise' => url('/franchise/login'),
+    ];
+
+    $labels = [
+        'institute' => 'Institute Portal',
+        'owner'     => 'Owner Portal',
+        'student'   => 'Student Portal',
+        'staff'     => 'Staff Portal',
+        'franchise' => 'Franchise Portal',
+    ];
+
+    $loginUrl   = $loginUrls[$guard];
+    $guardLabel = $labels[$guard];
+
+    return view('auth.session-expired', compact('guard', 'loginUrl', 'guardLabel'));
+})->name('session.expired');
+
 // ── Owner (Super Admin) Auth ──────────────────────────────────────────────────
 Route::prefix('owner')->name('owner.')->group(function () {
     Route::middleware('guest:web')->group(function () {

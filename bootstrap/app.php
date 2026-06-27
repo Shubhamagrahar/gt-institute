@@ -19,16 +19,23 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            // AJAX / JSON requests → 401 (don't redirect to HTML page)
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+
+            $guard = 'institute';
             if (str_starts_with($request->path(), 'owner/')) {
-                return route('owner.login');
+                $guard = 'owner';
+            } elseif (str_starts_with($request->path(), 'student/')) {
+                $guard = 'student';
+            } elseif (str_starts_with($request->path(), 'staff/')) {
+                $guard = 'staff';
+            } elseif (str_starts_with($request->path(), 'franchise/')) {
+                $guard = 'franchise';
             }
-            if (str_starts_with($request->path(), 'student/')) {
-                return route('student.login');
-            }
-            if (str_starts_with($request->path(), 'staff/')) {
-                return route('staff.login');
-            }
-            return route('login');
+
+            return url('/session-expired') . '?guard=' . $guard . '&reason=unauthenticated';
         });
     })
     ->withExceptions(function (Exceptions $exceptions) {
