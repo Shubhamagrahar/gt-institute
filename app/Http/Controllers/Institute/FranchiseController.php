@@ -88,11 +88,8 @@ class FranchiseController extends Controller
             'owner_mobile'       => 'required|digits:10',
             'franchise_level_id' => 'required|exists:franchise_levels,id',
             'commission_percent' => 'required|numeric|min:0|max:100',
-            'management_type'    => 'required|in:independent,wallet',
-            'wallet_enabled'     => 'required|boolean',
+            'has_sub_franchise'  => 'nullable|boolean',
             'low_wallet_alert'   => 'nullable|numeric|min:0',
-            'onboarding_fee'     => 'nullable|numeric|min:0',
-            'has_sub_franchise'  => 'required|boolean',
             'address'            => 'nullable|string',
             'state'              => 'nullable|string|max:100',
             'district'           => 'nullable|string|max:100',
@@ -101,6 +98,11 @@ class FranchiseController extends Controller
             'opening_balance'    => 'nullable|numeric|min:0',
             'logo'               => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
         ]);
+
+        // All franchises are wallet-based
+        $data['management_type'] = 'wallet';
+        $data['wallet_enabled']  = true;
+        $data['has_sub_franchise'] = (bool) ($data['has_sub_franchise'] ?? false);
 
         $level = FranchiseLevel::where('id', $data['franchise_level_id'])
             ->where('institute_id', $this->instituteId())
@@ -120,12 +122,7 @@ class FranchiseController extends Controller
 
         session(['franchise_create_data' => $data]);
 
-        // Wallet mode → Step 2: set course charges; Independent → skip to preview
-        if (($data['management_type'] ?? 'wallet') === 'wallet') {
-            return redirect()->route('institute.franchises.charges');
-        }
-
-        return redirect()->route('institute.franchises.preview');
+        return redirect()->route('institute.franchises.charges');
     }
 
     // ─── Create: Step 2 (wallet only) — Course Type Access ─────────────────
@@ -134,7 +131,7 @@ class FranchiseController extends Controller
     {
         $data = session('franchise_create_data');
 
-        if (! $data || ($data['management_type'] ?? '') !== 'wallet') {
+        if (! $data) {
             return redirect()->route('institute.franchises.create');
         }
 
@@ -202,7 +199,7 @@ class FranchiseController extends Controller
     {
         $data = session('franchise_create_data');
 
-        if (! $data || ($data['management_type'] ?? '') !== 'wallet') {
+        if (! $data) {
             return redirect()->route('institute.franchises.create');
         }
 
@@ -405,11 +402,8 @@ class FranchiseController extends Controller
             'owner_mobile'       => 'required|digits:10',
             'franchise_level_id' => 'required|exists:franchise_levels,id',
             'commission_percent' => 'required|numeric|min:0|max:100',
-            'management_type'    => 'required|in:independent,wallet',
-            'wallet_enabled'     => 'required|boolean',
+            'has_sub_franchise'  => 'nullable|boolean',
             'low_wallet_alert'   => 'nullable|numeric|min:0',
-            'onboarding_fee'     => 'nullable|numeric|min:0',
-            'has_sub_franchise'  => 'required|boolean',
             'address'            => 'nullable|string',
             'state'              => 'nullable|string|max:100',
             'district'           => 'nullable|string|max:100',

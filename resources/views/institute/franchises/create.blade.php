@@ -16,11 +16,16 @@
   <div class="wizard-step-line"></div>
   <div class="wizard-step">
     <div class="wizard-step-num">2</div>
-    <div class="wizard-step-label">Preview & Payment</div>
+    <div class="wizard-step-label">Course Access</div>
   </div>
   <div class="wizard-step-line"></div>
   <div class="wizard-step">
     <div class="wizard-step-num">3</div>
+    <div class="wizard-step-label">Review & Confirm</div>
+  </div>
+  <div class="wizard-step-line"></div>
+  <div class="wizard-step">
+    <div class="wizard-step-num">4</div>
     <div class="wizard-step-label">Fee Collection</div>
   </div>
 </div>
@@ -31,7 +36,7 @@
   <div class="gt-card">
     <div class="gt-card-header">
       <div class="gt-card-title">Franchise Details</div>
-      <span class="text-xs text-muted">Select the level first — commission and onboarding fee will auto-fill.</span>
+      <span class="text-xs text-muted">Select the level first — commission will auto-fill.</span>
     </div>
 
     @include('institute.franchises._form')
@@ -64,10 +69,9 @@
 
 @push('scripts')
 <script>
-// Both modes go through preview — always show "Continue to Preview →"
 (function () {
   const btn = document.getElementById('submit-btn');
-  if (btn) btn.textContent = 'Continue to Preview →';
+  if (btn) btn.textContent = 'Continue to Course Access →';
 })();
 </script>
 @endpush
