@@ -1602,8 +1602,21 @@ class EnrollmentController extends Controller
 
     private function buildFeeQuote(CourseBook $courseBook, array $submittedItems = []): array
     {
-        $courseBook->loadMissing(['course.feeStructures.feeType']);
-        $catalog = collect($this->courseCatalogItem($courseBook->course)['fee_items'])->values();
+        $courseBook->loadMissing(['course.feeStructures.feeType', 'feeSnapshots']);
+
+        // Franchise bookings already have fee snapshots with franchise-specific pricing.
+        // Use those as the base to avoid overriding with institute catalog amounts.
+        if ($courseBook->feeSnapshots->isNotEmpty()) {
+            $catalog = $courseBook->feeSnapshots->map(fn ($s) => [
+                'fee_type_id'   => $s->fee_type_id,
+                'fee_type_name' => $s->fee_type_name,
+                'amount'        => round((float) $s->original_amount, 2),
+                'is_mandatory'  => $s->fee_type_id === null,
+            ])->values();
+        } else {
+            $catalog = collect($this->courseCatalogItem($courseBook->course)['fee_items'])->values();
+        }
+
         $submittedItems = collect($submittedItems)->values();
 
         $items = $catalog->map(function (array $catalogItem, int $index) use ($submittedItems) {
@@ -1759,6 +1772,7 @@ class EnrollmentController extends Controller
 
         $this->createStudentAdmissionLedger($courseBook);
         $this->syncStudentPaymentTransactionsForCourseBook($courseBook);
+        $this->deductFranchiseAdmissionCharge($courseBook);
 
         if (! $courseBook->enrollment_no) {
             $courseBook->update(['enrollment_no' => $this->generateEnrollmentNo($courseBook->loadMissing('course'))]);
