@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Franchise;
 use App\Models\FranchiseFeeCollection;
+use App\Models\FranchiseInstituteTransaction;
+use App\Models\FranchisePayDetail;
 use App\Models\FranchiseTransaction;
 use App\Models\Owner\InstitutePayCollect;
 use App\Models\Owner\Institute;
@@ -78,13 +80,40 @@ class InvoiceService
 
     public function generateFranchiseTxnNo(int $instituteId, int $franchiseId): string
     {
-        $year = now()->year;
+        $year  = now()->year;
         $count = FranchiseTransaction::where('institute_id', $instituteId)
             ->where('franchise_id', $franchiseId)
             ->whereYear('created_at', $year)
             ->count();
-        $next = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+        $next  = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
 
         return "FR-TXN/{$year}/{$next}";
+    }
+
+    public function generateFranchisePayInvoice(int $instituteId): string
+    {
+        $year = now()->year;
+        $seq  = FranchisePayDetail::where('institute_id', $instituteId)
+            ->whereYear('created_at', $year)
+            ->count() + 1;
+
+        do {
+            $invoice = "FRN-PAY/{$year}/" . str_pad($seq, 4, '0', STR_PAD_LEFT);
+            $seq++;
+        } while (FranchisePayDetail::where('invoice_no', $invoice)->exists());
+
+        return $invoice;
+    }
+
+    public function generateFranchiseInstTxnNo(int $instituteId, int $franchiseId): string
+    {
+        $year  = now()->year;
+        $count = FranchiseInstituteTransaction::where('institute_id', $instituteId)
+            ->where('franchise_id', $franchiseId)
+            ->whereYear('created_at', $year)
+            ->count();
+        $next  = str_pad($count + 1, 4, '0', STR_PAD_LEFT);
+
+        return "FI-TXN/{$year}/{$next}";
     }
 }

@@ -28,12 +28,17 @@ class RoleMiddleware
             return redirect()->route('login');
         }
         $user = Auth::guard('institute')->user();
-        if (!in_array($user->role, $roles)) {
-            abort(403, 'Unauthorized');
-        }
         if ($user->status === 'inactive') {
             Auth::guard('institute')->logout();
             return redirect()->route('login')->withErrors(['login' => 'Account deactivated.']);
+        }
+        if (!in_array($user->role, $roles)) {
+            // Redirect to correct portal — don't 403 a validly-authenticated user
+            return match (true) {
+                in_array($user->role, ['franchise_head', 'franchise_staff', 'franchise_student'])
+                    => redirect()->route('franchise.dashboard'),
+                default => redirect()->route('login'),
+            };
         }
         return $next($request);
     }

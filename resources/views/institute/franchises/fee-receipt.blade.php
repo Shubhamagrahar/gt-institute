@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fee Receipt — {{ $collection->invoice_no }}</title>
+  <title>Fee Receipt — {{ $payment->invoice_no }}</title>
   <style>
     /* ── Reset ─────────────────────────────────────── */
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -209,13 +209,13 @@
     </div>
     <div class="rec-header-right">
       <div class="rec-doc-type">Receipt</div>
-      <div class="rec-inv-no">{{ $collection->invoice_no }}</div>
-      <div class="rec-date">{{ \Carbon\Carbon::parse($collection->date)->format('d F Y') }}</div>
+      <div class="rec-inv-no">{{ $payment->invoice_no }}</div>
+      <div class="rec-date">{{ \Carbon\Carbon::parse($payment->date)->format('d F Y') }}</div>
     </div>
   </div>
 
-  @if($collection->cancelled_at)
-    <div class="rec-watermark">⚠ CANCELLED — {{ \Carbon\Carbon::parse($collection->cancelled_at)->format('d M Y') }}{{ $collection->cancel_reason ? ' · ' . $collection->cancel_reason : '' }}</div>
+  @if($payment->cancelled_at)
+    <div class="rec-watermark">⚠ CANCELLED — {{ \Carbon\Carbon::parse($payment->cancelled_at)->format('d M Y') }}{{ $payment->cancel_reason ? ' · ' . $payment->cancel_reason : '' }}</div>
   @endif
 
   <div class="rec-body">
@@ -260,11 +260,11 @@
       <div class="rec-amount-label">
         <strong>Amount Received</strong><br>
         <span style="font-size:11.5px; color:#555;">
-          {{ $collection->payment_mode ?? 'Cash' }}
-          @if($collection->utr) &nbsp;·&nbsp; Ref: {{ $collection->utr }} @endif
+          {{ $payment->payment_mode ?? 'Cash' }}
+          @if($payment->utr) &nbsp;·&nbsp; Ref: {{ $payment->utr }} @endif
         </span>
       </div>
-      <div class="rec-amount-value">₹{{ number_format($collection->amount, 2) }}</div>
+      <div class="rec-amount-value">₹{{ number_format($payment->amount, 2) }}</div>
     </div>
 
     <div class="rec-balance-row">
@@ -289,8 +289,8 @@
           {{ $outstanding <= 0 ? 'FULLY PAID' : 'PARTIALLY PAID' }}
         </span>
       </div>
-      @if($collection->note)
-      <div class="rec-note">Note: {{ $collection->note }}</div>
+      @if($payment->note)
+      <div class="rec-note">Note: {{ $payment->note }}</div>
       @endif
     </div>
 

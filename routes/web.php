@@ -47,6 +47,33 @@ use App\Http\Controllers\Franchise\BatchController as FranchiseBatch;
 // Home page — portal selection
 Route::get('/', fn() => view('home'));
 
+// Session expired page — public, no auth required
+Route::get('/session-expired', function (\Illuminate\Http\Request $request) {
+    $allowed = ['institute', 'owner', 'student', 'staff', 'franchise'];
+    $guard   = in_array($request->query('guard'), $allowed) ? $request->query('guard') : 'institute';
+
+    $loginUrls = [
+        'institute' => url('/login'),
+        'owner'     => url('/owner/login'),
+        'student'   => url('/student/login'),
+        'staff'     => url('/staff/login'),
+        'franchise' => url('/franchise/login'),
+    ];
+
+    $labels = [
+        'institute' => 'Institute Portal',
+        'owner'     => 'Owner Portal',
+        'student'   => 'Student Portal',
+        'staff'     => 'Staff Portal',
+        'franchise' => 'Franchise Portal',
+    ];
+
+    $loginUrl   = $loginUrls[$guard];
+    $guardLabel = $labels[$guard];
+
+    return view('auth.session-expired', compact('guard', 'loginUrl', 'guardLabel'));
+})->name('session.expired');
+
 // ── Owner (Super Admin) Auth ──────────────────────────────────────────────────
 Route::prefix('owner')->name('owner.')->group(function () {
     Route::middleware('guest:web')->group(function () {
@@ -72,6 +99,7 @@ Route::middleware('guest:institute')->group(function () {
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/logout',  [LoginController::class, 'logout'])->name('logout.get');
 
 // Owner Panel — guard: web
 Route::prefix('owner')
@@ -207,8 +235,8 @@ Route::resource('fee-types', FeeTypeController::class)->except(['show']);
         // Franchise onboarding fee collection (institute ↔ franchise, completely separate from wallet)
         Route::get('franchises/{franchise}/fee', [FranchiseFeeController::class, 'index'])->name('franchises.fee.index');
         Route::post('franchises/{franchise}/fee/collect', [FranchiseFeeController::class, 'collect'])->name('franchises.fee.collect');
-        Route::get('franchises/{franchise}/fee/{collection}/receipt', [FranchiseFeeController::class, 'receipt'])->name('franchises.fee.receipt');
-        Route::patch('franchises/{franchise}/fee/{collection}/cancel', [FranchiseFeeController::class, 'cancel'])->name('franchises.fee.cancel');
+        Route::get('franchises/{franchise}/fee/{payment}/receipt', [FranchiseFeeController::class, 'receipt'])->name('franchises.fee.receipt');
+        Route::patch('franchises/{franchise}/fee/{payment}/cancel', [FranchiseFeeController::class, 'cancel'])->name('franchises.fee.cancel');
 
 // Certificates & Marksheets
 Route::get('certificates',                    [\App\Http\Controllers\Institute\CertificateController::class, 'index'])       ->name('certificates.index');

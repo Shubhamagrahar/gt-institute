@@ -5,7 +5,8 @@ namespace App\Services;
 use App\Mail\FranchiseWelcomeMail;
 use App\Models\Franchise;
 use App\Models\FranchiseCourseCharge;
-use App\Models\FranchiseJoiningWallet;
+use App\Models\FranchiseInstituteTransaction;
+use App\Models\FranchiseInstituteWallet;
 use App\Models\FranchiseTransaction;
 use App\Models\FranchiseWallet;
 use App\Models\LevelCourseCharge;
@@ -84,14 +85,30 @@ class FranchiseOnboardingService
                 'balance'      => $openingBalance,
             ]);
 
-            // Joining fee wallet — tracks level fee outstanding
-            FranchiseJoiningWallet::create([
+            // Institute wallet — tracks onboarding fee as a debt
+            // balance is negative: -levelFee means franchise owes that much to institute
+            FranchiseInstituteWallet::create([
                 'franchise_id' => $franchise->id,
                 'institute_id' => $instituteId,
-                'total_due'    => $levelFee,
-                'total_paid'   => 0,
-                'balance'      => $levelFee,
+                'balance'      => -$levelFee,
             ]);
+
+            if ($levelFee > 0) {
+                FranchiseInstituteTransaction::create([
+                    'franchise_id' => $franchise->id,
+                    'institute_id' => $instituteId,
+                    'txn_no'       => $this->invoiceService->generateFranchiseInstTxnNo($instituteId, $franchise->id),
+                    'type'         => 1, // opening_due
+                    'description'  => 'Onboarding / joining fee charged on franchise creation',
+                    'credit'       => 0,
+                    'debit'        => $levelFee,
+                    'op_bal'       => 0,
+                    'cl_bal'       => -$levelFee,
+                    'date'         => now()->toDateString(),
+                    'c_date'       => now(),
+                    'by_userid'    => $createdBy,
+                ]);
+            }
 
             // Copy level course charges for selected course types — always done
             if (! empty($data['franchise_level_id'])) {

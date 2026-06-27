@@ -115,27 +115,42 @@
   </div>
 </div>
 
-{{-- ── Wallet Settings ─────────────────────────────────────────────────── --}}
-<div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border-1);">
-  <div style="font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:14px;">Wallet Settings</div>
+{{-- ── Operational Wallet Balance (PRIMARY FIELD) ───────────────────────── --}}
+<div class="wallet-opening-card">
+  <div class="wallet-opening-header">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/><path d="M2 10h20"/></svg>
+    <span>Operational Wallet — Opening Balance</span>
+    <span class="wallet-opening-badge">Main</span>
+  </div>
+  <p class="wallet-opening-desc">
+    This amount will be credited to the franchise's operational wallet immediately on account creation.
+    The franchise uses this balance to deduct per-admission charges automatically.
+    Set to <strong>₹0</strong> if starting with zero balance.
+  </p>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <span style="font-size:22px; font-weight:700; color:var(--accent); line-height:1; padding-top:4px;">₹</span>
+    <div style="flex:1; max-width:260px;">
+      <input type="number" name="opening_balance" id="opening_balance" class="gt-input wallet-opening-input"
+        value="{{ old('opening_balance', isset($franchise) ? ($franchise->wallet?->balance ?? 0) : '0') }}"
+        min="0" step="0.01" placeholder="0.00">
+      @error('opening_balance')<div class="gt-error" style="margin-top:4px;">{{ $message }}</div>@enderror
+    </div>
+  </div>
+</div>
 
-  <div class="wallet-charges-info" style="margin-bottom:14px;">
+{{-- ── Wallet Alert Settings ────────────────────────────────────────────── --}}
+<div style="margin-top:14px; padding-top:14px; border-top:1px solid var(--border-1);">
+  <div style="font-size:11px; font-weight:700; color:var(--text-3); text-transform:uppercase; letter-spacing:.6px; margin-bottom:10px;">Wallet Alert</div>
+  <div class="wallet-charges-info" style="margin-bottom:12px;">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     All franchises use the wallet system. Course-wise admission &amp; certificate charges will be set on the <strong>next step</strong>.
   </div>
-
-  <div class="gt-form-grid-2">
+  <div style="max-width:260px;">
     <div class="gt-form-group">
-      <label class="gt-label">Low Wallet Alert (₹)</label>
+      <label class="gt-label">Low Wallet Alert Threshold (₹)</label>
       <input type="number" name="low_wallet_alert" class="gt-input"
         value="{{ old('low_wallet_alert', $franchise->low_wallet_alert ?? 1000) }}" min="0" step="0.01">
       @error('low_wallet_alert')<div class="gt-error">{{ $message }}</div>@enderror
-    </div>
-    <div class="gt-form-group">
-      <label class="gt-label">Opening Wallet Balance (₹)</label>
-      <input type="number" name="opening_balance" class="gt-input"
-        value="{{ old('opening_balance', isset($franchise) ? ($franchise->wallet?->balance ?? 0) : '0') }}" min="0" step="0.01">
-      @error('opening_balance')<div class="gt-error">{{ $message }}</div>@enderror
     </div>
   </div>
 </div>
@@ -225,6 +240,33 @@
   font-size: 12.5px; color: var(--text-2);
   background: var(--bg-3); border: 1px solid var(--border-2);
   border-radius: var(--radius-sm); padding: 9px 13px;
+}
+
+/* Opening wallet balance — primary highlighted card */
+.wallet-opening-card {
+  margin-top: 20px; padding: 18px 20px 20px;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-bg, rgba(var(--accent-rgb, 79,70,229), .06));
+  position: relative;
+}
+.wallet-opening-header {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13.5px; font-weight: 700; color: var(--accent);
+  margin-bottom: 10px;
+}
+.wallet-opening-badge {
+  margin-left: auto; font-size: 10px; font-weight: 700; letter-spacing: .5px;
+  text-transform: uppercase; background: var(--accent); color: #fff;
+  padding: 2px 8px; border-radius: 20px;
+}
+.wallet-opening-desc {
+  font-size: 12.5px; color: var(--text-2); margin-bottom: 14px; line-height: 1.55;
+}
+.wallet-opening-input {
+  font-size: 20px !important; font-weight: 700 !important;
+  color: var(--accent) !important; padding: 10px 14px !important;
+  border-color: var(--accent) !important; letter-spacing: .5px;
 }
 </style>
 @endpush
