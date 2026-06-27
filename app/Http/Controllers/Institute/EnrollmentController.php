@@ -1764,6 +1764,8 @@ class EnrollmentController extends Controller
             $courseBook->update(['enrollment_no' => $this->generateEnrollmentNo($courseBook->loadMissing('course'))]);
         }
 
+        $this->deductFranchiseAdmissionCharge($courseBook);
+
         $courseBook->update([
             'status' => 'RUN',
             'start_date' => $courseBook->start_date ?? now()->toDateString(),
