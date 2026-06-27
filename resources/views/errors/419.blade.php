@@ -1,3 +1,30 @@
+@php
+  $path    = request()->path();
+  $referer = request()->header('referer', '');
+  $check   = $path . ' ' . $referer;
+
+  if (str_contains($check, 'owner/')) {
+      $loginUrl    = route('owner.login');
+      $portalLabel = 'Owner Portal';
+      $portalIcon  = 'shield';
+  } elseif (str_contains($check, 'franchise/')) {
+      $loginUrl    = route('franchise.login');
+      $portalLabel = 'Franchise Portal';
+      $portalIcon  = 'briefcase';
+  } elseif (str_contains($check, 'staff/')) {
+      $loginUrl    = route('staff.login');
+      $portalLabel = 'Staff Portal';
+      $portalIcon  = 'users';
+  } elseif (str_contains($check, 'student/')) {
+      $loginUrl    = route('student.login');
+      $portalLabel = 'Student Portal';
+      $portalIcon  = 'book';
+  } else {
+      $loginUrl    = route('login');
+      $portalLabel = 'Institute Portal';
+      $portalIcon  = 'lock';
+  }
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -139,11 +166,18 @@
 
     {{-- Portal badge --}}
     <div class="se-badge">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-      </svg>
-      Institute Portal
+      @if($portalIcon === 'shield')
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      @elseif($portalIcon === 'briefcase')
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      @elseif($portalIcon === 'users')
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      @elseif($portalIcon === 'book')
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      @else
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      @endif
+      {{ $portalLabel }}
     </div>
 
     {{-- Countdown ring --}}
@@ -175,7 +209,7 @@
 
     {{-- Buttons --}}
     <div class="se-btn-row">
-      <a href="{{ url('/login') }}" class="se-btn se-btn-primary">
+      <a href="{{ $loginUrl }}" class="se-btn se-btn-primary">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
           <polyline points="10 17 15 12 10 7"/>
@@ -216,7 +250,7 @@
     if (timerEl) timerEl.textContent = remaining;
     if (remaining <= 0) {
       clearInterval(tick);
-      window.location.href = '{{ url('/login') }}';
+      window.location.href = '{{ $loginUrl }}';
     }
   }, 1000);
 
