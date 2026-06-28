@@ -57,9 +57,9 @@
   $selectedSessId = session('selected_session_id', $activeSession?->id);
 @endphp
 
-<div style="margin:6px 12px 4px;background:rgba(108,93,211,.12);border:1px solid rgba(108,93,211,.25);border-radius:7px;padding:6px 10px;">
+<div style="margin:6px 12px 4px;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.25);border-radius:7px;padding:6px 10px;">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a89cf5" stroke-width="2" style="flex-shrink:0;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" style="flex-shrink:0;">
       <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
     </svg>
@@ -71,7 +71,7 @@
 
   @if($allSessions->isEmpty())
     <a href="{{ route('institute.sessions.create') }}"
-       style="display:block;font-size:11.5px;color:#a89cf5;font-weight:600;">
+       style="display:block;font-size:11.5px;color:#93c5fd;font-weight:600;">
       + Create First Session
     </a>
   @else
@@ -168,7 +168,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Open Enquiries
       @if($__sidebarEnqOpen > 0)
-        <span style="margin-left:auto;background:rgba(108,93,211,.2);color:#a89cf5;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">{{ $__sidebarEnqOpen }}</span>
+        <span style="margin-left:auto;background:rgba(37,99,235,.2);color:#93c5fd;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">{{ $__sidebarEnqOpen }}</span>
       @endif
     </a>
     <a href="{{ route('institute.enquiries.index', ['tab'=>'due']) }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.index') && request()->get('tab')==='due' ? 'active' : '' }}">
@@ -336,13 +336,6 @@
 
     {{-- Footer (fixed) --}}
     <div class="gt-sidebar-footer">
-      <form action="{{ route('logout') }}" method="POST">
-        @csrf
-        <button type="submit" class="btn btn-outline w-full" style="justify-content:center;border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:12px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Sign Out
-        </button>
-      </form>
       <div class="gt-footer-brand">
         <img src="{{ asset('images/gt-icon.png') }}" alt="" onerror="this.style.display='none'">
         <span>Powered by Gaurangi Technologies</span>
@@ -352,29 +345,87 @@
 
   {{-- ─── MAIN ─── --}}
   <div class="gt-main">
-    <header class="gt-topbar">
+    <header class="gt-topbar gt-topbar-compact">
       <button class="gt-hamburger" id="hamburger-btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
 
-      {{-- Clock widget --}}
-      <div class="gt-clock-widget">
-        <span id="clock-time">00:00:00</span>
-        <span class="clock-ampm" id="clock-ampm">AM</span>
-        <span class="clock-date" id="clock-date"></span>
+      {{-- Page Title --}}
+      <div class="gt-topbar-title">@yield('page-title','Dashboard')</div>
+
+      {{-- ERP Quick Action Buttons --}}
+      <div class="gt-topbar-erp-nav">
+        <a href="{{ route('institute.enrollment.choose') }}" class="gt-erp-btn gt-erp-btn-blue">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+          <span class="erp-btn-label">Full Admission</span>
+        </a>
+        <a href="{{ route('institute.enrollment.quick') }}" class="gt-erp-btn gt-erp-btn-amber">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span class="erp-btn-label">Quick Reg</span>
+        </a>
+        <a href="{{ route('institute.fee-collect.index') }}" class="gt-erp-btn gt-erp-btn-green">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h3"/></svg>
+          <span class="erp-btn-label">Collect Fee</span>
+        </a>
+        <a href="{{ route('institute.students.index') }}" class="gt-erp-btn gt-erp-btn-outline">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="erp-btn-label">Search</span>
+        </a>
       </div>
 
       <div style="flex:1;"></div>
 
-      <div class="gt-topbar-actions">
-        @yield('topbar-actions')
-        {{-- Fullscreen & grid icons --}}
+      {{-- Right Side --}}
+      <div class="gt-topbar-right">
+
+        {{-- Session Switcher --}}
+        @if(!empty($allSessions) && $allSessions->isNotEmpty())
+        <form method="POST" action="{{ route('institute.sessions.switch') }}" id="topbar-session-form" style="display:flex;align-items:center;">
+          @csrf
+          <div style="position:relative;display:flex;align-items:center;gap:5px;background:var(--bg-3);border:1px solid var(--border-2);border-radius:7px;padding:4px 8px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <select name="session_id" class="gt-topbar-session-select"
+              onchange="document.getElementById('topbar-session-form').submit()">
+              @foreach($allSessions as $sess)
+                <option value="{{ $sess->id }}" {{ $selectedSessId == $sess->id ? 'selected' : '' }}>
+                  {{ $sess->name }}{{ $sess->is_active ? ' ●' : '' }}
+                </option>
+              @endforeach
+            </select>
+          </div>
+        </form>
+        @endif
+
+        {{-- Clock --}}
+        <div class="gt-clock-widget" style="padding:4px 12px;">
+          <span id="clock-time" style="font-size:12px;">00:00:00</span>
+          <span class="clock-ampm" id="clock-ampm" style="font-size:8px;">AM</span>
+        </div>
+
+        {{-- Fullscreen --}}
         <button class="gt-topbar-iconbtn" onclick="toggleFullscreen()" title="Fullscreen">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
         </button>
-        <button class="gt-topbar-iconbtn" title="Apps">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        </button>
+
+        {{-- User Info --}}
+        <div class="gt-topbar-user">
+          <div class="gt-topbar-avatar">
+            @php $uname = Auth::guard('institute')->user()->name ?? Auth::guard('institute')->user()->email ?? 'U'; @endphp
+            {{ strtoupper(substr($uname, 0, 1)) }}
+          </div>
+          <span class="gt-topbar-username">{{ Str::limit($uname, 18) }}</span>
+        </div>
+
+        {{-- Logout --}}
+        <form method="POST" action="{{ route('logout') }}" data-no-spinner="1">
+          @csrf
+          <button type="submit" class="gt-topbar-logout-btn">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Logout
+          </button>
+        </form>
+
+        @yield('topbar-actions')
       </div>
     </header>
 

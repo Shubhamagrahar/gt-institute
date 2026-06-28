@@ -1,28 +1,59 @@
 @extends('layouts.institute')
 @section('title','Dashboard')
+@section('page-title','Dashboard')
 @section('content')
 
-{{-- ── Page Header ─────────────────────────────────────────────────────── --}}
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;">
-  <div>
-    <div style="font-size:18px;font-weight:700;color:var(--text);line-height:1.2;">
-      {{ $institute->name }}
+{{-- ── ERP Welcome Banner ───────────────────────────────────────────────── --}}
+@php
+  $hour = now()->hour;
+  $greeting = $hour < 12 ? 'GOOD MORNING' : ($hour < 17 ? 'GOOD AFTERNOON' : 'GOOD EVENING');
+  $userName = Auth::guard('institute')->user()->name ?? Auth::guard('institute')->user()->email ?? 'User';
+@endphp
+<div class="gt-erp-banner">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:relative;z-index:1;">
+    <div>
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;opacity:.7;margin-bottom:3px;">{{ $greeting }}</div>
+      <div style="font-size:24px;font-weight:700;line-height:1.15;margin-bottom:8px;">{{ $userName }}</div>
+      <div style="display:flex;align-items:center;gap:14px;font-size:12px;opacity:.8;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ now()->format('d M Y, D') }}
+        </span>
+        @if(isset($activeSession) && $activeSession)
+        <span style="display:flex;align-items:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {{ $activeSession->name }}
+        </span>
+        @endif
+        <span style="display:flex;align-items:center;gap:4px;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
+          {{ $institute->name }}
+        </span>
+      </div>
     </div>
-    <div style="font-size:12.5px;color:var(--text-2);margin-top:3px;">
-      {{ now()->format('l, d F Y') }}
-      &nbsp;&middot;&nbsp;
-      <span style="color:var(--accent);font-weight:500;">{{ now()->format('F Y') }} Overview</span>
+    <div style="width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0;border:2px solid rgba(255,255,255,.3);">
+      {{ strtoupper(substr($userName, 0, 1)) }}
     </div>
   </div>
-  <div style="display:flex;gap:8px;">
-    <a href="{{ route('institute.quick-pay') }}" class="btn btn-outline btn-sm">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      Quick Pay
-    </a>
-    <a href="{{ route('institute.enrollment.choose') }}" class="btn btn-primary btn-sm">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-      New Admission
-    </a>
+
+  {{-- Banner Stats --}}
+  <div class="gt-erp-banner-stats">
+    <div class="gt-erp-banner-stat">
+      <div class="gt-erp-banner-stat-label">Today's Collection</div>
+      <div class="gt-erp-banner-stat-value" style="font-family:var(--font-mono);">₹{{ number_format($stats['fee_today'],0) }}</div>
+    </div>
+    <div class="gt-erp-banner-stat">
+      <div class="gt-erp-banner-stat-label">This Month</div>
+      <div class="gt-erp-banner-stat-value" style="font-family:var(--font-mono);">₹{{ number_format($stats['fee_this_month'],0) }}</div>
+    </div>
+    <div class="gt-erp-banner-stat">
+      <div class="gt-erp-banner-stat-label">Total Students</div>
+      <div class="gt-erp-banner-stat-value">{{ $stats['total_students'] }}</div>
+    </div>
+    <div class="gt-erp-banner-stat">
+      <div class="gt-erp-banner-stat-label">Pending Admissions</div>
+      <div class="gt-erp-banner-stat-value" style="color:#fcd34d;">{{ $stats['enrollments_open'] }}</div>
+    </div>
   </div>
 </div>
 
@@ -67,23 +98,51 @@
 
   {{-- Total Students --}}
   <div class="gt-stat">
-    <div class="gt-stat-icon purple">
+    <div class="gt-stat-icon blue">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     </div>
     <div style="min-width:0;">
       <div class="gt-stat-value">{{ $stats['total_students'] }}</div>
       <div class="gt-stat-label">Total Students</div>
       @if($stats['new_students_month'] > 0)
-        <div style="font-size:11px;color:var(--success);margin-top:2px;font-weight:500;">
-          +{{ $stats['new_students_month'] }} this month
-        </div>
+        <div style="font-size:11px;color:var(--success);margin-top:2px;font-weight:500;">+{{ $stats['new_students_month'] }} this month</div>
       @else
-        <div class="gt-stat-sub">All sessions</div>
+        <div style="font-size:10.5px;background:var(--accent-bg);color:var(--accent);border-radius:4px;padding:1px 6px;margin-top:3px;display:inline-block;font-weight:600;">Active</div>
       @endif
     </div>
   </div>
 
-  {{-- This Month Collection --}}
+  {{-- Total Admissions (Session) --}}
+  <div class="gt-stat">
+    <div class="gt-stat-icon teal">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div style="min-width:0;">
+      <div class="gt-stat-value">{{ $stats['enrollments_run'] + $stats['enrollments_open'] }}</div>
+      <div class="gt-stat-label">Total Admissions</div>
+      <div style="font-size:10.5px;background:rgba(20,184,166,.1);color:#14b8a6;border-radius:4px;padding:1px 6px;margin-top:3px;display:inline-block;font-weight:600;">Session</div>
+    </div>
+  </div>
+
+  {{-- Active Running --}}
+  <div class="gt-stat">
+    <div class="gt-stat-icon green">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    </div>
+    <div style="min-width:0;">
+      <div class="gt-stat-value">{{ $stats['enrollments_run'] }}</div>
+      <div class="gt-stat-label">Active Running</div>
+      @if($stats['month_growth'] !== null)
+        <div style="font-size:11px;font-weight:500;margin-top:2px;color:{{ $stats['month_growth'] >= 0 ? 'var(--success)' : 'var(--danger)' }};">
+          {{ $stats['month_growth'] >= 0 ? '+' : '' }}{{ $stats['month_growth'] }}% revenue
+        </div>
+      @else
+        <div class="gt-stat-sub">Enrolled</div>
+      @endif
+    </div>
+  </div>
+
+  {{-- Month Collection --}}
   <div class="gt-stat">
     <div class="gt-stat-icon green">
       <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -91,43 +150,7 @@
     <div style="min-width:0;">
       <div class="gt-stat-value mono" style="font-size:16px;">₹{{ number_format($stats['fee_this_month'],0) }}</div>
       <div class="gt-stat-label">This Month</div>
-      @if($stats['month_growth'] !== null)
-        <div style="font-size:11px;font-weight:500;margin-top:2px;color:{{ $stats['month_growth'] >= 0 ? 'var(--success)' : 'var(--danger)' }};">
-          {{ $stats['month_growth'] >= 0 ? '+' : '' }}{{ $stats['month_growth'] }}% vs last month
-        </div>
-      @else
-        <div class="gt-stat-sub">{{ now()->format('M Y') }}</div>
-      @endif
-    </div>
-  </div>
-
-  {{-- Today's Collection --}}
-  <div class="gt-stat">
-    <div class="gt-stat-icon teal">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    </div>
-    <div style="min-width:0;">
-      <div class="gt-stat-value mono" style="font-size:16px;">₹{{ number_format($stats['fee_today'],0) }}</div>
-      <div class="gt-stat-label">Today</div>
-      <div class="gt-stat-sub">{{ now()->format('d M') }}</div>
-    </div>
-  </div>
-
-  {{-- Active Admissions --}}
-  <div class="gt-stat">
-    <div class="gt-stat-icon orange">
-      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    </div>
-    <div style="min-width:0;">
-      <div class="gt-stat-value">{{ $stats['enrollments_run'] }}</div>
-      <div class="gt-stat-label">Active Admissions</div>
-      @if($stats['enrollments_open'] > 0)
-        <div style="font-size:11px;color:var(--warning);margin-top:2px;font-weight:500;">
-          {{ $stats['enrollments_open'] }} pending
-        </div>
-      @else
-        <div class="gt-stat-sub">Running</div>
-      @endif
+      <div class="gt-stat-sub">{{ now()->format('M Y') }}</div>
     </div>
   </div>
 
@@ -136,37 +159,51 @@
 {{-- ── Secondary Stats Row ──────────────────────────────────────────────── --}}
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;">
 
-  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
-    <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['enrollments_open'] }}</div>
+  <div class="gt-stat" style="border-left:3px solid var(--warning);">
+    <div class="gt-stat-icon orange">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+    </div>
     <div>
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Pending</div>
-      <div style="font-size:11px;color:var(--text-2);">Admissions</div>
+      <div class="gt-stat-value">{{ $stats['enrollments_open'] }}</div>
+      <div class="gt-stat-label">Pending Approvals</div>
+      @if($stats['enrollments_open'] > 0)
+        <div style="font-size:10.5px;color:var(--warning);margin-top:2px;font-weight:600;">Action needed</div>
+      @else
+        <div class="gt-stat-sub">All clear</div>
+      @endif
     </div>
   </div>
 
-  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
-    <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['total_staff'] }}</div>
+  <div class="gt-stat" style="border-left:3px solid var(--info);">
+    <div class="gt-stat-icon blue">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
     <div>
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Staff</div>
-      <div style="font-size:11px;color:var(--text-2);">Members</div>
+      <div class="gt-stat-value">{{ $stats['total_staff'] }}</div>
+      <div class="gt-stat-label">Staff Members</div>
+      <div class="gt-stat-sub">Active</div>
     </div>
   </div>
 
-  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
-    <div style="font-size:18px;font-weight:700;color:var(--text);">{{ $stats['active_courses'] }}</div>
+  <div class="gt-stat" style="border-left:3px solid var(--success);">
+    <div class="gt-stat-icon green">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    </div>
     <div>
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Courses</div>
-      <div style="font-size:11px;color:var(--text-2);">Active</div>
+      <div class="gt-stat-value">{{ $stats['active_courses'] }}</div>
+      <div class="gt-stat-label">Active Courses</div>
+      <div class="gt-stat-sub">Running</div>
     </div>
   </div>
 
-  <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;">
-    <div style="font-size:16px;font-weight:700;color:var(--text);font-family:var(--font-mono);">
-      ₹{{ number_format($stats['student_wallet_balance'],0) }}
+  <div class="gt-stat" style="border-left:3px solid var(--accent);">
+    <div class="gt-stat-icon purple">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/></svg>
     </div>
-    <div>
-      <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;">Wallet</div>
-      <div style="font-size:11px;color:var(--text-2);">Total collected</div>
+    <div style="min-width:0;">
+      <div class="gt-stat-value mono" style="font-size:16px;">₹{{ number_format($stats['student_wallet_balance'],0) }}</div>
+      <div class="gt-stat-label">Wallet Balance</div>
+      <div class="gt-stat-sub">Total collected</div>
     </div>
   </div>
 
@@ -190,7 +227,7 @@
   <div style="display:grid;grid-template-columns:repeat(5,1fr);">
     @php
       $pipelineCols = [
-        ['label'=>'Open',        'value'=>$enquiryStats['enquiryOpen'],      'color'=>'#6c5dd3', 'tab'=>'open'],
+        ['label'=>'Open',        'value'=>$enquiryStats['enquiryOpen'],      'color'=>'#2563eb', 'tab'=>'open'],
         ['label'=>'Due Today',   'value'=>$enquiryStats['enquiryDueToday'],  'color'=>'#f59e0b', 'tab'=>'due'],
         ['label'=>'Overdue',     'value'=>$enquiryStats['enquiryOverdue'],   'color'=>'#ef4444', 'tab'=>'due'],
         ['label'=>'Converted',   'value'=>$enquiryStats['enquiryConverted'], 'color'=>'#10b981', 'tab'=>'converted'],
@@ -215,7 +252,7 @@
       $lostPct = $enquiryStats['enquiryTotal'] > 0 ? round(($enquiryStats['enquiryLost']/$enquiryStats['enquiryTotal'])*100) : 0;
       $openPct = 100 - $convPct - $lostPct;
     @endphp
-    <div style="width:{{ $openPct }}%;background:#6c5dd3;"></div>
+    <div style="width:{{ $openPct }}%;background:#2563eb;"></div>
     <div style="width:{{ $convPct }}%;background:#10b981;"></div>
     <div style="width:{{ $lostPct }}%;background:#ef4444;"></div>
   </div>
@@ -403,8 +440,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-  const accent  = '#6c5dd3';
-  const accentL = 'rgba(108,93,211,.12)';
+  const accent  = '#2563eb';
+  const accentL = 'rgba(37,99,235,.12)';
   const green   = '#10b981';
   const amber   = '#f59e0b';
   const gridCol = 'rgba(26,31,60,.07)';
