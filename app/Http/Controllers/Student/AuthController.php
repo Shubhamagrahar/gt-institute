@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -41,7 +40,7 @@ class AuthController extends Controller
         if (Auth::guard('student')->attempt($credentials, $request->boolean('remember'))) {
             $user = Auth::guard('student')->user();
 
-            if ($user->role !== 'student' || $user->status !== 'active') {
+            if (!in_array($user->role, ['student', 'franchise_student']) || $user->status !== 'active') {
                 Auth::guard('student')->logout();
                 return back()->withErrors(['login' => 'Your account is not active.'])->withInput();
             }

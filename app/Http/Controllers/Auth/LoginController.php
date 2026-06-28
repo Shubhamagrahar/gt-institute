@@ -37,6 +37,8 @@ class LoginController extends Controller
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 
+        $portal = $request->input('portal', '');
+
         $user = User::where('email', $login)
             ->orWhere('mobile', $login)
             ->orWhere('user_id', $login)
@@ -46,6 +48,18 @@ class LoginController extends Controller
             if ($user->status === 'inactive') {
                 return back()->withErrors(['login' => 'Your account has been deactivated. Contact your institute.'])->withInput();
             }
+
+            $franchiseRoles = ['franchise_head', 'franchise_staff'];
+            $instituteRoles = ['institute_head'];
+
+            if ($portal === 'franchise' && !in_array($user->role, $franchiseRoles)) {
+                return back()->withErrors(['login' => 'Invalid credentials. Please check your ID / Email / Mobile and password.'])->withInput();
+            }
+
+            if ($portal !== 'franchise' && !in_array($user->role, $instituteRoles)) {
+                return back()->withErrors(['login' => 'Invalid credentials. Please check your ID / Email / Mobile and password.'])->withInput();
+            }
+
             return $this->initiateOtpFlow($request, $user, $remember);
         }
 
@@ -180,11 +194,10 @@ class LoginController extends Controller
     private function redirectAfterLogin(User $user)
     {
         return match ($user->role) {
-            'institute_head', 'staff'           => redirect()->route('institute.dashboard'),
-            'franchise_head', 'franchise_staff' => redirect()->route('franchise.dashboard'),
-            'student'                           => redirect()->route('institute.dashboard'),
-            'franchise_student'                 => redirect()->route('franchise.dashboard'),
-            default                             => redirect('/'),
+            'institute_head'               => redirect()->route('institute.dashboard'),
+            'franchise_head',
+            'franchise_staff'              => redirect()->route('franchise.dashboard'),
+            default                        => redirect('/'),
         };
     }
 
