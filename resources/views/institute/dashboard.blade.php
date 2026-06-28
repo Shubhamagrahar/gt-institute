@@ -7,7 +7,8 @@
 @php
   $hour = now()->hour;
   $greeting = $hour < 12 ? 'GOOD MORNING' : ($hour < 17 ? 'GOOD AFTERNOON' : 'GOOD EVENING');
-  $userName = Auth::guard('institute')->user()->name ?? Auth::guard('institute')->user()->email ?? 'User';
+  $__bUser = Auth::guard('institute')->user();
+  $userName = $__bUser->institute?->name ?? $__bUser->email ?? 'Admin';
 @endphp
 <div class="gt-erp-banner">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;position:relative;z-index:1;">

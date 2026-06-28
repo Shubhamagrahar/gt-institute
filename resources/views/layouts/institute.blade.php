@@ -6,7 +6,7 @@
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>@yield('title', 'Dashboard') — {{ Auth::guard('institute')->user()->institute?->name ?? 'Institute' }}</title>
   <link rel="icon" href="{{ asset('images/gt-favicon.png') }}" type="image/png">
-  <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+  <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ filemtime(public_path('css/app.css')) }}">
   @stack('styles')
   <style>
     @keyframes gt-spin { to { transform: rotate(360deg); } }
@@ -408,12 +408,17 @@
         </button>
 
         {{-- User Info --}}
+        @php
+          $__topbarUser = Auth::guard('institute')->user();
+          $__displayName = $__topbarUser->institute?->name ?? $__topbarUser->email ?? 'Admin';
+          $__roleLabel   = $__topbarUser->role === 'institute_head' ? 'Head' : ucfirst(str_replace('_',' ', $__topbarUser->role ?? 'Staff'));
+        @endphp
         <div class="gt-topbar-user">
-          <div class="gt-topbar-avatar">
-            @php $uname = Auth::guard('institute')->user()->name ?? Auth::guard('institute')->user()->email ?? 'U'; @endphp
-            {{ strtoupper(substr($uname, 0, 1)) }}
+          <div class="gt-topbar-avatar">{{ strtoupper(substr($__displayName, 0, 1)) }}</div>
+          <div style="min-width:0;">
+            <div class="gt-topbar-username">{{ Str::limit($__displayName, 18) }}</div>
+            <div style="font-size:10px;color:var(--text-3);line-height:1;">{{ $__roleLabel }}</div>
           </div>
-          <span class="gt-topbar-username">{{ Str::limit($uname, 18) }}</span>
         </div>
 
         {{-- Logout --}}
