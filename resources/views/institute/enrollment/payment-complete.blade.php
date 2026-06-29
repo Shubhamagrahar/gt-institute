@@ -382,7 +382,9 @@
                autocomplete="off" required style="font-family:monospace;font-weight:700;letter-spacing:.12em">
       </div>
       <div style="display:flex;gap:10px;margin-top:8px">
-        <button type="submit" class="btn" style="background:#dc2626;color:#fff;flex:1;justify-content:center">
+        <button type="button" id="cancel-submit-btn" class="btn" disabled
+          style="background:#dc2626;color:#fff;flex:1;justify-content:center;opacity:.45;cursor:not-allowed"
+          onclick="confirmCancelSubmit()">
           Confirm Cancel
         </button>
         <button type="button" class="btn btn-outline" onclick="closeCancelModal()">Back</button>
@@ -428,12 +430,51 @@ document.getElementById('pay-form') && document.getElementById('pay-form').addEv
 
 // Cancel modal
 const _cancelBase = '{{ route("institute.enrollment.receipt.cancel", [$courseBook, "__ID__"]) }}';
+const _cancelBtn  = document.getElementById('cancel-submit-btn');
+const _cancelConfirmInput = document.querySelector('#cancel-form input[name="confirm"]');
+const _cancelReasonInput  = document.querySelector('#cancel-form textarea[name="reason"]');
+
+function _updateCancelBtn() {
+  const typed = _cancelConfirmInput ? _cancelConfirmInput.value : '';
+  const ready = typed === 'CANCEL';
+  _cancelBtn.disabled = !ready;
+  _cancelBtn.style.opacity  = ready ? '1'    : '.45';
+  _cancelBtn.style.cursor   = ready ? 'pointer' : 'not-allowed';
+}
+
+_cancelConfirmInput && _cancelConfirmInput.addEventListener('input', _updateCancelBtn);
+
 function openCancelModal(feeId, invoiceNo, amount) {
   document.getElementById('cancel-form').action = _cancelBase.replace('__ID__', feeId);
   document.getElementById('cancel-modal-sub').textContent = 'Invoice: ' + invoiceNo + ' — ₹' + amount;
+  if (_cancelConfirmInput) _cancelConfirmInput.value = '';
+  if (_cancelReasonInput)  _cancelReasonInput.value  = '';
+  _updateCancelBtn();
   document.getElementById('cancel-modal').classList.add('open');
 }
 function closeCancelModal() { document.getElementById('cancel-modal').classList.remove('open'); }
+
+function confirmCancelSubmit() {
+  const reason = _cancelReasonInput ? _cancelReasonInput.value.trim() : '';
+  if (!reason) {
+    Swal.fire({ icon: 'warning', title: 'Reason required', text: 'Please describe why you are cancelling this payment.', confirmButtonColor: '#dc2626' });
+    return;
+  }
+  Swal.fire({
+    icon: 'warning',
+    title: 'Cancel this payment?',
+    html: '<b>This action cannot be undone.</b><br>The amount will be reversed from both wallets.',
+    showCancelButton: true,
+    confirmButtonColor: '#dc2626',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Yes, Cancel Payment',
+    cancelButtonText: 'Go Back',
+  }).then(function(result) {
+    if (result.isConfirmed) {
+      document.getElementById('cancel-form').submit();
+    }
+  });
+}
 
 // Close on backdrop click
 ['pay-modal','cancel-modal'].forEach(id => {
