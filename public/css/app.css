@@ -6,15 +6,15 @@
    Purple accent (#6c5dd3)
 ══════════════════════════════════════════ */
 :root {
-  /* Sidebar — dark blue */
+  /* Sidebar — dark navy */
   --sidebar-bg:           #0f172a;
   --sidebar-bg2:          #1e293b;
   --sidebar-border:       rgba(255,255,255,.07);
   --sidebar-text:         rgba(255,255,255,.45);
   --sidebar-text2:        rgba(255,255,255,.85);
-  --sidebar-active-bg:    rgba(37,99,235,.18);
-  --sidebar-active-color: #93c5fd;
-  --sidebar-active-bdr:   #2563eb;
+  --sidebar-active-bg:    rgba(108,93,211,.18);
+  --sidebar-active-color: #c4b5fd;
+  --sidebar-active-bdr:   #6c5dd3;
 
   /* Main area — light */
   --bg:       #f0f4f8;
@@ -27,11 +27,11 @@
   --text-2:   #64748b;
   --text-3:   #94a3b8;
 
-  /* Blue brand */
-  --accent:     #2563eb;
-  --accent-2:   #3b82f6;
-  --accent-dim: #1d4ed8;
-  --accent-bg:  rgba(37,99,235,.08);
+  /* Purple brand */
+  --accent:     #6c5dd3;
+  --accent-2:   #8a73f5;
+  --accent-dim: #5b4ec7;
+  --accent-bg:  rgba(108,93,211,.08);
 
   /* Topbar */
   --topbar-bg:     #ffffff;
@@ -325,6 +325,8 @@ img { max-width: 100%; height: auto; }
   flex-direction: column;
   min-height: 100vh;
   background: var(--bg);
+  overflow-x: hidden;
+  min-width: 0;
 }
 
 /* ─── TOPBAR ─── */
@@ -392,7 +394,7 @@ img { max-width: 100%; height: auto; }
 .gt-topbar-iconbtn:hover { background: var(--bg-4); color: var(--text); }
 
 /* ─── PAGE BODY ─── */
-.gt-page { padding: 20px 22px; flex: 1; }
+.gt-page { padding: 20px 22px; flex: 1; overflow-x: hidden; min-width: 0; }
 
 /* ══════════════════════════════════════════
    COMPONENTS

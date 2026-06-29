@@ -298,13 +298,13 @@ Route::post('enquiries/{enquiry}/followup', [\App\Http\Controllers\Institute\Enq
 Route::patch('enquiries/{enquiry}/mark-lost', [\App\Http\Controllers\Institute\EnquiryController::class, 'markLost'])->name('enquiries.mark-lost');
 Route::get('enquiries/{enquiry}/convert', [\App\Http\Controllers\Institute\EnquiryController::class, 'convert'])->name('enquiries.convert');
 
-// Fee Collection
+// Quick Pay (kept for now)
 Route::get('quick-pay', [FeeCollectController::class, 'quickPay'])->name('quick-pay');
 Route::get('quick-pay/search', [FeeCollectController::class, 'quickPaySearch'])->name('quick-pay.search');
-Route::get('fee-collect', [FeeCollectController::class, 'index'])->name('fee-collect.index');
-Route::get('fee-collect/{user}', [FeeCollectController::class, 'show'])->name('fee-collect.show');
-Route::post('fee-collect/{user}/collect', [FeeCollectController::class, 'collect'])->name('fee-collect.collect');
-Route::get('fee-collect/{user}/receipt/{fee}', [FeeCollectController::class, 'receipt'])->name('fee-collect.receipt');
+// fee-collect pages removed — redirect old URLs to enrollment pending list
+Route::get('fee-collect', fn() => redirect()->route('institute.enrollment.pending'))->name('fee-collect.index');
+Route::get('fee-collect/{user}', fn() => redirect()->route('institute.enrollment.pending'))->name('fee-collect.show');
+Route::get('fee-collect/{user}/receipt/{fee}', fn() => redirect()->route('institute.enrollment.pending'))->name('fee-collect.receipt');
 
 // Wallet Adjustment
 Route::get('wallet-adjustment', [\App\Http\Controllers\Institute\WalletAdjustmentController::class, 'index'])->name('wallet-adjustment.index');

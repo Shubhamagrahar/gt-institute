@@ -267,7 +267,7 @@
               </a>
 
               {{-- Collect Fee --}}
-              <a href="{{ route('institute.enrollment.fee', $e) }}"
+              <a href="{{ route('institute.enrollment.payment-complete', $e) }}"
                  class="btn btn-primary btn-xs"
                  style="display:inline-flex;align-items:center;gap:4px;">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

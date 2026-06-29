@@ -326,7 +326,7 @@
   <div class="gt-card" style="padding:0;overflow:hidden;">
     <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
       <div class="gt-card-title">Recent Collections</div>
-      <a href="{{ route('institute.fee-collect.index') }}" class="btn btn-outline btn-xs">View All</a>
+      <a href="{{ route('institute.fees-dashboard') }}" class="btn btn-outline btn-xs">View All</a>
     </div>
     @forelse($recentFees as $fee)
     @php

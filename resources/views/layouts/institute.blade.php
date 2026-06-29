@@ -232,7 +232,7 @@
     </a>
 
     <div class="gt-sidebar-section">Finance</div>
-    <a href="{{ route('institute.fee-collect.index') }}" class="gt-nav-item {{ request()->routeIs('institute.fee-collect.*') ? 'active' : '' }}">
+    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard') || request()->routeIs('institute.enrollment.payment-complete') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Collect Fees
     </a>
@@ -352,26 +352,6 @@
 
       {{-- Page Title --}}
       <div class="gt-topbar-title">@yield('page-title','Dashboard')</div>
-
-      {{-- ERP Quick Action Buttons --}}
-      <div class="gt-topbar-erp-nav">
-        <a href="{{ route('institute.enrollment.choose') }}" class="gt-erp-btn gt-erp-btn-blue">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-          <span class="erp-btn-label">Full Admission</span>
-        </a>
-        <a href="{{ route('institute.enrollment.quick') }}" class="gt-erp-btn gt-erp-btn-amber">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-          <span class="erp-btn-label">Quick Reg</span>
-        </a>
-        <a href="{{ route('institute.fee-collect.index') }}" class="gt-erp-btn gt-erp-btn-green">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><path d="M6 15h3"/></svg>
-          <span class="erp-btn-label">Collect Fee</span>
-        </a>
-        <a href="{{ route('institute.students.index') }}" class="gt-erp-btn gt-erp-btn-outline">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <span class="erp-btn-label">Search</span>
-        </a>
-      </div>
 
       <div style="flex:1;"></div>
 
