@@ -148,6 +148,18 @@ class PricingController extends Controller
         $iid = $this->instituteId();
         abort_if($charge->franchise_id !== $fid, 403);
 
+        $request->validate([
+            'fees'                    => 'nullable|array|max:50',
+            'fees.*.fee_type_name'    => 'required_with:fees.*.enabled|string|max:100',
+            'fees.*.amount'           => 'required_with:fees.*.enabled|numeric|min:1|max:100000',
+        ], [
+            'fees.*.fee_type_name.required_with' => 'Fee type name is required.',
+            'fees.*.fee_type_name.max'           => 'Fee type name must be under 100 characters.',
+            'fees.*.amount.required_with'        => 'Amount is required for each enabled fee.',
+            'fees.*.amount.min'                  => 'Amount must be at least ₹1.',
+            'fees.*.amount.max'                  => 'Amount cannot exceed ₹1,00,000.',
+        ]);
+
         // Read raw fees array directly from request (bypasses boolean-cast issue)
         $rawFees  = $request->input('fees', []);
         $incoming = collect(is_array($rawFees) ? $rawFees : []);
