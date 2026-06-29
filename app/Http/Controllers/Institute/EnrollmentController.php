@@ -2247,8 +2247,8 @@ class EnrollmentController extends Controller
             abort(403);
         }
 
-        // Institute staff cannot access franchise-owned enrollments
-        if (in_array($user->role, ['institute_head', 'staff']) && $courseBook->franchise_id !== null) {
+        // Staff (not institute_head) cannot access franchise-owned enrollments
+        if ($user->role === 'staff' && $courseBook->franchise_id !== null) {
             abort(403);
         }
     }
