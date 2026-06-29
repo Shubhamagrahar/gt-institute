@@ -193,7 +193,15 @@
           </td>
           <td class="no-strike" style="text-align:right">
             <div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap">
-              @if(!$f->isCancelled())
+              @if($f->isCancelled())
+                <div style="text-align:right">
+                  <a href="{{ route('institute.enrollment.receipt.a4', [$courseBook, $f]) }}" target="_blank"
+                     class="btn btn-outline btn-xs" style="opacity:.55;text-decoration:line-through">Receipt</a>
+                  <div style="font-size:11px;color:#b91c1c;max-width:130px;margin-top:4px;word-break:break-word;line-height:1.3">
+                    {{ \Illuminate\Support\Str::limit($f->cancel_reason, 35) }}
+                  </div>
+                </div>
+              @else
                 <a href="{{ route('institute.enrollment.receipt.a4', [$courseBook, $f]) }}" target="_blank"
                    class="btn btn-outline btn-xs">A4</a>
                 <a href="{{ route('institute.enrollment.receipt.thermal', [$courseBook, $f]) }}" target="_blank"
@@ -203,10 +211,6 @@
                   onclick="openCancelModal('{{ $f->id }}','{{ $f->invoice_no }}','{{ number_format($f->{$amountColumn},2) }}')">
                   Cancel
                 </button>
-              @else
-                <span class="text-muted" style="font-size:11px;max-width:120px;display:block;word-break:break-word">
-                  {{ \Illuminate\Support\Str::limit($f->cancel_reason, 30) }}
-                </span>
               @endif
             </div>
           </td>

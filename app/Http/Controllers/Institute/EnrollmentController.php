@@ -1095,37 +1095,31 @@ class EnrollmentController extends Controller
                 'by_user_id'    => Auth::guard('institute')->id(),
             ]);
 
-            $studentTxn = StudentTransaction::where('ref_type', 'fee_collect_detail')
-                ->where('ref_id', $fee->id)
-                ->first();
+            $wallet = StudentWallet::firstOrCreate(
+                ['user_id' => $fee->user_id],
+                ['institute_id' => $iid, 'franchise_id' => $fee->franchise_id, 'owner_type' => $fee->franchise_id ? 'franchise' : 'institute', 'balance' => 0]
+            );
+            $opBal = (float) $wallet->balance;
+            $clBal = round($opBal - $amount, 2);
+            $wallet->update(['balance' => $clBal]);
 
-            if ($studentTxn) {
-                $wallet = StudentWallet::firstOrCreate(
-                    ['user_id' => $fee->user_id],
-                    ['institute_id' => $iid, 'franchise_id' => $fee->franchise_id, 'owner_type' => 'institute', 'balance' => 0]
-                );
-                $opBal = (float) $wallet->balance;
-                $clBal = round($opBal - $amount, 2);
-                $wallet->update(['balance' => $clBal]);
-
-                StudentTransaction::create([
-                    'user_id'      => $fee->user_id,
-                    'institute_id' => $iid,
-                    'franchise_id' => $fee->franchise_id,
-                    'owner_type'   => $fee->franchise_id ? 'franchise' : 'institute',
-                    'description'  => 'Payment reversal | Invoice: ' . $fee->invoice_no . ' | ' . $request->reason,
-                    'debit'        => $amount,
-                    'credit'       => 0,
-                    'type'         => 5,
-                    'ref_type'     => 'fee_collect_detail_cancel',
-                    'ref_id'       => $fee->id,
-                    'date'         => now()->toDateString(),
-                    'c_date'       => now(),
-                    'op_bal'       => $opBal,
-                    'cl_bal'       => $clBal,
-                    'by_user_id'   => Auth::guard('institute')->id(),
-                ]);
-            }
+            StudentTransaction::create([
+                'user_id'      => $fee->user_id,
+                'institute_id' => $iid,
+                'franchise_id' => $fee->franchise_id,
+                'owner_type'   => $fee->franchise_id ? 'franchise' : 'institute',
+                'description'  => 'Payment reversal | Invoice: ' . $fee->invoice_no . ' | ' . $request->reason,
+                'debit'        => $amount,
+                'credit'       => 0,
+                'type'         => 5,
+                'ref_type'     => 'fee_collect_detail_cancel',
+                'ref_id'       => $fee->id,
+                'date'         => now()->toDateString(),
+                'c_date'       => now(),
+                'op_bal'       => $opBal,
+                'cl_bal'       => $clBal,
+                'by_user_id'   => Auth::guard('institute')->id(),
+            ]);
         });
 
         return redirect()->route('institute.enrollment.payment-complete', $courseBook)

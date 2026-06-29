@@ -18,6 +18,9 @@ body{font-family:'Courier New',Courier,monospace;background:#e8ecf0;padding:12px
 .big-amount{font-size:20px;font-weight:bold;text-align:center;margin:8px 0;letter-spacing:.04em}
 .balance-row{display:flex;justify-content:space-between;font-size:12px;margin:3px 0}
 .no-print{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.receipt{position:relative}
+.cancelled-stamp-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}
+.cancelled-stamp-box{border:5px double rgba(185,28,28,.55);border-radius:8px;padding:8px 14px;color:rgba(185,28,28,.55);font-size:22pt;font-weight:900;letter-spacing:.15em;text-transform:uppercase;font-family:'Arial Black',Arial,sans-serif;transform:rotate(-22deg);white-space:nowrap;line-height:1}
 .no-print button{padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;border:none}
 .btn-print{background:#1e40af;color:#fff}
 .btn-close{background:#f1f5f9;color:#374151}
@@ -45,6 +48,11 @@ $studentName = $courseBook->student->profile?->name ?? $courseBook->student->use
 </div>
 
 <div class="receipt">
+  @if($fee->isCancelled())
+  <div class="cancelled-stamp-overlay">
+    <div class="cancelled-stamp-box">CANCELLED</div>
+  </div>
+  @endif
   <div class="center bold" style="font-size:14px;line-height:1.4">{{ $institute?->name ?? 'Institute' }}</div>
   @if($institute?->address)
     <div class="center" style="font-size:10px;color:#555">{{ $institute->address }}</div>

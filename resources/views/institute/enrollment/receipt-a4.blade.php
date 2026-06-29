@@ -216,6 +216,32 @@ body { font-family: Arial, Helvetica, sans-serif; background: #bbb; }
   margin: 0 auto 2px;
 }
 
+/* Cancelled stamp */
+.receipt { position: relative; }
+.cancelled-stamp-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 20;
+}
+.cancelled-stamp-box {
+  border: 6px double rgba(185,28,28,.55);
+  border-radius: 10px;
+  padding: 10px 20px;
+  color: rgba(185,28,28,.55);
+  font-size: 24pt;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  font-family: 'Arial Black', Arial, sans-serif;
+  transform: rotate(-22deg);
+  white-space: nowrap;
+  line-height: 1;
+}
+
 /* Copy label */
 .r-copy {
   border-top: 1.5px solid #000;
@@ -306,6 +332,12 @@ body { font-family: Arial, Helvetica, sans-serif; background: #bbb; }
       @if(!$loop->first)<div class="cut-line"></div>@endif
 
       <div class="receipt">
+
+        @if($fee->isCancelled())
+        <div class="cancelled-stamp-overlay">
+          <div class="cancelled-stamp-box">CANCELLED</div>
+        </div>
+        @endif
 
         {{-- Institute Header --}}
         <div class="r-head">
