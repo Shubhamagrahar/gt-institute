@@ -298,9 +298,9 @@ Route::post('enquiries/{enquiry}/followup', [\App\Http\Controllers\Institute\Enq
 Route::patch('enquiries/{enquiry}/mark-lost', [\App\Http\Controllers\Institute\EnquiryController::class, 'markLost'])->name('enquiries.mark-lost');
 Route::get('enquiries/{enquiry}/convert', [\App\Http\Controllers\Institute\EnquiryController::class, 'convert'])->name('enquiries.convert');
 
-// Quick Pay (kept for now)
-Route::get('quick-pay', [FeeCollectController::class, 'quickPay'])->name('quick-pay');
-Route::get('quick-pay/search', [FeeCollectController::class, 'quickPaySearch'])->name('quick-pay.search');
+// Quick Pay — redirect to fees dashboard
+Route::get('quick-pay', fn() => redirect()->route('institute.fees-dashboard'))->name('quick-pay');
+Route::get('quick-pay/search', fn() => redirect()->route('institute.fees-dashboard'))->name('quick-pay.search');
 // fee-collect pages removed — redirect old URLs to enrollment pending list
 Route::get('fee-collect', fn() => redirect()->route('institute.enrollment.pending'))->name('fee-collect.index');
 Route::get('fee-collect/{user}', fn() => redirect()->route('institute.enrollment.pending'))->name('fee-collect.show');
