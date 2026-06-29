@@ -460,6 +460,8 @@ function confirmCancelSubmit() {
     Swal.fire({ icon: 'warning', title: 'Reason required', text: 'Please describe why you are cancelling this payment.', confirmButtonColor: '#dc2626' });
     return;
   }
+  // Close modal first so SweetAlert is not hidden behind it
+  document.getElementById('cancel-modal').classList.remove('open');
   Swal.fire({
     icon: 'warning',
     title: 'Cancel this payment?',
@@ -472,6 +474,9 @@ function confirmCancelSubmit() {
   }).then(function(result) {
     if (result.isConfirmed) {
       document.getElementById('cancel-form').submit();
+    } else {
+      // Reopen modal if user went back
+      document.getElementById('cancel-modal').classList.add('open');
     }
   });
 }
