@@ -56,32 +56,39 @@
 
 {{-- Hero --}}
 <div class="fc-hero {{ $isAdmitted ? 'fc-hero-admitted' : '' }}">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+  {{-- Top row: identity --}}
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:18px">
     <div>
       <div class="fc-badge">{{ $isAdmitted ? '✓ Admitted' : '◉ Seat Booked' }}</div>
-      <div class="fc-hero-name">
-        {{ $isAdmitted ? ($courseBook->enrollment_no ?? '—') : ($courseBook->student->profile?->name ?? $courseBook->student->user_id) }}
-      </div>
-      @if($isAdmitted)
-        <div class="fc-hero-sub">{{ $courseBook->student->profile?->name ?? $courseBook->student->user_id }}</div>
-      @endif
-      <div class="fc-hero-sub" style="margin-top:6px">
+      <div class="fc-hero-name">{{ $courseBook->student->profile?->name ?? $courseBook->student->user_id }}</div>
+      <div class="fc-hero-sub" style="margin-top:4px">
+        @if($isAdmitted && $courseBook->enrollment_no)
+          <span style="opacity:.75">{{ $courseBook->enrollment_no }}</span> &middot;
+        @endif
         {{ $courseBook->course->name }}
         @if($courseBook->batch) &middot; {{ $courseBook->batch->name }}@endif
-        &middot; <strong>{{ $plan?->plan_type ?? 'No Plan' }}</strong>
+        @if($plan) &middot; <strong>{{ $plan->plan_type }}</strong>@endif
       </div>
     </div>
-    <div style="text-align:right">
-      <div class="fc-paid-label">Collected</div>
-      <div class="fc-paid-big">₹{{ number_format($paidTotal, 2) }}</div>
-      <div style="font-size:12px;opacity:.7">of ₹{{ number_format($courseBook->final_fee, 2) }}</div>
+  </div>
+
+  {{-- Bottom row: 3 fee stats --}}
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+    <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px 16px">
+      <div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Total Fee</div>
+      <div style="font-size:20px;font-weight:900">₹{{ number_format($courseBook->final_fee, 2) }}</div>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px 16px">
+      <div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Paid</div>
+      <div style="font-size:20px;font-weight:900;color:#6ee7b7">₹{{ number_format($paidTotal, 2) }}</div>
+    </div>
+    <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px 16px">
+      <div style="font-size:11px;opacity:.7;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Due</div>
       @if($due > 0)
-        <div style="margin-top:6px;background:rgba(239,68,68,.25);padding:3px 12px;border-radius:8px;font-size:12px">
-          ₹{{ number_format($due, 2) }} due
-          @if($lateFee > 0) + ₹{{ number_format($lateFee, 2) }} late fee @endif
-        </div>
+        <div style="font-size:20px;font-weight:900;color:#fca5a5">₹{{ number_format($due, 2) }}</div>
+        @if($lateFee > 0)<div style="font-size:11px;opacity:.75;margin-top:2px">+ ₹{{ number_format($lateFee, 2) }} late fee</div>@endif
       @else
-        <div style="margin-top:6px;background:rgba(16,185,129,.25);padding:3px 12px;border-radius:8px;font-size:12px">Fully Paid</div>
+        <div style="font-size:16px;font-weight:800;color:#6ee7b7">Fully Paid ✓</div>
       @endif
     </div>
   </div>
