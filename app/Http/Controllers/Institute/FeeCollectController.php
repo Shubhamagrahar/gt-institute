@@ -47,7 +47,11 @@ class FeeCollectController extends Controller
             ->get();
 
         return response()->json($students->map(function ($student) {
-            $enrollment = $student->enrollments->whereNotNull('enrollment_no')->first();
+            $enrollment = $student->enrollments->whereNotNull('enrollment_no')->first()
+                       ?? $student->enrollments->first();
+            $url = $enrollment
+                ? route('institute.enrollment.payment-complete', $enrollment->id)
+                : route('institute.fees-dashboard');
             return [
                 'id'            => $student->id,
                 'user_id'       => $student->user_id,
@@ -55,7 +59,7 @@ class FeeCollectController extends Controller
                 'mobile'        => $student->mobile ?? null,
                 'email'         => $student->email ?? null,
                 'enrollment_no' => $enrollment?->enrollment_no ?? null,
-                'url'           => route('institute.fee-collect.show', $student->id),
+                'url'           => $url,
             ];
         }));
     }

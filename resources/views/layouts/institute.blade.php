@@ -236,7 +236,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Collect Fees
     </a>
-    <a href="{{ route('institute.fees-dashboard', ['tab'=>'quick-pay']) }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard') && request('tab') === 'quick-pay' ? 'active' : '' }}">
+    <a href="{{ route('institute.quick-pay') }}" class="gt-nav-item {{ request()->routeIs('institute.quick-pay*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       Quick Pay
     </a>
