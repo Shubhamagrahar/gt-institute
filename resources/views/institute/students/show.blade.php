@@ -54,58 +54,19 @@
 }
 .enr-section-title { font-size: 14px; font-weight: 800; }
 
-/* ── Enrollment Card ── */
-.enr-card {
-  padding: 20px 22px;
-  border-bottom: 1px solid var(--border);
+.enr-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.enr-tbl th {
+  padding: 10px 14px; text-align: left;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--text-2);
+  background: var(--bg-3); border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
-.enr-card:last-child { border-bottom: none; }
-
-.enr-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
-.enr-course { font-size: 16px; font-weight: 800; }
-.enr-meta { font-size: 12px; color: var(--text-2); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px 12px; }
-
-.enr-dates {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px;
-}
-.enr-date-chip {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 12px; border-radius: 8px;
-  background: var(--bg-3); border: 1px solid var(--border);
-  font-size: 12px;
-}
-.enr-date-chip .lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing:.05em; color: var(--text-3); }
-.enr-date-chip .val { font-weight: 700; color: var(--text); }
-
-.enr-fee-row {
-  display: grid; grid-template-columns: repeat(3, 1fr) auto;
-  gap: 10px; align-items: center;
-}
-@media(max-width:640px) { .enr-fee-row { grid-template-columns: repeat(3,1fr); } .enr-fee-row .enr-btn-col { grid-column: 1/-1; } }
-
-.enr-fee-box {
-  background: var(--bg-3); border: 1px solid var(--border);
-  border-radius: 10px; padding: 10px 14px;
-}
-.enr-fee-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); margin-bottom: 3px; }
-.enr-fee-val { font-size: 16px; font-weight: 900; }
-.enr-fee-box.due-box { background: #fef2f2; border-color: #fecaca; }
-.enr-fee-box.due-box .enr-fee-lbl { color: #b91c1c; }
-.enr-fee-box.due-box .enr-fee-val { color: #dc2626; }
-.enr-fee-box.paid-box { background: #f0fdf4; border-color: #bbf7d0; }
-.enr-fee-box.paid-box .enr-fee-lbl { color: #15803d; }
-.enr-fee-box.paid-box .enr-fee-val { color: #16a34a; }
-.enr-fee-box.clear-box .enr-fee-val { color: #16a34a; }
-
-.enr-btn-col { display: flex; flex-direction: column; gap: 6px; }
-
-/* expired notice */
-.enr-expired-notice {
-  margin-bottom: 12px; padding: 10px 14px;
-  background: #fef2f2; border: 1px solid #fecaca;
-  border-radius: 10px; font-size: 12px; color: #b91c1c;
-  display: flex; align-items: center; gap: 8px;
-}
+.enr-tbl td { padding: 13px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.enr-tbl tbody tr:last-child td { border-bottom: none; }
+.enr-tbl tbody tr:hover td { background: var(--bg-3); }
+.enr-row-muted td { opacity: .65; }
+.text-muted { color: var(--text-3); }
 </style>
 @endpush
 
@@ -192,129 +153,123 @@
   </div>
 </div>
 
-{{-- ══ Enrollments ══ --}}
+{{-- ══ Enrollments Table ══ --}}
 <div class="enr-section">
   <div class="enr-section-head">
     <div class="enr-section-title">Course Enrollments</div>
     <a href="{{ route('institute.enrollment.choose') }}" class="btn btn-outline btn-xs">+ New Enrollment</a>
   </div>
 
-  @forelse($enrollments as $e)
-    @php
-      $amtCol   = \App\Models\FeeCollectDetail::amountColumn();
-      $ePaid    = (float)\App\Models\FeeCollectDetail::where('course_book_id',$e->id)->whereNull('cancelled_at')->sum($amtCol);
-      $eDue     = max((float)$e->final_fee - $ePaid, 0);
-      $duration = (int)($e->course?->duration ?? 0);
-      $startDate = $e->start_date;
-      $expectedEnd = $startDate && $duration ? $startDate->copy()->addMonths($duration) : null;
-      $statusMap = ['RUN'=>'badge-success','OPEN'=>'badge-warning','CLOSE'=>'badge-neutral','EXPIRED'=>'badge-danger'];
-      $statusLabel = ['RUN'=>'Admitted','OPEN'=>'Seat Booked','CLOSE'=>'Closed','EXPIRED'=>'Expired'];
-    @endphp
-    <div class="enr-card">
-
-      {{-- Top row: course + status --}}
-      <div class="enr-top">
-        <div>
-          <div class="enr-course">{{ $e->course?->name }}</div>
-          <div class="enr-meta">
-            @if($e->batch?->name)<span>{{ $e->batch->name }}</span>@endif
-            @if($e->enrollment_no)<span style="font-family:monospace;font-size:11px;">{{ $e->enrollment_no }}</span>@endif
-            @if($e->paymentPlan?->plan_type)<span style="font-weight:700;color:var(--accent)">{{ $e->paymentPlan->plan_type }}</span>@endif
-          </div>
-        </div>
-        <span class="badge {{ $statusMap[$e->status] ?? 'badge-neutral' }}" style="flex-shrink:0;font-size:12px;">
-          {{ $statusLabel[$e->status] ?? $e->status }}
-        </span>
-      </div>
-
-      {{-- Date chips --}}
-      @if($startDate || $expectedEnd || $e->book_date)
-      <div class="enr-dates">
-        @if($e->book_date)
-          <div class="enr-date-chip">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            <div><div class="lbl">Booked On</div><div class="val">{{ \Carbon\Carbon::parse($e->book_date)->format('d M Y') }}</div></div>
-          </div>
-        @endif
-        @if($startDate)
-          <div class="enr-date-chip" style="border-color:#a5b4fc;background:#eef2ff">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <div><div class="lbl" style="color:#6366f1">Started</div><div class="val">{{ $startDate->format('d M Y') }}</div></div>
-          </div>
-        @endif
-        @if($expectedEnd)
-          <div class="enr-date-chip" style="border-color:#fed7aa;background:#fff7ed">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <div><div class="lbl" style="color:#ea580c">Expected End</div><div class="val">{{ $expectedEnd->format('d M Y') }}</div></div>
-          </div>
-        @endif
-        @if($duration)
-          <div class="enr-date-chip">
-            <div><div class="lbl">Duration</div><div class="val">{{ $duration }} month{{ $duration > 1 ? 's' : '' }}</div></div>
-          </div>
-        @endif
-      </div>
-      @endif
-
-      @if($e->status === 'EXPIRED')
-        <div class="enr-expired-notice">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Seat booking expired. Renew to continue with admission.
-        </div>
-      @endif
-
-      {{-- Fee stats + action --}}
-      <div class="enr-fee-row">
-        <div class="enr-fee-box">
-          <div class="enr-fee-lbl">Total Fee</div>
-          <div class="enr-fee-val">₹{{ number_format($e->final_fee, 2) }}</div>
-        </div>
-        <div class="enr-fee-box paid-box">
-          <div class="enr-fee-lbl">Paid</div>
-          <div class="enr-fee-val">₹{{ number_format($ePaid, 2) }}</div>
-        </div>
-        <div class="enr-fee-box {{ $eDue > 0 ? 'due-box' : 'clear-box' }}">
-          <div class="enr-fee-lbl">Due</div>
-          <div class="enr-fee-val">{{ $eDue > 0 ? '₹'.number_format($eDue,2) : '✓ Clear' }}</div>
-        </div>
-
-        <div class="enr-btn-col">
-          @if($e->status === 'EXPIRED')
-            <form method="POST" action="{{ route('institute.enrollment.renew', $e) }}" class="renew-form" style="margin:0">
-              @csrf<button type="button" class="btn btn-primary btn-sm renew-btn" style="white-space:nowrap">↺ Renew</button>
-            </form>
-            <form method="POST" action="{{ route('institute.enrollment.cancel', $e) }}" class="cancel-form" style="margin:0">
-              @csrf<button type="button" class="btn btn-outline btn-sm cancel-btn" style="color:#dc2626;border-color:#fca5a5;white-space:nowrap">Cancel</button>
-            </form>
-
-          @elseif($e->status === 'OPEN')
-            <a href="{{ route('institute.enrollment.fee', $e) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              Collect Fee
-            </a>
-            <a href="{{ route('institute.enrollment.profile', $e) }}" class="btn btn-outline btn-sm" style="white-space:nowrap">Fill Details</a>
-            <form method="POST" action="{{ route('institute.enrollment.cancel', $e) }}" class="cancel-form" style="margin:0">
-              @csrf<button type="button" class="btn btn-outline btn-sm cancel-btn" style="color:#dc2626;border-color:#fca5a5;white-space:nowrap">Cancel</button>
-            </form>
-
-          @else
-            <a href="{{ route('institute.enrollment.payment-complete', $e) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;display:inline-flex;align-items:center;gap:5px">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              Collect Fee
-            </a>
-            <a href="{{ route('institute.enrollment.preview', $e) }}" class="btn btn-outline btn-sm" style="white-space:nowrap">Application Form</a>
-            <a href="{{ route('institute.students.enrollments.edit', [$student, $e]) }}" class="btn btn-outline btn-sm" style="white-space:nowrap">Change Course</a>
-          @endif
-        </div>
-      </div>
-
-    </div>
-  @empty
+  @if($enrollments->isEmpty())
     <div style="padding:40px;text-align:center;color:var(--text-3);font-size:13px;">
       No enrollments yet.
       <a href="{{ route('institute.enrollment.choose') }}" style="color:var(--accent)">Enroll now →</a>
     </div>
-  @endforelse
+  @else
+  <div style="overflow-x:auto">
+    <table class="enr-tbl">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Course</th>
+          <th>Enrollment No.</th>
+          <th>Status</th>
+          <th>Start Date</th>
+          <th>Expected End</th>
+          <th style="text-align:right">Total Fee</th>
+          <th style="text-align:right">Paid</th>
+          <th style="text-align:right">Due</th>
+          <th style="text-align:right">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        @foreach($enrollments as $i => $e)
+          @php
+            $amtCol      = \App\Models\FeeCollectDetail::amountColumn();
+            $ePaid       = (float)\App\Models\FeeCollectDetail::where('course_book_id',$e->id)->whereNull('cancelled_at')->sum($amtCol);
+            $eDue        = max((float)$e->final_fee - $ePaid, 0);
+            $duration    = (int)($e->course?->duration ?? 0);
+            $startDate   = $e->start_date;
+            $expectedEnd = $startDate && $duration ? $startDate->copy()->addMonths($duration) : null;
+            $statusColors = [
+              'RUN'     => ['bg'=>'#f0fdf4','color'=>'#15803d','dot'=>'#16a34a'],
+              'OPEN'    => ['bg'=>'#fffbeb','color'=>'#b45309','dot'=>'#d97706'],
+              'CLOSE'   => ['bg'=>'var(--bg-3)','color'=>'var(--text-2)','dot'=>'#9ca3af'],
+              'EXPIRED' => ['bg'=>'#fef2f2','color'=>'#b91c1c','dot'=>'#dc2626'],
+            ];
+            $sc = $statusColors[$e->status] ?? $statusColors['CLOSE'];
+            $statusLabel = ['RUN'=>'Running','OPEN'=>'Seat Booked','CLOSE'=>'Closed','EXPIRED'=>'Expired'];
+          @endphp
+          <tr class="{{ in_array($e->status,['CLOSE','EXPIRED']) ? 'enr-row-muted' : '' }}">
+            <td class="text-muted">{{ $i + 1 }}</td>
+            <td>
+              <div style="font-weight:700;font-size:13px;">{{ $e->course?->name }}</div>
+              @if($e->batch?->name)
+                <div style="font-size:11px;color:var(--text-3);margin-top:1px;">{{ $e->batch->name }}</div>
+              @endif
+              @if($e->paymentPlan?->plan_type)
+                <div style="font-size:11px;color:var(--accent);font-weight:700;margin-top:1px;">{{ $e->paymentPlan->plan_type }}</div>
+              @endif
+            </td>
+            <td>
+              @if($e->enrollment_no)
+                <span style="font-family:monospace;font-size:12px;font-weight:700;">{{ $e->enrollment_no }}</span>
+              @else
+                <span class="text-muted" style="font-size:12px">—</span>
+              @endif
+            </td>
+            <td>
+              <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:700;background:{{ $sc['bg'] }};color:{{ $sc['color'] }}">
+                <span style="width:6px;height:6px;border-radius:50%;background:{{ $sc['dot'] }};flex-shrink:0"></span>
+                {{ $statusLabel[$e->status] ?? $e->status }}
+              </span>
+            </td>
+            <td style="font-size:12px;white-space:nowrap;color:var(--text-2)">
+              {{ $startDate ? $startDate->format('d M Y') : '—' }}
+            </td>
+            <td style="font-size:12px;white-space:nowrap;color:var(--text-2)">
+              {{ $expectedEnd ? $expectedEnd->format('d M Y') : '—' }}
+              @if($duration)<div style="font-size:10px;color:var(--text-3)">{{ $duration }}m course</div>@endif
+            </td>
+            <td style="text-align:right;font-weight:700;font-size:13px;white-space:nowrap">
+              ₹{{ number_format($e->final_fee, 2) }}
+            </td>
+            <td style="text-align:right;font-weight:700;font-size:13px;white-space:nowrap;color:#16a34a">
+              ₹{{ number_format($ePaid, 2) }}
+            </td>
+            <td style="text-align:right;font-weight:700;font-size:13px;white-space:nowrap;{{ $eDue > 0 ? 'color:#dc2626' : 'color:#16a34a' }}">
+              {{ $eDue > 0 ? '₹'.number_format($eDue,2) : '✓ Clear' }}
+            </td>
+            <td style="text-align:right;white-space:nowrap">
+              @if($e->status === 'EXPIRED')
+                <form method="POST" action="{{ route('institute.enrollment.renew', $e) }}" class="renew-form" style="display:inline;margin:0">
+                  @csrf<button type="button" class="btn btn-primary btn-xs renew-btn">↺ Renew</button>
+                </form>
+                <form method="POST" action="{{ route('institute.enrollment.cancel', $e) }}" class="cancel-form" style="display:inline;margin:0">
+                  @csrf<button type="button" class="btn btn-outline btn-xs cancel-btn" style="color:#dc2626;border-color:#fca5a5">Cancel</button>
+                </form>
+
+              @elseif($e->status === 'OPEN')
+                <a href="{{ route('institute.enrollment.fee', $e) }}" class="btn btn-primary btn-xs">Collect Fee</a>
+                <a href="{{ route('institute.enrollment.profile', $e) }}" class="btn btn-outline btn-xs">Details</a>
+                <form method="POST" action="{{ route('institute.enrollment.cancel', $e) }}" class="cancel-form" style="display:inline;margin:0">
+                  @csrf<button type="button" class="btn btn-outline btn-xs cancel-btn" style="color:#dc2626;border-color:#fca5a5">Cancel</button>
+                </form>
+
+              @elseif($e->status === 'RUN')
+                <a href="{{ route('institute.enrollment.payment-complete', $e) }}" class="btn btn-primary btn-xs">Collect Fee</a>
+                <a href="{{ route('institute.enrollment.preview', $e) }}" class="btn btn-outline btn-xs">Form</a>
+
+              @else
+                <a href="{{ route('institute.enrollment.payment-complete', $e) }}" class="btn btn-outline btn-xs">View</a>
+              @endif
+            </td>
+          </tr>
+        @endforeach
+      </tbody>
+    </table>
+  </div>
+  @endif
 </div>
 @endsection
 
