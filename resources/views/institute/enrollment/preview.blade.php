@@ -127,10 +127,15 @@
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
     <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline btn-sm">← Edit Details</a>
     <button onclick="window.print()" class="btn btn-outline btn-sm">Print / Download PDF</button>
-    @if(($paidTotal ?? 0) <= 0)
+    @if($courseBook->status === 'RUN')
+      <a href="{{ route('institute.enrollment.payment-complete', $courseBook) }}"
+         class="btn btn-primary" style="padding:9px 24px;font-weight:800;">
+        View Fee History →
+      </a>
+    @elseif(($paidTotal ?? 0) <= 0)
       <a href="{{ route('institute.enrollment.fee', $courseBook) }}"
          class="btn btn-primary" style="padding:9px 24px;font-weight:800;">
-        Proceed to Payment &rarr;
+        Proceed to Payment →
       </a>
     @else
       <form method="POST" action="{{ route('institute.enrollment.confirm', $courseBook) }}" style="display:inline">
@@ -332,9 +337,12 @@
 <div class="no-print" style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;max-width:210mm;margin-left:auto;margin-right:auto">
   <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline">← Edit Details</a>
   <button onclick="window.print()" class="btn btn-outline">Print / Download PDF</button>
-  @if(($paidTotal ?? 0) <= 0)
+  @if($courseBook->status === 'RUN')
+    <a href="{{ route('institute.enrollment.payment-complete', $courseBook) }}"
+       class="btn btn-primary" style="padding:11px 28px;font-weight:800;">View Fee History →</a>
+  @elseif(($paidTotal ?? 0) <= 0)
     <a href="{{ route('institute.enrollment.fee', $courseBook) }}"
-       class="btn btn-primary" style="padding:11px 28px;font-weight:800;">Proceed to Payment &rarr;</a>
+       class="btn btn-primary" style="padding:11px 28px;font-weight:800;">Proceed to Payment →</a>
   @else
     <form method="POST" action="{{ route('institute.enrollment.confirm', $courseBook) }}">
       @csrf
