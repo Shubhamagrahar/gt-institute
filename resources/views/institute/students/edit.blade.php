@@ -54,7 +54,8 @@
 @php
   $p = $student->profile;
   $photo = $p?->photo;
-  $hasPhoto = $photo && $photo !== 'images/user.svg' && $photo !== 'images/user.png';
+  $isRealPhoto = $photo && $photo !== 'images/user.svg' && $photo !== 'images/user.png' && !str_starts_with($photo, 'http');
+  $photoSrc = $isRealPhoto ? asset($photo) : asset('images/user.svg');
   $name = $p?->name ?? $student->user_id;
 @endphp
 
@@ -71,28 +72,44 @@
 <div class="sec" id="photo">
   <div class="sec-hd">
     <div class="sec-hd-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
-    <div class="sec-hd-text"><div class="t">Profile Photo</div></div>
+    <div class="sec-hd-text"><div class="t">Profile Photo</div><div class="s">Click the photo to change it</div></div>
   </div>
   @if(session('success_photo'))
     <div class="s-ok" style="margin:10px 16px 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>{{ session('success_photo') }}</div>
   @endif
-  <form method="POST" action="{{ route('institute.students.update', $student) }}" enctype="multipart/form-data">
+  <form method="POST" action="{{ route('institute.students.update', $student) }}" enctype="multipart/form-data" id="photo-form">
     @csrf @method('PUT')
     <input type="hidden" name="_section" value="photo">
-    <div class="sec-body">
-      <div class="photo-row">
-        <div class="photo-circle" id="photo-wrap">
-          @if($hasPhoto)<img src="{{ asset($photo) }}" id="photo-img" alt="">
-          @else<span>{{ strtoupper(substr($name,0,1)) }}</span>@endif
+    <div class="sec-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+
+      {{-- Clickable avatar --}}
+      <div style="position:relative;cursor:pointer;flex-shrink:0" onclick="document.getElementById('photo-file').click()">
+        <div style="width:100px;height:100px;border-radius:50%;overflow:hidden;border:3px solid var(--accent);box-shadow:0 0 0 4px rgba(108,93,211,.15);">
+          <img id="photo-preview" src="{{ $photoSrc }}" alt="{{ $name }}"
+               style="width:100%;height:100%;object-fit:cover;">
         </div>
-        <div>
-          <input type="file" name="photo" id="photo-file" class="gt-input" accept="image/*" required style="font-size:12.5px;max-width:260px;">
-          <div style="font-size:11px;color:var(--text-2);margin-top:4px;">JPG / PNG / WEBP — max 2 MB</div>
-          @error('photo')<div class="gt-error">{{ $message }}</div>@enderror
+        <div style="position:absolute;bottom:4px;right:4px;width:28px;height:28px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.25);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff" stroke="none"/></svg>
         </div>
       </div>
+
+      <div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px;">{{ $name }}</div>
+        <div style="font-size:12px;color:var(--text-2);margin-bottom:10px;">Click the photo or button below to upload a new one</div>
+        <input type="file" name="photo" id="photo-file" accept="image/jpeg,image/png,image/webp" required style="display:none">
+        <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('photo-file').click()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Choose Photo
+        </button>
+        <span id="photo-filename" style="font-size:12px;color:var(--text-2);margin-left:8px;">No file chosen</span>
+        <div style="font-size:11px;color:var(--text-3);margin-top:6px;">JPG / PNG / WEBP — max 2 MB</div>
+        @error('photo')<div class="gt-error">{{ $message }}</div>@enderror
+      </div>
     </div>
-    <div class="sec-ft"><button class="btn btn-primary btn-sm">Save Photo</button></div>
+    <div class="sec-ft" style="display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-primary btn-sm" id="photo-save-btn" disabled style="opacity:.4;cursor:not-allowed">Save Photo</button>
+      <span id="photo-save-hint" style="font-size:12px;color:var(--text-3)">Select a photo first</span>
+    </div>
   </form>
 </div>
 
@@ -447,15 +464,21 @@ function syncDistricts(stateId, districtId, preSelected) {
 syncDistricts('state',      'district',      @json(old('district',      $p?->district)));
 syncDistricts('perm_state', 'perm_district', @json(old('permanent_district', $p?->permanent_district)));
 
-// Photo preview
+// Photo preview + enable save button
 document.getElementById('photo-file')?.addEventListener('change', function() {
   if (!this.files[0]) return;
+  const file = this.files[0];
   const r = new FileReader();
   r.onload = e => {
-    const w = document.getElementById('photo-wrap');
-    w.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+    document.getElementById('photo-preview').src = e.target.result;
   };
-  r.readAsDataURL(this.files[0]);
+  r.readAsDataURL(file);
+  document.getElementById('photo-filename').textContent = file.name;
+  const btn = document.getElementById('photo-save-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  btn.style.cursor = 'pointer';
+  document.getElementById('photo-save-hint').textContent = '';
 });
 
 // Same as present

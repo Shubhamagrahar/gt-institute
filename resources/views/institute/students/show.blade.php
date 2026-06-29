@@ -76,14 +76,15 @@
   $wallet   = $student->studentWallet;
   $bal      = $wallet?->balance ?? 0;
   $photo    = $profile?->photo;
-  $hasPhoto = $photo && $photo !== 'images/user.svg';
+  $hasPhoto = $photo && $photo !== 'images/user.svg' && $photo !== 'images/user.png';
+  $photoSrc = $hasPhoto ? asset($photo) : asset('images/user.svg');
   $initials = strtoupper(substr($profile?->name ?? 'S', 0, 1));
 @endphp
 
 {{-- ══ Student Banner ══ --}}
 <div class="sb-banner">
   <div class="sb-avatar">
-    @if($hasPhoto)<img src="{{ asset($photo) }}" alt="">@else{{ $initials }}@endif
+    <img src="{{ $photoSrc }}" alt="{{ $initials }}" style="width:100%;height:100%;object-fit:cover;">
   </div>
 
   <div class="sb-info">
