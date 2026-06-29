@@ -251,7 +251,7 @@
 
               @elseif($e->status === 'OPEN')
                 <a href="{{ route('institute.enrollment.fee', $e) }}" class="btn btn-primary btn-xs">Collect Fee</a>
-                <a href="{{ route('institute.enrollment.profile', $e) }}" class="btn btn-outline btn-xs">Details</a>
+                <a href="{{ route('institute.students.edit', $student) }}" class="btn btn-outline btn-xs">Edit Profile</a>
                 <form method="POST" action="{{ route('institute.enrollment.cancel', $e) }}" class="cancel-form" style="display:inline;margin:0">
                   @csrf<button type="button" class="btn btn-outline btn-xs cancel-btn" style="color:#dc2626;border-color:#fca5a5">Cancel</button>
                 </form>

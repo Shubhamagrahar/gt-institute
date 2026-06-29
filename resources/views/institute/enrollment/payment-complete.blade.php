@@ -155,7 +155,7 @@
       Setup Payment Plan
     </a>
   @endif
-  <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline">Edit Profile</a>
+  <a href="{{ route('institute.students.edit', $courseBook->student) }}" class="btn btn-outline">Edit Profile</a>
   <a href="{{ route('institute.students.show', $courseBook->student) }}" class="btn btn-outline">Student Profile</a>
   <a href="{{ route('institute.enrollment.pending') }}" class="btn btn-outline">← Back</a>
 </div>

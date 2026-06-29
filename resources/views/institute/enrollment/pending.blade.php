@@ -175,7 +175,7 @@
         {{-- Actions --}}
         <div class="adm-actions">
           @if($stage === 1)
-            <a href="{{ route('institute.enrollment.profile', $book) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
+            <a href="{{ route('institute.students.edit', $book->student) }}" class="btn btn-primary btn-sm" style="white-space:nowrap;">
               Fill Details →
             </a>
             <span style="font-size:11px;color:#ef4444;font-weight:600;">Details pending</span>

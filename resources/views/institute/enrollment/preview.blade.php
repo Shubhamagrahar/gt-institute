@@ -125,7 +125,7 @@
     @endif
   </div>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-    <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline btn-sm">← Edit Details</a>
+    <a href="{{ route('institute.students.edit', $courseBook->student) }}" class="btn btn-outline btn-sm">← Edit Details</a>
     <button onclick="window.print()" class="btn btn-outline btn-sm">Print / Download PDF</button>
     @if($courseBook->status === 'RUN')
       <a href="{{ route('institute.enrollment.payment-complete', $courseBook) }}"
@@ -335,7 +335,7 @@
 
 {{-- Bottom action bar --}}
 <div class="no-print" style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;max-width:210mm;margin-left:auto;margin-right:auto">
-  <a href="{{ route('institute.enrollment.profile', $courseBook) }}" class="btn btn-outline">← Edit Details</a>
+  <a href="{{ route('institute.students.edit', $courseBook->student) }}" class="btn btn-outline">← Edit Details</a>
   <button onclick="window.print()" class="btn btn-outline">Print / Download PDF</button>
   @if($courseBook->status === 'RUN')
     <a href="{{ route('institute.enrollment.payment-complete', $courseBook) }}"

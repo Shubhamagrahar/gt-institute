@@ -265,7 +265,9 @@ Route::get('enrollment/new', [EnrollmentController::class, 'newStudent'])->name(
 Route::post('enrollment/new', [EnrollmentController::class, 'storeNew'])->name('enrollment.store-new');
 Route::get('enrollment/quick', [EnrollmentController::class, 'quickStudent'])->name('enrollment.quick');
 Route::post('enrollment/quick', [EnrollmentController::class, 'storeQuick'])->name('enrollment.store-quick');
-Route::get('enrollment/{courseBook}/profile', [EnrollmentController::class, 'profileForm'])->name('enrollment.profile');
+Route::get('enrollment/{courseBook}/profile', function(\App\Models\CourseBook $courseBook) {
+    return redirect()->route('institute.students.edit', $courseBook->user_id);
+})->name('enrollment.profile');
 Route::post('enrollment/{courseBook}/profile', [EnrollmentController::class, 'saveProfile'])->name('enrollment.save-profile');
 Route::get('enrollment/{courseBook}/fee', [EnrollmentController::class, 'feeForm'])->name('enrollment.fee');
 Route::post('enrollment/{courseBook}/fee', [EnrollmentController::class, 'saveFee'])->name('enrollment.save-fee');
