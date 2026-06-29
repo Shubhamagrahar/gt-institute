@@ -244,9 +244,11 @@ payAmountEl?.addEventListener('input', () => {
 
 recalc();
 
-document.getElementById('fee-form')?.addEventListener('submit', () => {
+document.getElementById('fee-form')?.addEventListener('submit', function () {
   const el = document.getElementById('pay-amount');
   if (el && el.value === '') el.value = '0';
+  const btn = this.querySelector('[type=submit]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
 });
 </script>
 @endpush

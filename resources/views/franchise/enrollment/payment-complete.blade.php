@@ -400,5 +400,13 @@ function closeCancelModal() { document.getElementById('cancel-modal').classList.
     if (e.target === this) this.classList.remove('open');
   });
 });
+
+// Disable submit button after first click to prevent duplicate payments
+document.querySelectorAll('#pay-modal form, #cancel-modal form').forEach(function(form) {
+  form.addEventListener('submit', function() {
+    const btn = this.querySelector('[type=submit]');
+    if (btn) { btn.disabled = true; btn.textContent = 'Processing…'; }
+  });
+});
 </script>
 @endpush

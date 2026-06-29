@@ -68,13 +68,6 @@ class EnrollmentController extends Controller
     {
         $iid = $this->instituteId();
 
-        // Auto-expire OPEN bookings past the institute's configured validity window
-        $validityDays = \Auth::guard('institute')->user()->institute?->seat_booking_validity_days ?? 30;
-        CourseBook::where('institute_id', $iid)
-            ->where('status', 'OPEN')
-            ->where('book_date', '<', now()->subDays($validityDays)->toDateString())
-            ->update(['status' => 'EXPIRED']);
-
         $openBooks = CourseBook::with(['student.profile', 'course', 'batch'])
             ->where('institute_id', $iid)
             ->where('status', 'OPEN')
@@ -657,10 +650,10 @@ class EnrollmentController extends Controller
             }
             $rules[$field->field_key] = $field->is_required ? 'required' : 'nullable';
             if ($field->field_type === 'file') {
-                $rules[$field->field_key] .= '|image|max:2048';
+                $rules[$field->field_key] .= '|image|mimes:jpg,jpeg,png,webp|max:2048';
             }
             if ($field->field_key === 'mobile') {
-                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|string|max:15|unique:users,mobile,' . $user->id;
+                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|digits:10|unique:users,mobile,' . $user->id;
             }
             if ($field->field_key === 'email') {
                 $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|email|max:100|unique:users,email,' . $user->id;
@@ -671,6 +664,25 @@ class EnrollmentController extends Controller
                     'string', 'max:100',
                     Rule::exists('states', 'name'),
                 ];
+            }
+            // Specific format validation for sensitive fields
+            if ($field->field_key === 'aadhar_no') {
+                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|digits:12';
+            }
+            if ($field->field_key === 'pan_no') {
+                $rules[$field->field_key] = [$field->is_required ? 'required' : 'nullable', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/'];
+            }
+            if ($field->field_key === 'blood_group') {
+                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|in:A+,A-,B+,B-,AB+,AB-,O+,O-';
+            }
+            if ($field->field_key === 'dob') {
+                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|date|before:today';
+            }
+            if (in_array($field->field_key, ['whatsapp_no', 'alternate_mobile', 'guardian_mobile'], true)) {
+                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|digits:10';
+            }
+            if (in_array($field->field_key, ['pin_code', 'permanent_pin_code'], true)) {
+                $rules[$field->field_key] = ($field->is_required ? 'required' : 'nullable') . '|digits:6';
             }
         }
 
@@ -914,7 +926,7 @@ class EnrollmentController extends Controller
             : 'nullable|string|max:80';
 
         $request->validate([
-            'amount'       => 'required|numeric|min:0.01',
+            'amount'       => 'required|numeric|min:0.01|max:500000',
             'payment_mode' => 'required|in:CASH,UPI,NEFT,IMPS,CHEQUE',
             'payment_date' => 'required|date',
             'utr'          => $utrRule,
@@ -1233,9 +1245,9 @@ class EnrollmentController extends Controller
             'examination' => 'required|string|max:80',
             'institute_name' => 'nullable|string|max:150',
             'board_university' => 'nullable|string|max:150',
-            'passing_year' => 'nullable|string|max:10',
+            'passing_year' => 'nullable|integer|min:1900|max:' . date('Y'),
             'division' => 'nullable|string|max:50',
-            'marks_percentage' => 'nullable|string|max:10',
+            'marks_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
         $user = User::findOrFail($data['user_id']);
         abort_unless($user->institute_id === $this->instituteId(), 403);
@@ -1397,24 +1409,6 @@ class EnrollmentController extends Controller
 
     private function activePaymentPlans(int $iid)
     {
-        $defaults = [
-            'OTP' => 'One Time Payment',
-            'PART' => 'Partial Payment',
-            'MONTHLY' => 'Monthly Payment',
-        ];
-
-        foreach ($defaults as $type => $name) {
-            PaymentPlanType::firstOrCreate(
-                ['institute_id' => $iid, 'type' => $type],
-                [
-                    'name' => $name,
-                    'grace_days' => 0,
-                    'late_fee_per_day' => 0,
-                    'is_active' => true,
-                ]
-            );
-        }
-
         return PaymentPlanType::where('institute_id', $iid)
             ->where('is_active', true)
             ->orderByRaw("CASE type WHEN 'OTP' THEN 1 WHEN 'PART' THEN 2 WHEN 'MONTHLY' THEN 3 ELSE 4 END")
@@ -1446,25 +1440,25 @@ class EnrollmentController extends Controller
                 Rule::exists('payment_plan_types', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('is_active', true)),
             ],
             'name' => 'required|string|max:100',
-            'mobile' => 'required|string|max:15|unique:users,mobile',
+            'mobile' => 'required|digits:10|unique:users,mobile',
             'email' => 'nullable|email|max:100|unique:users,email',
-            'photo' => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'father_name' => $required('father_name', 'nullable|string|max:100'),
             'mother_name' => $required('mother_name', 'nullable|string|max:100'),
             'guardian_name' => $required('guardian_name', 'nullable|string|max:100'),
             'guardian_relation' => $required('guardian_relation', 'nullable|string|max:50'),
-            'guardian_mobile' => $required('guardian_mobile', 'nullable|string|max:15'),
+            'guardian_mobile' => $required('guardian_mobile', 'nullable|digits:10'),
             'guardian_occupation' => $required('guardian_occupation', 'nullable|string|max:80'),
-            'dob' => 'nullable|date',
+            'dob' => 'nullable|date|before:today',
             'gender' => 'nullable|in:Male,Female,Other',
             'category' => 'nullable|string|max:20',
             'religion' => 'nullable|string|max:50',
             'nationality' => 'nullable|string|max:50',
-            'whatsapp_no' => 'nullable|string|max:15',
-            'alternate_mobile' => 'nullable|string|max:15',
-            'aadhar_no' => 'nullable|string|max:16',
-            'pan_no' => 'nullable|string|max:10',
-            'blood_group' => 'nullable|string|max:5',
+            'whatsapp_no' => 'nullable|digits:10',
+            'alternate_mobile' => 'nullable|digits:10',
+            'aadhar_no' => 'nullable|digits:12',
+            'pan_no' => ['nullable', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/'],
+            'blood_group' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
             'employment_status' => 'nullable|in:Employed,Unemployed',
             'computer_literacy' => 'nullable|in:Yes,No',
             'qualification' => 'nullable|string|max:80',
@@ -1478,7 +1472,7 @@ class EnrollmentController extends Controller
                 Schema::hasTable('districts') ? Rule::exists('districts', 'name') : null,
             ])),
             'city' => 'nullable|string|max:100',
-            'pin_code' => 'nullable|string|max:10',
+            'pin_code' => 'nullable|digits:6',
             'permanent_state' => ['nullable', 'string', 'max:100', Rule::exists('states', 'name')],
             'permanent_district' => array_values(array_filter([
                 'nullable',
@@ -1487,14 +1481,14 @@ class EnrollmentController extends Controller
                 Schema::hasTable('districts') ? Rule::exists('districts', 'name') : null,
             ])),
             'permanent_city' => 'nullable|string|max:100',
-            'permanent_pin_code' => 'nullable|string|max:10',
+            'permanent_pin_code' => 'nullable|digits:6',
             'education' => 'nullable|array',
             'education.*.examination' => 'nullable|string|max:80',
             'education.*.institute_name' => 'nullable|string|max:150',
             'education.*.board_university' => 'nullable|string|max:150',
-            'education.*.passing_year' => 'nullable|string|max:10',
+            'education.*.passing_year' => 'nullable|integer|min:1900|max:' . date('Y'),
             'education.*.division' => 'nullable|string|max:50',
-            'education.*.marks_percentage' => 'nullable|string|max:10',
+            'education.*.marks_percentage' => 'nullable|numeric|min:0|max:100',
             'first_payment_amount' => 'nullable|numeric|min:0',
             'payment_mode' => 'nullable|in:CASH,UPI,NEFT,IMPS,CHEQUE',
             'payment_date' => 'nullable|date',
@@ -1525,7 +1519,7 @@ class EnrollmentController extends Controller
                 Rule::exists('payment_plan_types', 'id')->where(fn ($query) => $query->where('institute_id', $iid)->where('is_active', true)),
             ],
             'name' => 'required|string|max:100',
-            'mobile' => 'required|string|max:15|unique:users,mobile',
+            'mobile' => 'required|digits:10|unique:users,mobile',
             'email' => 'required|email|max:100|unique:users,email',
         ];
 
@@ -2247,7 +2241,14 @@ class EnrollmentController extends Controller
 
     private function authorizeCourseBook(CourseBook $courseBook): void
     {
+        $user = Auth::guard('institute')->user();
+
         if ($courseBook->institute_id !== $this->instituteId()) {
+            abort(403);
+        }
+
+        // Institute staff cannot access franchise-owned enrollments
+        if (in_array($user->role, ['institute_head', 'staff']) && $courseBook->franchise_id !== null) {
             abort(403);
         }
     }

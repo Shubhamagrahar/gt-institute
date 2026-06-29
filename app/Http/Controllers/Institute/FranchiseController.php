@@ -314,7 +314,12 @@ class FranchiseController extends Controller
                 ->route('institute.franchises.fee.index', $franchise)
                 ->with('success', "Franchise '{$franchise->name}' created. Login credentials sent to {$franchise->email}.{$walletMsg}{$levelFeeMsg}");
         } catch (\Throwable $e) {
-            return back()->with('error', 'Error: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Franchise creation failed', [
+                'institute_id' => $this->instituteId(),
+                'error'        => $e->getMessage(),
+                'trace'        => $e->getTraceAsString(),
+            ]);
+            return back()->with('error', 'Franchise creation failed. Please try again or contact support.');
         }
     }
 
@@ -489,7 +494,7 @@ class FranchiseController extends Controller
         $data = $request->validate([
             'payment_mode' => 'required|in:CASH,UPI,NEFT,IMPS,CHEQUE',
             'utr'          => 'nullable|string|max:80',
-            'amount'       => 'required|numeric|min:1',
+            'amount'       => 'required|numeric|min:1|max:1000000',
             'date'         => 'required|date',
             'note'         => 'nullable|string|max:255',
         ]);

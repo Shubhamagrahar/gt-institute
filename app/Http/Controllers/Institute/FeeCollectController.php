@@ -107,7 +107,7 @@ class FeeCollectController extends Controller
 
         $data = $request->validate([
             'course_book_id' => 'nullable|exists:course_books,id',
-            'amount'       => 'required|numeric|min:1',
+            'amount'       => 'required|numeric|min:1|max:500000',
             'payment_mode' => 'required|in:CASH,UPI,NEFT,IMPS,CHEQUE',
             'utr'          => 'nullable|string|max:80',
             'date'         => 'required|date',

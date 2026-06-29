@@ -32,6 +32,9 @@ return Application::configure(basePath: dirname(__DIR__))
             } elseif (str_starts_with($request->path(), 'staff/')) {
                 $guard = 'staff';
             } elseif (str_starts_with($request->path(), 'franchise/')) {
+                // Franchise users authenticate via the 'institute' guard,
+                // but we use 'franchise' as a label so session-expired page
+                // redirects them to /franchise/login (not the institute /login).
                 $guard = 'franchise';
             }
 

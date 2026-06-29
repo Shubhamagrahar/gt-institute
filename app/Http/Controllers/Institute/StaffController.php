@@ -412,7 +412,7 @@ class StaffController extends Controller
 
         $data = $request->validate([
             'month'           => 'required|date_format:Y-m',
-            'expected_amount' => 'required|numeric|min:0',
+            'expected_amount' => 'required|numeric|min:0|max:500000',
         ]);
 
         $monthDate = $data['month'] . '-01';
@@ -436,7 +436,7 @@ class StaffController extends Controller
 
         $data = $request->validate([
             'salary_record_id' => 'required|exists:salary_records,id',
-            'amount'           => 'required|numeric|min:1',
+            'amount'           => 'required|numeric|min:1|max:500000',
             'payment_date'     => 'required|date',
             'payment_mode'     => 'required|in:cash,bank,upi,cheque',
             'reference_no'     => 'nullable|string|max:100',

@@ -191,7 +191,7 @@ class CourseController extends Controller
                 'required',
                 Rule::exists('fee_types', 'id')->where(fn ($query) => $query->where('institute_id', $this->institute()->id)->where('is_active', true)),
             ],
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:500000',
         ]);
 
         $feeType = FeeType::where('institute_id', $this->institute()->id)->findOrFail($data['fee_type_id']);

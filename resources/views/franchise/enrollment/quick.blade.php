@@ -107,6 +107,7 @@
 @push('scripts')
 <script>
 (() => {
+  function escapeHtml(s){ const d=document.createElement('div');d.appendChild(document.createTextNode(String(s||'')));return d.innerHTML; }
   const catalog = @json($courseCatalog);
   const ctSel   = document.getElementById('course_type_id');
   const durSel  = document.getElementById('course_duration_filter');
@@ -128,16 +129,16 @@
   function renderCourses() {
     const tid=ctSel.value, dur=durSel.value;
     pool = catalog.filter(c => String(c.course_type_id)===String(tid) && String(c.duration)===String(dur));
-    crsId.innerHTML = '<option value="">Select Course</option>' + pool.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+    crsId.innerHTML = '<option value="">Select Course</option>' + pool.map(c=>`<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
     crsDisp.value=''; crsDrop.style.display='none';
   }
 
   function renderDropdown(q='') {
     const f = q ? pool.filter(c=>c.name.toLowerCase().includes(q.toLowerCase())) : pool;
     crsDrop.innerHTML = f.length
-      ? f.map(c=>`<div class="crs-opt" data-id="${c.id}" data-name="${c.name}"
+      ? f.map(c=>`<div class="crs-opt" data-id="${c.id}" data-name="${escapeHtml(c.name)}"
           style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--border);">
-          ${c.name} <span style="color:var(--text-3);font-size:11px;">(${c.duration}m)</span>
+          ${escapeHtml(c.name)} <span style="color:var(--text-3);font-size:11px;">(${c.duration}m)</span>
         </div>`).join('')
       : '<div style="padding:10px 14px;font-size:12px;color:var(--text-2);">No courses found</div>';
     crsDrop.querySelectorAll('.crs-opt').forEach(d => {

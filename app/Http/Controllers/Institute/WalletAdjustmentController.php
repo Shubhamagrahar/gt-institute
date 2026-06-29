@@ -58,7 +58,7 @@ class WalletAdjustmentController extends Controller
         }
 
         $data = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:500000',
             'note'   => 'required|string|max:255',
         ]);
 
@@ -123,7 +123,7 @@ class WalletAdjustmentController extends Controller
         }
 
         $data = $request->validate([
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:500000',
             'note'   => 'required|string|max:255',
         ]);
 

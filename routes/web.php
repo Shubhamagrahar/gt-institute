@@ -77,8 +77,11 @@ Route::get('/session-expired', function (\Illuminate\Http\Request $request) {
 // ── Owner (Super Admin) Auth ──────────────────────────────────────────────────
 Route::prefix('owner')->name('owner.')->group(function () {
     Route::middleware('guest:web')->group(function () {
-        Route::get('/login',  [OwnerLoginController::class, 'showLogin'])->name('login');
-        Route::post('/login', [OwnerLoginController::class, 'login'])->name('login.post');
+        Route::get('/login',             [OwnerLoginController::class, 'showLogin'])->name('login');
+        Route::post('/login',            [OwnerLoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
+        Route::get('/login/otp',         [OwnerLoginController::class, 'showOtpVerify'])->name('login.otp.show');
+        Route::post('/login/otp',        [OwnerLoginController::class, 'verifyOtp'])->name('login.otp.verify')->middleware('throttle:5,1');
+        Route::post('/login/otp/resend', [OwnerLoginController::class, 'resendOtp'])->name('login.otp.resend')->middleware('throttle:3,1');
     });
     Route::post('/logout', [OwnerLoginController::class, 'logout'])->name('logout');
 });
@@ -87,19 +90,18 @@ Route::prefix('owner')->name('owner.')->group(function () {
 Route::middleware('guest:institute')->group(function () {
     Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
     Route::get('/franchise/login', fn() => view('auth.franchise-login'))->name('franchise.login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
     Route::get('/login/otp', [LoginController::class, 'showOtpVerify'])->name('login.otp.show');
-    Route::post('/login/otp', [LoginController::class, 'verifyOtp'])->name('login.otp.verify');
-    Route::post('/login/otp/resend', [LoginController::class, 'resendOtp'])->name('login.otp.resend');
+    Route::post('/login/otp', [LoginController::class, 'verifyOtp'])->name('login.otp.verify')->middleware('throttle:5,1');
+    Route::post('/login/otp/resend', [LoginController::class, 'resendOtp'])->name('login.otp.resend')->middleware('throttle:3,1');
     Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
-    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
     Route::get('/forgot-password/sent', [PasswordResetController::class, 'showSentPage'])->name('password.sent');
     Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
-    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+    Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-Route::get('/logout',  [LoginController::class, 'logout'])->name('logout.get');
 
 // Owner Panel — guard: web
 Route::prefix('owner')
@@ -281,10 +283,9 @@ Route::post('enrollment/{courseBook}/cancel', [EnrollmentController::class, 'can
 Route::post('enrollment/education/add', [EnrollmentController::class, 'addEducation'])->name('enrollment.education.add');
 Route::delete('enrollment/education/{education}', [EnrollmentController::class, 'removeEducation'])->name('enrollment.education.remove');
 
-// DEV ONLY — Email preview (remove before production)
-Route::get('dev/preview-email/seat-booking/{courseBook}', function (\App\Models\CourseBook $courseBook) {
-    $user = $courseBook->student;
-    return new \App\Mail\SeatBookingConfirmationMail($user, $courseBook->load(['course','batch','student.profile']), 'TempPass@123');
+// Dev email preview route — redirected for security
+Route::get('dev/preview-email/seat-booking/{courseBook}', function () {
+    return redirect()->route('institute.dashboard');
 })->middleware('auth:institute');
 
 // Enquiries
@@ -314,7 +315,7 @@ Route::post('wallet-adjustment/{user}/debit', [\App\Http\Controllers\Institute\W
 
 Route::prefix('franchise')
     ->name('franchise.')
-    ->middleware(['auth:institute', 'role:franchise_head,franchise_staff,franchise_student'])
+    ->middleware(['auth:institute', 'role:franchise_head,franchise_staff,franchise_student', 'check.session'])
     ->group(function () {
 
         // ── Dashboard ───────────────────────────────────────────────────────
@@ -376,7 +377,7 @@ Route::prefix('franchise')
 Route::prefix('staff')->name('staff.')->group(function () {
     Route::middleware('guest:staff')->group(function () {
         Route::get('/login',  [StaffAuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [StaffAuthController::class, 'login'])->name('login.post');
+        Route::post('/login', [StaffAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
     });
     Route::post('/logout', [StaffAuthController::class, 'logout'])->name('logout');
 
@@ -402,12 +403,12 @@ Route::prefix('institute')->name('institute.')->middleware(['auth:institute', 'r
 Route::prefix('student')->name('student.')->group(function () {
     Route::middleware('guest:student')->group(function () {
         Route::get('/login',  [StudentAuthController::class, 'showLogin'])->name('login');
-        Route::post('/login', [StudentAuthController::class, 'login'])->name('login.post');
+        Route::post('/login', [StudentAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
         Route::get('/forgot-password',       [StudentPasswordReset::class, 'showForgotForm'])->name('password.request');
-        Route::post('/forgot-password',      [StudentPasswordReset::class, 'sendResetLink'])->name('password.email');
+        Route::post('/forgot-password',      [StudentPasswordReset::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
         Route::get('/forgot-password/sent',  [StudentPasswordReset::class, 'showSentPage'])->name('password.sent');
         Route::get('/reset-password/{token}',[StudentPasswordReset::class, 'showResetForm'])->name('password.reset');
-        Route::post('/reset-password',       [StudentPasswordReset::class, 'resetPassword'])->name('password.update');
+        Route::post('/reset-password',       [StudentPasswordReset::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
     });
     Route::post('/logout', [StudentAuthController::class, 'logout'])->name('logout');
 

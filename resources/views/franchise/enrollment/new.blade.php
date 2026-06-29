@@ -723,6 +723,7 @@
   const uniqueTimers = new Map();
 
   function money(v){ return '₹' + Number(v||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function escapeHtml(s){ const d=document.createElement('div');d.appendChild(document.createTextNode(String(s||'')));return d.innerHTML; }
 
   function selectedCourse(){ return courseCatalog.find(c=>String(c.id)===String(courseSelect.value))||null; }
 
@@ -904,7 +905,7 @@
       return{examination:ins[0]?.value||'',institute_name:ins[1]?.value||'',board_university:ins[2]?.value||'',passing_year:ins[3]?.value||'',division:ins[4]?.value||'',marks_percentage:ins[5]?.value||''};
     }).filter(r=>Object.values(r).some(v=>v));
     if(reviewEduBody) reviewEduBody.innerHTML=eduEntries.length
-      ?eduEntries.map(r=>`<tr><td>${r.examination||'-'}</td><td>${r.institute_name||'-'}</td><td>${r.board_university||'-'}</td><td>${r.passing_year||'-'}</td><td>${r.division||'-'}</td><td>${r.marks_percentage||'-'}</td></tr>`).join('')
+      ?eduEntries.map(r=>`<tr><td>${escapeHtml(r.examination)||'-'}</td><td>${escapeHtml(r.institute_name)||'-'}</td><td>${escapeHtml(r.board_university)||'-'}</td><td>${escapeHtml(r.passing_year)||'-'}</td><td>${escapeHtml(r.division)||'-'}</td><td>${escapeHtml(r.marks_percentage)||'-'}</td></tr>`).join('')
       :'<tr><td colspan="6" style="text-align:center;">No education details added.</td></tr>';
   }
 

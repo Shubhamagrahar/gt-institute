@@ -33,6 +33,13 @@ class CheckSession
             ->exists();
 
         if (!$hasSession) {
+            // Franchise users cannot manage sessions — redirect to their dashboard
+            $franchiseRoles = ['franchise_head', 'franchise_staff', 'franchise_student'];
+            if (in_array($user->role, $franchiseRoles)) {
+                return redirect()->route('franchise.dashboard')
+                    ->with('error', 'No active academic session. Please contact your institute to activate a session.');
+            }
+
             return redirect()->route('institute.sessions.create')
                 ->with('error', 'Please create and activate a session before proceeding.');
         }

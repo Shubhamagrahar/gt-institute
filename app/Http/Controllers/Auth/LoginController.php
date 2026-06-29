@@ -45,6 +45,14 @@ class LoginController extends Controller
             ->first();
 
         if ($user && Hash::check($password, $user->password)) {
+            // Only institute_head, staff, franchise_head, franchise_staff can use this portal
+            $allowedRoles = ['institute_head', 'staff', 'franchise_head', 'franchise_staff', 'franchise_student'];
+            if (!in_array($user->role, $allowedRoles)) {
+                return back()
+                    ->withErrors(['login' => 'Invalid credentials. Please check your ID / Email / Mobile and password.'])
+                    ->withInput();
+            }
+
             if ($user->status === 'inactive') {
                 return back()->withErrors(['login' => 'Your account has been deactivated. Contact your institute.'])->withInput();
             }
@@ -106,8 +114,19 @@ class LoginController extends Controller
                 ->withErrors(['login' => 'OTP has expired. Please sign in again.']);
         }
 
+        // Block after 5 wrong attempts
+        if (($record->attempts ?? 0) >= 5) {
+            DB::table('login_otps')->where('email', $pending['email'])->delete();
+            $request->session()->forget('otp_pending');
+            return redirect()->route('login')
+                ->withErrors(['login' => 'Too many incorrect OTP attempts. Please sign in again.']);
+        }
+
         if ($request->input('otp') !== $record->otp) {
-            return back()->withErrors(['otp' => 'Incorrect OTP. Please try again.']);
+            DB::table('login_otps')->where('email', $pending['email'])
+                ->increment('attempts');
+            $remaining = 4 - ($record->attempts ?? 0);
+            return back()->withErrors(['otp' => "Incorrect OTP. {$remaining} attempt(s) remaining."]);
         }
 
         // OTP valid — clean up and complete login

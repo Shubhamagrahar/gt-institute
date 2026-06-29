@@ -205,9 +205,15 @@ class AccountController extends Controller
                 ->withInput($request->except(['old_password', 'new_password', 'confirm_password']));
         }
 
-        $user->update([
-            'password' => Hash::make($request->new_password),
-        ]);
+        // Update password and rotate remember_token to invalidate other "remember me" sessions
+        $user->forceFill([
+            'password'       => Hash::make($request->new_password),
+            'remember_token' => \Illuminate\Support\Str::random(60),
+        ])->save();
+
+        // Regenerate current session so this device stays logged in
+        $request->session()->regenerate();
+        Auth::guard('institute')->setUser($user->fresh());
 
         return redirect()
             ->route('institute.accounts.password.edit')

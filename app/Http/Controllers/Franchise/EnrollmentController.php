@@ -203,7 +203,7 @@ class EnrollmentController extends Controller
 
         $data = $request->validate([
             'name'                => 'required|string|max:100',
-            'mobile'              => 'required|string|max:15|unique:users,mobile',
+            'mobile'              => 'required|digits:10|unique:users,mobile',
             'email'               => 'nullable|email|max:100|unique:users,email',
             'photo'               => 'nullable|image|max:2048',
             'course_id'           => ['required', \Illuminate\Validation\Rule::exists('course_details', 'id')
@@ -211,16 +211,16 @@ class EnrollmentController extends Controller
             'batch_id'            => ['nullable', \Illuminate\Validation\Rule::exists('batch_details', 'id')
                 ->where(fn ($q) => $q->where('franchise_id', $this->franchiseId()))],
             'admission_source'    => 'nullable|in:direct,channel_partner',
-            'dob'                 => 'nullable|date',
+            'dob'                 => 'nullable|date|before:today',
             'gender'              => 'nullable|in:Male,Female,Other',
             'category'            => 'nullable|string|max:20',
             'religion'            => 'nullable|string|max:50',
             'nationality'         => 'nullable|string|max:50',
-            'whatsapp_no'         => 'nullable|string|max:15',
-            'alternate_mobile'    => 'nullable|string|max:15',
-            'aadhar_no'           => 'nullable|string|max:16',
-            'pan_no'              => 'nullable|string|max:10',
-            'blood_group'         => 'nullable|string|max:5',
+            'whatsapp_no'         => 'nullable|digits:10',
+            'alternate_mobile'    => 'nullable|digits:10',
+            'aadhar_no'           => 'nullable|digits:12',
+            'pan_no'              => ['nullable', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/'],
+            'blood_group'         => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
             'employment_status'   => 'nullable|in:Employed,Unemployed',
             'computer_literacy'   => 'nullable|in:Yes,No',
             'qualification'       => 'nullable|string|max:80',
@@ -228,25 +228,25 @@ class EnrollmentController extends Controller
             'mother_name'         => 'nullable|string|max:100',
             'guardian_name'       => 'nullable|string|max:100',
             'guardian_relation'   => 'nullable|string|max:50',
-            'guardian_mobile'     => 'nullable|string|max:15',
+            'guardian_mobile'     => 'nullable|digits:10',
             'guardian_occupation' => 'nullable|string|max:80',
             'address'             => 'nullable|string',
             'permanent_address'   => 'nullable|string',
             'state'               => 'nullable|string|max:100',
             'district'            => 'nullable|string|max:100',
             'city'                => 'nullable|string|max:100',
-            'pin_code'            => 'nullable|string|max:10',
+            'pin_code'            => 'nullable|digits:6',
             'permanent_state'     => 'nullable|string|max:100',
             'permanent_district'  => 'nullable|string|max:100',
             'permanent_city'      => 'nullable|string|max:100',
-            'permanent_pin_code'  => 'nullable|string|max:10',
+            'permanent_pin_code'  => 'nullable|digits:6',
             'education'                      => 'nullable|array',
             'education.*.examination'        => 'nullable|string|max:80',
             'education.*.institute_name'     => 'nullable|string|max:150',
             'education.*.board_university'   => 'nullable|string|max:150',
-            'education.*.passing_year'       => 'nullable|string|max:10',
+            'education.*.passing_year'       => 'nullable|integer|min:1900|max:' . date('Y'),
             'education.*.division'           => 'nullable|string|max:50',
-            'education.*.marks_percentage'   => 'nullable|string|max:10',
+            'education.*.marks_percentage'   => 'nullable|numeric|min:0|max:100',
         ]);
 
         // Build fee catalog entry for this course (franchise-specific pricing)
@@ -421,7 +421,7 @@ class EnrollmentController extends Controller
             'course_id'  => ['required', \Illuminate\Validation\Rule::exists('course_details', 'id')
                 ->where(fn ($q) => $q->where('institute_id', $iid))],
             'batch_id'   => ['nullable', \Illuminate\Validation\Rule::exists('batch_details', 'id')
-                ->where(fn ($q) => $q->where('institute_id', $iid))],
+                ->where(fn ($q) => $q->where('franchise_id', $fid))],
         ]);
 
         $student = User::where('id', $data['student_id'])->where('institute_id', $iid)
@@ -715,13 +715,6 @@ class EnrollmentController extends Controller
 
     private function activePlans(int $iid)
     {
-        $defaults = ['OTP' => 'One Time Payment', 'PART' => 'Partial Payment', 'MONTHLY' => 'Monthly Payment'];
-        foreach ($defaults as $type => $name) {
-            PaymentPlanType::firstOrCreate(
-                ['institute_id' => $iid, 'type' => $type],
-                ['name' => $name, 'grace_days' => 0, 'late_fee_per_day' => 0, 'is_active' => true]
-            );
-        }
         return PaymentPlanType::where('institute_id', $iid)->where('is_active', true)
             ->orderByRaw("CASE type WHEN 'OTP' THEN 1 WHEN 'PART' THEN 2 WHEN 'MONTHLY' THEN 3 ELSE 4 END")->get();
     }
