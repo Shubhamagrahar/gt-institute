@@ -58,38 +58,46 @@
 }
 
 /* ── Quick Pay ── */
-.qp-search-wrap { position:relative; margin-bottom:16px; }
+.qp-wrap { max-width:580px; margin:0 auto; }
+.qp-search-wrap { position:relative; margin-bottom:12px; }
 .qp-search-wrap input {
-  width:100%; padding:13px 18px 13px 46px;
-  border:2px solid var(--border); border-radius:12px;
-  font-size:15px; background:var(--bg-2); color:var(--text);
+  width:100%; padding:12px 18px 12px 44px;
+  border:2px solid var(--border); border-radius:10px;
+  font-size:14px; background:var(--bg-2); color:var(--text);
   outline:none; transition:border-color .2s;
 }
-.qp-search-wrap input:focus { border-color:var(--accent); }
-.qp-search-icon { position:absolute; left:15px; top:50%; transform:translateY(-50%); font-size:18px; color:var(--text-3); }
+.qp-search-wrap input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(108,93,211,.1); }
+.qp-search-icon { position:absolute; left:14px; top:50%; transform:translateY(-50%); font-size:16px; color:var(--text-3); }
 .qp-loader {
-  position:absolute; right:14px; top:50%; transform:translateY(-50%);
-  width:18px; height:18px; border:2px solid var(--border);
+  position:absolute; right:12px; top:50%; transform:translateY(-50%);
+  width:16px; height:16px; border:2px solid var(--border);
   border-top-color:var(--accent); border-radius:50%;
   display:none; animation:spin .6s linear infinite;
 }
 @keyframes spin { to { transform:translateY(-50%) rotate(360deg); } }
-.qp-results { display:flex; flex-direction:column; gap:10px; }
+.qp-results { display:flex; flex-direction:column; gap:8px; }
 .qp-card {
-  display:flex; align-items:center; justify-content:space-between;
-  gap:14px; padding:14px 18px;
-  background:var(--bg-3); border:1px solid var(--border);
-  border-radius:12px; transition:box-shadow .15s;
+  background:var(--bg-2); border:1px solid var(--border);
+  border-radius:12px; padding:14px 16px;
+  transition:box-shadow .15s;
 }
 .qp-card:hover { box-shadow:var(--shadow); }
+.qp-card-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
 .qp-info { flex:1; min-width:0; }
-.qp-name { font-size:15px; font-weight:700; }
-.qp-meta { font-size:12px; color:var(--text-2); margin-top:2px; }
-.qp-due { text-align:right; flex-shrink:0; }
-.qp-due-amt { font-size:20px; font-weight:900; color:#b91c1c; }
-.qp-due-lbl { font-size:11px; color:var(--text-3); }
-.qp-no-due  { font-size:16px; font-weight:700; color:#16a34a; }
-.qp-empty { padding:40px; text-align:center; color:var(--text-3); font-size:14px; }
+.qp-name { font-size:14px; font-weight:700; }
+.qp-meta { font-size:12px; color:var(--text-2); margin-top:3px; }
+.qp-due-amt { font-size:18px; font-weight:900; color:#b91c1c; text-align:right; }
+.qp-due-lbl { font-size:11px; color:var(--text-3); text-align:right; }
+.qp-no-due  { font-size:14px; font-weight:700; color:#16a34a; }
+.qp-proceed-btn {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; padding:10px; border-radius:8px;
+  background:var(--accent); color:#fff; font-size:13px; font-weight:600;
+  text-decoration:none; border:none; cursor:pointer;
+  transition:opacity .15s;
+}
+.qp-proceed-btn:hover { opacity:.88; color:#fff; }
+.qp-empty { padding:32px; text-align:center; color:var(--text-3); font-size:13px; }
 
 /* ── Enrollment filter bar ── */
 .enr-filter { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
@@ -268,24 +276,19 @@
 
 {{-- ══ TAB 3: QUICK PAY ══ --}}
 <div class="fd-tab {{ $tab==='quick-pay' ? 'fd-active':'' }}" id="tab-quick-pay">
-  <div class="fd-head">
-    <div>
-      <div class="fd-title">Quick Pay</div>
-      <div class="fd-sub">Search student by name, mobile, email, or enrollment number</div>
-    </div>
-  </div>
-
-  <div class="gt-card" style="padding:20px">
-    <div class="qp-search-wrap">
-      <span class="qp-search-icon">🔍</span>
-      <input type="text" id="qp-input"
-        placeholder="Type name, mobile, email, or enrollment no…"
-        autocomplete="off">
-      <div class="qp-loader" id="qp-loader"></div>
-    </div>
-
-    <div class="qp-results" id="qp-results">
-      <div class="qp-empty">Start typing to search students…</div>
+  <div class="qp-wrap">
+    <div class="gt-card" style="padding:20px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:14px;">Quick Pay</div>
+      <div class="qp-search-wrap">
+        <span class="qp-search-icon">🔍</span>
+        <input type="text" id="qp-input"
+          placeholder="Name, mobile, email, or enrollment no…"
+          autocomplete="off">
+        <div class="qp-loader" id="qp-loader"></div>
+      </div>
+      <div class="qp-results" id="qp-results">
+        <div class="qp-empty">Start typing to search students…</div>
+      </div>
     </div>
   </div>
 </div>{{-- /tab quick-pay --}}
@@ -435,23 +438,25 @@
         : '<div class="qp-no-due">Paid ✓</div>';
 
       html += '<div class="qp-card">' +
-        '<div class="qp-info">' +
-          '<div class="qp-name">' + s.name + '</div>' +
-          '<div class="qp-meta">' +
-            '<span>📱 ' + s.mobile + '</span>' +
-            ' &nbsp;|&nbsp; ' +
-            '<span>ID: <strong>' + s.enrollment_no + '</strong></span>' +
-            ' &nbsp;|&nbsp; ' +
-            '<span>' + s.course + '</span>' +
+        '<div class="qp-card-top">' +
+          '<div class="qp-info">' +
+            '<div class="qp-name">' + s.name + '</div>' +
+            '<div class="qp-meta">' +
+              '📱 ' + s.mobile +
+              ' &nbsp;|&nbsp; ID: <strong>' + s.enrollment_no + '</strong>' +
+              ' &nbsp;|&nbsp; ' + s.course +
+            '</div>' +
+            '<div style="margin-top:3px; font-size:11px; color:var(--text-3)">' +
+              'Total: ' + rupee(s.total_fee) + ' &nbsp;&nbsp; Paid: ' + rupee(s.paid) +
+            '</div>' +
           '</div>' +
-          '<div style="margin-top:4px; font-size:12px; color:var(--text-3)">' +
-            'Total: ' + rupee(s.total_fee) + ' &nbsp; Paid: ' + rupee(s.paid) +
-          '</div>' +
+          '<div>' + dueHtml + '</div>' +
         '</div>' +
-        '<div class="qp-due">' + dueHtml + '</div>' +
-        '<div>' +
-          '<a href="' + s.pay_url + '" class="btn btn-primary btn-xs">Pay</a>' +
-        '</div>' +
+        '<a href="' + s.pay_url + '" class="qp-proceed-btn">' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' +
+          'Proceed to Pay' +
+          '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>' +
+        '</a>' +
         '</div>';
     });
     results.innerHTML = html;
