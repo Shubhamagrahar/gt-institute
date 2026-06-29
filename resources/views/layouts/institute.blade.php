@@ -232,21 +232,17 @@
     </a>
 
     <div class="gt-sidebar-section">Finance</div>
-    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard') || request()->routeIs('institute.enrollment.payment-complete') ? 'active' : '' }}">
+    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ (request()->routeIs('institute.fees-dashboard') && request('tab','all-dues') !== 'quick-pay') || request()->routeIs('institute.enrollment.payment-complete') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Collect Fees
     </a>
-    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard') ? 'active' : '' }}">
+    <a href="{{ route('institute.fees-dashboard', ['tab'=>'quick-pay']) }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard') && request('tab') === 'quick-pay' ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       Quick Pay
     </a>
     <a href="{{ route('institute.wallet-adjustment.index') }}" class="gt-nav-item {{ request()->routeIs('institute.wallet-adjustment.*') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7H3v10h18V7z"/><path d="M17 12h.01"/><path d="M3 9h18"/><path d="M8 12h.01"/></svg>
       Wallet Adjustment
-    </a>
-    <a href="{{ route('institute.fees-dashboard') }}" class="gt-nav-item {{ request()->routeIs('institute.fees-dashboard','institute.fees-search') ? 'active' : '' }}">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 8h.01"/><path d="M12 8h5"/><path d="M7 12h.01"/><path d="M12 12h5"/></svg>
-      Fee Dashboard
     </a>
     <a href="{{ route('institute.fees.collection-report') }}" class="gt-nav-item {{ request()->routeIs('institute.fees.collection-report') ? 'active' : '' }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>

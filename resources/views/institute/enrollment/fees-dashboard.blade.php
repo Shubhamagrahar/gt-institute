@@ -110,23 +110,23 @@
 @section('content')
 @php $amtCol = \App\Models\FeeCollectDetail::amountColumn(); @endphp
 
-{{-- Tab Navigation Pills --}}
+{{-- Tab Navigation Pills (URL-based) --}}
 <div class="fd-tabs">
-  <button class="fd-tab-btn {{ $tab==='all-dues' ? 'active':'' }}" data-tab="all-dues">
+  <a href="{{ route('institute.fees-dashboard', ['tab'=>'all-dues']) }}" class="fd-tab-btn {{ $tab==='all-dues' ? 'active':'' }}">
     All Dues
     <span class="cnt">{{ $allDues->count() }}</span>
-  </button>
-  <button class="fd-tab-btn {{ $tab==='monthly-dues' ? 'active':'' }}" data-tab="monthly-dues">
+  </a>
+  <a href="{{ route('institute.fees-dashboard', ['tab'=>'monthly-dues']) }}" class="fd-tab-btn {{ $tab==='monthly-dues' ? 'active':'' }}">
     Monthly Dues
     <span class="cnt">{{ $monthlyDues->count() }}</span>
-  </button>
-  <button class="fd-tab-btn {{ $tab==='quick-pay' ? 'active':'' }}" data-tab="quick-pay">
+  </a>
+  <a href="{{ route('institute.fees-dashboard', ['tab'=>'quick-pay']) }}" class="fd-tab-btn {{ $tab==='quick-pay' ? 'active':'' }}">
     Quick Pay
-  </button>
-  <button class="fd-tab-btn {{ $tab==='enrollment' ? 'active':'' }}" data-tab="enrollment">
+  </a>
+  <a href="{{ route('institute.fees-dashboard', ['tab'=>'enrollment']) }}" class="fd-tab-btn {{ $tab==='enrollment' ? 'active':'' }}">
     Session View
     <span class="cnt">{{ $enrollments->total() }}</span>
-  </button>
+  </a>
 </div>
 
 {{-- ══ TAB 1: ALL DUES ══ --}}
@@ -410,27 +410,6 @@
 @push('scripts')
 <script>
 (function () {
-  // ── Tab switching ──────────────────────────────────────────────
-  var navItems = document.querySelectorAll('.fd-tab-btn[data-tab]');
-  var tabs     = document.querySelectorAll('.fd-tab');
-
-  navItems.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var target = btn.getAttribute('data-tab');
-
-      navItems.forEach(function (b) { b.classList.remove('active'); });
-      tabs.forEach(function (t)     { t.classList.remove('fd-active'); });
-
-      btn.classList.add('active');
-      var pane = document.getElementById('tab-' + target);
-      if (pane) pane.classList.add('fd-active');
-
-      if (target === 'quick-pay') {
-        setTimeout(function () { document.getElementById('qp-input').focus(); }, 80);
-      }
-    });
-  });
-
   // ── Quick Pay search with debounce ────────────────────────────
   var input    = document.getElementById('qp-input');
   var results  = document.getElementById('qp-results');
