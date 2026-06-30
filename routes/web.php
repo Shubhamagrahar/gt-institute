@@ -109,7 +109,7 @@ Route::prefix('owner')
     ->middleware(['auth:web', 'role:owner'])
     ->group(function () {
         Route::get('/dashboard', [OwnerDashboard::class, 'index'])->name('dashboard');
-        Route::resource('features', FeatureController::class);
+        Route::resource('features', FeatureController::class)->except(['show']);
         Route::patch('features/{feature}/toggle', [FeatureController::class, 'toggle'])->name('features.toggle');
         Route::resource('plans', PlanController::class);
         Route::patch('plans/{plan}/toggle', [PlanController::class, 'toggle'])->name('plans.toggle');
@@ -154,7 +154,7 @@ Route::prefix('dashboard')
         Route::get('students/{student}/enrollments/{courseBook}/edit', [EnrollmentController::class, 'editBooking'])->name('students.enrollments.edit');
         Route::put('students/{student}/enrollments/{courseBook}', [EnrollmentController::class, 'updateBooking'])->name('students.enrollments.update');
         Route::resource('staff', StaffController::class);
-        Route::resource('courses', CourseController::class);
+        Route::resource('courses', CourseController::class)->except(['show']);
         Route::patch('courses/{course}/toggle', [CourseController::class, 'toggle'])->name('courses.toggle');
         Route::get('course-fee-bindings', [CourseController::class, 'feeBindingsIndex'])->name('courses.fee-bindings');
         Route::get('course-fee-bindings/{course}/edit', [CourseController::class, 'feeBindingsEdit'])->name('courses.fee-bindings.edit');
@@ -162,7 +162,7 @@ Route::prefix('dashboard')
         Route::resource('course-types', CourseTypeController::class)
             ->parameters(['course-types' => 'courseType'])
             ->except(['show', 'create']);
-        Route::resource('subjects', SubjectController::class);
+        Route::resource('subjects', SubjectController::class)->except(['show']);
         Route::patch('subjects/{subject}/toggle', [SubjectController::class, 'toggle'])->name('subjects.toggle');
         Route::get('batches', [BatchController::class, 'index'])->name('batches.index');
         Route::post('batches', [BatchController::class, 'store'])->name('batches.store');
