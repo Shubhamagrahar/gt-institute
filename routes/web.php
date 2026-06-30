@@ -249,6 +249,8 @@ Route::get('certificates/history',            [\App\Http\Controllers\Institute\C
 Route::get('certificates/enrollments/{user}', [\App\Http\Controllers\Institute\CertificateController::class, 'enrollments']) ->name('certificates.enrollments');
 Route::post('certificates',                   [\App\Http\Controllers\Institute\CertificateController::class, 'store'])       ->name('certificates.store');
 Route::post('certificates/reject',            [\App\Http\Controllers\Institute\CertificateController::class, 'reject'])      ->name('certificates.reject');
+Route::get('certificates/{certificate}/marksheet',   [\App\Http\Controllers\Institute\CertificateController::class, 'printMarksheet'])   ->name('certificates.marksheet');
+Route::get('certificates/{certificate}/certificate', [\App\Http\Controllers\Institute\CertificateController::class, 'printCertificate']) ->name('certificates.certificate');
 
 // Fees Dashboard
 Route::get('fees-dashboard', [FeesDashboardController::class, 'index'])->name('fees-dashboard');

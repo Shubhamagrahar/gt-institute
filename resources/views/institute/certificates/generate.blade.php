@@ -25,77 +25,61 @@
 .si-name { font-size:13px; font-weight:700; }
 .si-meta { font-size:11px; color:var(--text-2); }
 
-/* Student card */
-.stu-card { border-radius:10px; background:var(--bg-3); padding:14px; margin-bottom:14px; display:none; }
-.stu-card.show { display:block; }
-.stu-card-name { font-size:15px; font-weight:800; }
-.stu-card-meta { font-size:12px; color:var(--text-2); margin-top:3px; }
+/* Student details card */
+.stu-detail-card { border-radius:10px; background:var(--bg-3); padding:16px; margin-bottom:14px; display:none; }
+.stu-detail-card.show { display:block; }
+.stu-detail-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.stu-detail-avatar { width:48px; height:48px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; flex-shrink:0; overflow:hidden; }
+.stu-detail-avatar img { width:100%; height:100%; object-fit:cover; }
+.stu-detail-name { font-size:15px; font-weight:800; }
+.stu-detail-id { font-size:11px; color:var(--text-2); }
+.stu-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 14px; }
+.sdg-item .l { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-2); }
+.sdg-item .v { font-size:12.5px; font-weight:600; margin-top:1px; }
 
 /* Enrollment picker */
 .enr-list { display:flex; flex-direction:column; gap:8px; margin-bottom:14px; }
 .enr-item { border:1.5px solid var(--border); border-radius:10px; padding:12px 14px; cursor:pointer; transition:.12s; }
 .enr-item:hover { border-color:var(--accent); }
 .enr-item.selected { border-color:var(--accent); background:var(--bg-3); }
+.enr-item.disabled { opacity:.55; cursor:not-allowed; }
 .enr-item input[type=radio] { display:none; }
 .enr-course { font-size:13px; font-weight:700; }
 .enr-meta   { font-size:11px; color:var(--text-2); margin-top:3px; }
 .enr-status { display:inline-block; font-size:10px; font-weight:800; padding:2px 8px; border-radius:5px; text-transform:uppercase; }
-.es-close { background:#dcfce7; color:#15803d; }
-.es-run   { background:#fef9c3; color:#a16207; }
-
-/* Doc type buttons */
-.doc-type-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
-.doc-type-btn { border:1.5px solid var(--border); border-radius:10px; padding:10px 6px; text-align:center; cursor:pointer; transition:.12s; }
-.doc-type-btn:hover { border-color:var(--accent); }
-.doc-type-btn.selected { border-color:var(--accent); background:var(--bg-3); }
-.doc-type-btn input[type=radio] { display:none; }
-.dtb-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
-.dtb-name  { font-size:12px; font-weight:700; margin-top:3px; }
-.dtb-ms { color:#5b21b6; }
-.dtb-tc { color:#4c3fae; }
-.dtb-cc { color:#15803d; }
+.es-run     { background:#fef9c3; color:#a16207; }
+.es-open    { background:#dbeafe; color:#1e40af; }
+.es-close   { background:#dcfce7; color:#15803d; }
+.es-expired { background:#fee2e2; color:#991b1b; }
+.enr-already { font-size:10.5px; font-weight:700; color:#dc2626; margin-top:4px; }
 
 /* Form panel */
 .form-panel { border-radius:14px; border:1.5px solid var(--border); background:var(--bg-2); overflow:hidden; }
 .form-section { padding:20px 22px; border-bottom:1px solid var(--border); }
 .form-section:last-child { border-bottom:none; }
 .fs-title { font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--text-2); margin-bottom:14px; }
-.form-row { display:grid; gap:12px; margin-bottom:12px; }
-.form-row.cols2 { grid-template-columns:1fr 1fr; }
-.form-row.cols3 { grid-template-columns:1fr 1fr 1fr; }
-.fg label { font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:5px; }
-.fg input, .fg select, .fg textarea {
-  width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px;
-  font-size:13px; background:var(--bg-3); color:var(--text); outline:none;
-  transition:.15s; box-sizing:border-box; }
-.fg input:focus, .fg select:focus, .fg textarea:focus { border-color:var(--accent); background:var(--bg-2); }
 
 /* Marks table */
 .marks-table { width:100%; border-collapse:collapse; font-size:13px; }
 .marks-table th { background:var(--bg-3); padding:8px 10px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-2); border-bottom:1px solid var(--border); }
-.marks-table td { padding:8px 10px; border-bottom:1px solid var(--border); }
+.marks-table td { padding:8px 10px; border-bottom:1px solid var(--border); vertical-align:middle; }
 .marks-table tr:last-child td { border-bottom:none; }
 .marks-table input { padding:6px 8px; border:1.5px solid var(--border); border-radius:7px; font-size:13px; background:var(--bg-3); color:var(--text); outline:none; width:100%; box-sizing:border-box; }
 .marks-table input:focus { border-color:var(--accent); }
-.add-subject-btn { margin-top:10px; padding:7px 14px; border:1.5px dashed var(--border); border-radius:8px; background:transparent; color:var(--text-2); font-size:12px; font-weight:600; cursor:pointer; width:100%; transition:.12s; }
-.add-subject-btn:hover { border-color:var(--accent); color:var(--accent); }
-.remove-row { background:none; border:none; cursor:pointer; color:#ef4444; padding:0 6px; font-size:16px; line-height:1; }
+.marks-table input[readonly] { background:var(--bg-3); color:var(--text-2); cursor:default; }
+.no-subjects-note { font-size:12.5px; color:var(--text-2); padding:14px; text-align:center; background:var(--bg-3); border-radius:10px; }
+.no-subjects-note a { color:var(--accent); font-weight:700; }
 
 /* Result row */
-.result-chips { display:flex; gap:8px; }
-.result-chip { flex:1; border:1.5px solid var(--border); border-radius:8px; padding:8px; text-align:center; cursor:pointer; transition:.12s; font-size:12px; font-weight:700; }
-.result-chip input[type=radio] { display:none; }
-.result-chip.sel-pass { border-color:#16a34a; background:#dcfce7; color:#15803d; }
-.result-chip.sel-fail { border-color:#dc2626; background:#fee2e2; color:#991b1b; }
-.result-chip:not(.sel-pass):not(.sel-fail):hover { border-color:var(--accent); }
+.result-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+@media(max-width:560px){ .result-summary{grid-template-columns:1fr 1fr;} }
+.rs-box { border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; text-align:center; }
+.rs-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-2); }
+.rs-value { font-size:17px; font-weight:900; margin-top:3px; }
 
 /* Submit bar */
 .submit-bar { padding:16px 22px; display:flex; align-items:center; justify-content:space-between; background:var(--bg-3); }
 .cert-preview-note { font-size:12px; color:var(--text-2); }
-
-/* Hidden sections */
-.section-marksheet, .section-tc, .section-cc { display:none; }
-.section-marksheet.show, .section-tc.show, .section-cc.show { display:block; }
 </style>
 @endpush
 
@@ -118,43 +102,27 @@
         <div class="suggest-drop" id="suggest-drop"></div>
       </div>
 
-      {{-- Selected student card --}}
-      <div class="stu-card" id="stu-card">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <div style="width:38px;height:38px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;" id="stu-avatar">-</div>
+      {{-- Student details card --}}
+      <div class="stu-detail-card" id="stu-card">
+        <div class="stu-detail-top">
+          <div class="stu-detail-avatar" id="stu-avatar">-</div>
           <div>
-            <div class="stu-card-name" id="stu-name">—</div>
-            <div class="stu-card-meta" id="stu-meta">—</div>
+            <div class="stu-detail-name" id="stu-name">—</div>
+            <div class="stu-detail-id" id="stu-uid">—</div>
           </div>
+        </div>
+        <div class="stu-detail-grid">
+          <div class="sdg-item"><div class="l">Mobile</div><div class="v" id="d-mobile">—</div></div>
+          <div class="sdg-item"><div class="l">Father's Name</div><div class="v" id="d-father">—</div></div>
+          <div class="sdg-item"><div class="l">Mother's Name</div><div class="v" id="d-mother">—</div></div>
+          <div class="sdg-item"><div class="l">Date of Birth</div><div class="v" id="d-dob">—</div></div>
         </div>
       </div>
 
       {{-- Enrollment list --}}
       <div id="enr-section" style="display:none;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:8px;">Select Enrollment</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:8px;">Select Course</div>
         <div class="enr-list" id="enr-list"></div>
-      </div>
-
-      {{-- Doc type --}}
-      <div id="doctype-section" style="display:none;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);margin-bottom:8px;">Document Type</div>
-        <div class="doc-type-grid">
-          <label class="doc-type-btn" id="btn-ms">
-            <input type="radio" name="doc_type" value="MARKSHEET" onchange="switchDocType('MARKSHEET')">
-            <div class="dtb-label dtb-ms">MS</div>
-            <div class="dtb-name">Marksheet</div>
-          </label>
-          <label class="doc-type-btn" id="btn-tc">
-            <input type="radio" name="doc_type" value="TC" onchange="switchDocType('TC')">
-            <div class="dtb-label dtb-tc">TC</div>
-            <div class="dtb-name">Transfer<br>Cert.</div>
-          </label>
-          <label class="doc-type-btn" id="btn-cc">
-            <input type="radio" name="doc_type" value="CC" onchange="switchDocType('CC')">
-            <div class="dtb-label dtb-cc">CC</div>
-            <div class="dtb-name">Character<br>Cert.</div>
-          </label>
-        </div>
       </div>
 
       {{-- Walk-in link --}}
@@ -173,183 +141,40 @@
   <form method="POST" action="{{ route('institute.certificates.store') }}" id="cert-form">
     @csrf
     <input type="hidden" name="course_book_id" id="f-course-book-id">
-    <input type="hidden" name="doc_type" id="f-doc-type">
     <input type="hidden" name="is_walk_in" value="0">
+    <input type="hidden" name="student_name" id="f-student-name">
+    <input type="hidden" name="father_name" id="f-father-name">
+    <input type="hidden" name="mother_name" id="f-mother-name">
+    <input type="hidden" name="mobile" id="f-mobile">
+    <input type="hidden" name="dob" id="f-dob">
+    <input type="hidden" name="enrollment_no" id="f-enrollment-no">
+    <input type="hidden" name="course_name" id="f-course-name">
+    <input type="hidden" name="duration" id="f-duration">
+    <input type="hidden" name="start_date" id="f-start-date">
+    <input type="hidden" name="end_date" id="f-end-date">
+    <input type="hidden" name="academic_session" id="f-academic-session">
+    <input type="hidden" id="f-enr-status">
 
     <div class="form-panel">
 
-      {{-- Student info (pre-filled, read-only) --}}
       <div class="form-section">
-        <div class="fs-title">Student Information</div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Student Name</label>
-            <input type="text" name="student_name" id="f-student-name" required>
-          </div>
-          <div class="fg">
-            <label>Father's Name</label>
-            <input type="text" name="father_name" id="f-father-name">
-          </div>
-        </div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Enrollment / Cert No.</label>
-            <input type="text" name="enrollment_no" id="f-enrollment-no" readonly style="background:var(--bg-3);color:var(--text-2);">
-          </div>
-          <div class="fg">
-            <label>Mobile</label>
-            <input type="text" name="mobile" id="f-mobile">
-          </div>
-        </div>
-      </div>
-
-      {{-- Course info --}}
-      <div class="form-section">
-        <div class="fs-title">Course Details</div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Course Name</label>
-            <input type="text" name="course_name" id="f-course-name" required>
-          </div>
-          <div class="fg">
-            <label>Duration</label>
-            <input type="text" name="duration" id="f-duration" placeholder="e.g. 6 Months">
-          </div>
-        </div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Start Date</label>
-            <input type="date" name="start_date" id="f-start-date">
-          </div>
-          <div class="fg">
-            <label>End Date</label>
-            <input type="date" name="end_date" id="f-end-date">
-          </div>
-        </div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Academic Session</label>
-            <input type="text" name="academic_session" placeholder="e.g. 2025-26">
-          </div>
-          <div class="fg">
-            <label>Passing Year</label>
-            <input type="text" name="passing_year" id="f-passing-year" placeholder="e.g. 2026">
-          </div>
-        </div>
-      </div>
-
-      {{-- ── MARKSHEET SECTION ── --}}
-      <div class="form-section section-marksheet" id="section-marksheet">
         <div class="fs-title">Subject-wise Marks</div>
-        <div style="overflow-x:auto;">
-          <table class="marks-table" id="marks-table">
-            <thead>
-              <tr>
-                <th style="width:34%">Subject</th>
-                <th style="width:18%">Max Marks</th>
-                <th style="width:18%">Obtained</th>
-                <th style="width:18%">Grade</th>
-                <th style="width:12%"></th>
-              </tr>
-            </thead>
-            <tbody id="marks-body">
-              <tr>
-                <td><input type="text" name="subjects[0][name]" placeholder="Subject name"></td>
-                <td><input type="number" name="subjects[0][max]" placeholder="100" min="0"></td>
-                <td><input type="number" name="subjects[0][obtained]" placeholder="75" min="0" oninput="calcTotals()"></td>
-                <td><input type="text" name="subjects[0][grade]" placeholder="A"></td>
-                <td></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <button type="button" class="add-subject-btn" onclick="addSubjectRow()">+ Add Subject</button>
-
-        <div class="form-row cols3" style="margin-top:16px;">
-          <div class="fg">
-            <label>Total Max Marks</label>
-            <input type="number" name="total_max" id="total-max" readonly style="background:var(--bg-3);">
-          </div>
-          <div class="fg">
-            <label>Total Obtained</label>
-            <input type="number" name="total_obtained" id="total-obtained" readonly style="background:var(--bg-3);">
-          </div>
-          <div class="fg">
-            <label>Percentage</label>
-            <input type="text" name="percentage" id="percentage" readonly style="background:var(--bg-3);">
-          </div>
-        </div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Overall Grade</label>
-            <select name="overall_grade">
-              <option value="">— Select —</option>
-              <option>A+</option><option>A</option><option>B+</option>
-              <option>B</option><option>C</option><option>D</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Result</label>
-            <div class="result-chips" style="margin-top:5px;">
-              <label class="result-chip" id="chip-pass" onclick="this.classList.add('sel-pass');document.getElementById('chip-fail').classList.remove('sel-fail')">
-                <input type="radio" name="result" value="PASS" checked> PASS
-              </label>
-              <label class="result-chip" id="chip-fail" onclick="this.classList.add('sel-fail');document.getElementById('chip-pass').classList.remove('sel-pass')">
-                <input type="radio" name="result" value="FAIL"> FAIL
-              </label>
-            </div>
-          </div>
+        <div id="subjects-wrap"></div>
+        <div class="result-summary">
+          <div class="rs-box"><div class="rs-label">Total Max</div><div class="rs-value" id="rs-max">0</div></div>
+          <div class="rs-box"><div class="rs-label">Total Obtained</div><div class="rs-value" id="rs-obtained">0</div></div>
+          <div class="rs-box"><div class="rs-label">Percentage</div><div class="rs-value" id="rs-percent">0%</div></div>
+          <div class="rs-box"><div class="rs-label">Result</div><div class="rs-value" id="rs-result">—</div></div>
         </div>
       </div>
 
-      {{-- ── TC SECTION ── --}}
-      <div class="form-section section-tc" id="section-tc">
-        <div class="fs-title">Transfer Certificate Details</div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Reason for Leaving</label>
-            <select name="tc_reason">
-              <option value="Course Completed">Course Completed</option>
-              <option value="Transfer">Transfer</option>
-              <option value="Personal Reasons">Personal Reasons</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Conduct</label>
-            <select name="tc_conduct">
-              <option>Good</option><option>Satisfactory</option><option>Excellent</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {{-- ── CC SECTION ── --}}
-      <div class="form-section section-cc" id="section-cc">
-        <div class="fs-title">Character Certificate Details</div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Character Grade</label>
-            <select name="character_grade">
-              <option>Satisfactory</option><option>Good</option><option>Excellent</option><option>Very Good</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Conduct</label>
-            <select name="cc_conduct">
-              <option>Good</option><option>Excellent</option><option>Satisfactory</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {{-- Submit bar --}}
       <div class="submit-bar">
         <div class="cert-preview-note">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:4px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          PDF new tab mein khulega — auto print
+          Generate karne ke baad History list pe le jayega
         </div>
         <button type="submit" class="btn btn-primary" id="generate-btn" style="padding:10px 28px;">
-          Generate &amp; Print
+          Next →
         </button>
       </div>
 
@@ -362,7 +187,7 @@
     <div style="text-align:center;color:var(--text-2);">
       <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="opacity:.3;margin-bottom:12px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
       <div style="font-size:14px;font-weight:700;">Student search karo</div>
-      <div style="font-size:12px;margin-top:4px;">Left side se student select karo,<br>phir document type aur details fill karo.</div>
+      <div style="font-size:12px;margin-top:4px;">Left side se student select karo,<br>phir course select kro.</div>
     </div>
   </div>
 
@@ -371,11 +196,11 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const SUGGEST_URL = '{{ route("institute.students.suggest") }}';
-let subjectCount = 1;
 
-// ── Student Search ──
+// ── Student Search (debounced) ──
 const searchInput = document.getElementById('stu-search');
 const suggestDrop = document.getElementById('suggest-drop');
 let searchTimer;
@@ -384,7 +209,7 @@ searchInput.addEventListener('input', function() {
   clearTimeout(searchTimer);
   const q = this.value.trim();
   if (q.length < 2) { closeSuggest(); return; }
-  searchTimer = setTimeout(() => fetchSuggest(q), 250);
+  searchTimer = setTimeout(() => fetchSuggest(q), 300);
 });
 document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) closeSuggest(); });
 
@@ -396,7 +221,7 @@ function fetchSuggest(q) {
 function renderSuggest(data) {
   if (!data.length) { suggestDrop.innerHTML='<div style="padding:14px;text-align:center;font-size:13px;color:var(--text-2)">No students found</div>'; suggestDrop.classList.add('open'); return; }
   suggestDrop.innerHTML = data.map(s => `
-    <div class="suggest-item" onclick="selectStudent(${s.id},'${s.name}','${s.mobile}','${s.uid}')">
+    <div class="suggest-item" onclick="selectStudent(${s.id})">
       <div class="si-avatar">${s.name.charAt(0).toUpperCase()}</div>
       <div><div class="si-name">${s.name}</div><div class="si-meta">${s.uid} · ${s.mobile}</div></div>
     </div>`).join('');
@@ -405,99 +230,160 @@ function renderSuggest(data) {
 
 function closeSuggest() { suggestDrop.classList.remove('open'); }
 
-// ── Select Student → load enrollments ──
-function selectStudent(id, name, mobile, uid) {
+// ── Select Student → load full details + enrollments ──
+function selectStudent(id) {
   closeSuggest();
-  searchInput.value = name;
-
-  document.getElementById('stu-card').classList.add('show');
-  document.getElementById('stu-avatar').textContent = name.charAt(0).toUpperCase();
-  document.getElementById('stu-name').textContent = name;
-  document.getElementById('stu-meta').textContent = uid + ' · ' + mobile;
-
-  document.getElementById('f-student-name').value = name;
-  document.getElementById('f-mobile').value = mobile;
 
   fetch('{{ url("institute/certificates/enrollments") }}/' + id, { headers:{'X-Requested-With':'XMLHttpRequest'} })
-    .then(r => r.json()).then(renderEnrollments);
+    .then(r => r.json()).then(data => renderStudentAndEnrollments(data));
 }
 
-function renderEnrollments(enrollments) {
-  const list = document.getElementById('enr-list');
-  const sec  = document.getElementById('enr-section');
-  document.getElementById('doctype-section').style.display = 'none';
+function renderStudentAndEnrollments(data) {
+  const s = data.student;
+  const enrollments = data.enrollments;
+
+  document.getElementById('stu-card').classList.add('show');
+  document.getElementById('stu-avatar').textContent = (s.name || '?').charAt(0).toUpperCase();
+  document.getElementById('stu-name').textContent = s.name;
+  document.getElementById('stu-uid').textContent = s.uid;
+  document.getElementById('d-mobile').textContent = s.mobile || '—';
+  document.getElementById('d-father').textContent = s.father_name || '—';
+  document.getElementById('d-mother').textContent = s.mother_name || '—';
+  document.getElementById('d-dob').textContent = s.dob || '—';
+
+  document.getElementById('f-student-name').value = s.name || '';
+  document.getElementById('f-father-name').value  = s.father_name || '';
+  document.getElementById('f-mother-name').value  = s.mother_name || '';
+  document.getElementById('f-mobile').value       = s.mobile || '';
+  document.getElementById('f-dob').value          = s.dob || '';
+
+  document.getElementById('enr-section').style.display = 'block';
   document.getElementById('form-area').style.display = 'none';
   document.getElementById('form-placeholder').style.display = 'flex';
 
+  const list = document.getElementById('enr-list');
   if (!enrollments.length) {
-    list.innerHTML = '<div style="font-size:13px;color:var(--text-2);text-align:center;padding:10px;">No CLOSE enrollments found.<br>Walk-in option use karo.</div>';
-    sec.style.display = 'block';
+    list.innerHTML = '<div style="font-size:13px;color:var(--text-2);text-align:center;padding:10px;">Koi enrollment nahi mila.<br>Walk-in option use karo.</div>';
     return;
   }
+
+  const statusClass = { RUN:'es-run', OPEN:'es-open', CLOSE:'es-close', EXPIRED:'es-expired' };
+
   list.innerHTML = enrollments.map(e => `
-    <label class="enr-item" onclick="selectEnrollment(this, ${JSON.stringify(e).replace(/"/g,'&quot;')})">
+    <label class="enr-item ${e.already_certified ? 'disabled' : ''}" ${e.already_certified ? '' : `onclick="selectEnrollment(this, ${JSON.stringify(e).replace(/"/g,'&quot;')})"`}>
       <input type="radio" name="enr_pick" value="${e.id}">
       <div class="enr-course">${e.course_name}</div>
-      <div class="enr-meta">${e.enrollment_no || 'No Enrollment No'} · <span class="enr-status es-close">Completed</span></div>
+      <div class="enr-meta">${e.enrollment_no || 'No Enrollment No'} · <span class="enr-status ${statusClass[e.status] || ''}">${e.status}</span></div>
+      ${e.already_certified ? '<div class="enr-already">Certificate already generated for this course</div>' : ''}
     </label>`).join('');
-  sec.style.display = 'block';
 }
+
+let selectedSubjects = [];
 
 function selectEnrollment(el, enr) {
   document.querySelectorAll('.enr-item').forEach(i => i.classList.remove('selected'));
   el.classList.add('selected');
 
-  document.getElementById('f-course-book-id').value = enr.id;
-  document.getElementById('f-enrollment-no').value  = enr.enrollment_no || '';
-  document.getElementById('f-course-name').value    = enr.course_name;
-  document.getElementById('f-start-date').value     = enr.start_date || '';
-  document.getElementById('f-end-date').value       = enr.end_date || '';
-  document.getElementById('f-father-name').value    = enr.father_name || '';
-  if (enr.end_date) document.getElementById('f-passing-year').value = enr.end_date.substring(0,4);
+  document.getElementById('f-course-book-id').value   = enr.id;
+  document.getElementById('f-enr-status').value       = enr.status;
+  document.getElementById('f-enrollment-no').value    = enr.enrollment_no || '';
+  document.getElementById('f-course-name').value      = enr.course_name;
+  document.getElementById('f-duration').value         = enr.duration || '';
+  document.getElementById('f-start-date').value       = enr.start_date || '';
+  document.getElementById('f-end-date').value         = enr.end_date || '';
+  document.getElementById('f-academic-session').value = enr.academic_session || '';
 
-  document.getElementById('doctype-section').style.display = 'block';
-}
-
-// ── Doc type switch ──
-function switchDocType(type) {
-  document.getElementById('f-doc-type').value = type;
-  ['btn-ms','btn-tc','btn-cc'].forEach(id => document.getElementById(id).classList.remove('selected'));
-  document.getElementById('btn-' + type.toLowerCase()).classList.add('selected');
-
-  ['section-marksheet','section-tc','section-cc'].forEach(id => {
-    document.getElementById(id).classList.remove('show');
-  });
-  if (type === 'MARKSHEET') document.getElementById('section-marksheet').classList.add('show');
-  if (type === 'TC')        document.getElementById('section-tc').classList.add('show');
-  if (type === 'CC')        document.getElementById('section-cc').classList.add('show');
+  selectedSubjects = enr.subjects || [];
+  renderSubjectsTable();
 
   document.getElementById('form-area').style.display = 'block';
   document.getElementById('form-placeholder').style.display = 'none';
 }
 
-// ── Marks auto-calc ──
+function renderSubjectsTable() {
+  const wrap = document.getElementById('subjects-wrap');
+  if (!selectedSubjects.length) {
+    wrap.innerHTML = '<div class="no-subjects-note">Is course ke liye subjects bind nahi hain — <a href="{{ route("institute.subjects.bind") }}" target="_blank">Subjects → Bind to Courses</a> se add karo.</div>';
+    calcTotals();
+    return;
+  }
+  wrap.innerHTML = `
+    <div style="overflow-x:auto;">
+    <table class="marks-table" id="marks-table">
+      <thead>
+        <tr>
+          <th style="width:14%">Code</th>
+          <th style="width:38%">Subject</th>
+          <th style="width:16%">Max</th>
+          <th style="width:16%">Obtained</th>
+          <th style="width:16%">Grade</th>
+        </tr>
+      </thead>
+      <tbody id="marks-body">
+        ${selectedSubjects.map((s, i) => `
+          <tr>
+            <td><input type="text" value="${s.code || ''}" readonly></td>
+            <td><input type="text" value="${s.name || ''}" readonly>
+              <input type="hidden" name="subjects[${i}][name]" value="${s.name || ''}">
+              <input type="hidden" name="subjects[${i}][code]" value="${s.code || ''}">
+              <input type="hidden" name="subjects[${i}][subject_id]" value="${s.subject_id || ''}">
+              <input type="hidden" name="subjects[${i}][max]" value="${s.max || 0}">
+            </td>
+            <td><input type="text" value="${s.max || 0}" readonly></td>
+            <td><input type="number" name="subjects[${i}][obtained]" min="0" max="${s.max || ''}" placeholder="0" oninput="calcTotals()"></td>
+            <td class="subj-grade" data-max="${s.max || 0}">—</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    </div>`;
+  calcTotals();
+}
+
+function gradeFor(percent) {
+  if (percent >= 90) return 'A+';
+  if (percent >= 75) return 'A';
+  if (percent >= 60) return 'B';
+  if (percent >= 45) return 'C';
+  if (percent >= 35) return 'D';
+  return 'F';
+}
+
 function calcTotals() {
   let maxT = 0, obtT = 0;
   document.querySelectorAll('#marks-body tr').forEach(row => {
     const mx = parseFloat(row.querySelector('[name*="[max]"]')?.value) || 0;
-    const ob = parseFloat(row.querySelector('[name*="[obtained]"]')?.value) || 0;
+    const obInput = row.querySelector('[name*="[obtained]"]');
+    const ob = parseFloat(obInput?.value) || 0;
     maxT += mx; obtT += ob;
+    const gradeCell = row.querySelector('.subj-grade');
+    if (gradeCell) gradeCell.textContent = mx > 0 && obInput?.value !== '' ? gradeFor((ob / mx) * 100) : '—';
   });
-  document.getElementById('total-max').value = maxT || '';
-  document.getElementById('total-obtained').value = obtT || '';
-  document.getElementById('percentage').value = maxT > 0 ? (obtT/maxT*100).toFixed(2) + '%' : '';
+  document.getElementById('rs-max').textContent = maxT;
+  document.getElementById('rs-obtained').textContent = obtT;
+  const pct = maxT > 0 ? (obtT / maxT * 100) : 0;
+  document.getElementById('rs-percent').textContent = pct.toFixed(2) + '%';
+  document.getElementById('rs-result').textContent = maxT > 0 ? (pct < 35 ? 'FAIL' : 'PASS') : '—';
 }
 
-function addSubjectRow() {
-  const i = subjectCount++;
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td><input type="text" name="subjects[${i}][name]" placeholder="Subject name"></td>
-    <td><input type="number" name="subjects[${i}][max]" placeholder="100" min="0"></td>
-    <td><input type="number" name="subjects[${i}][obtained]" placeholder="0" min="0" oninput="calcTotals()"></td>
-    <td><input type="text" name="subjects[${i}][grade]" placeholder="A"></td>
-    <td><button type="button" class="remove-row" onclick="this.closest('tr').remove();calcTotals()">×</button></td>`;
-  document.getElementById('marks-body').appendChild(tr);
-}
+// ── Submit: confirm if course status isn't CLOSE ──
+document.getElementById('cert-form').addEventListener('submit', function(e) {
+  const status = document.getElementById('f-enr-status').value;
+  if (status && status !== 'CLOSE') {
+    e.preventDefault();
+    Swal.fire({
+      icon: 'warning',
+      title: 'Course Complete Nahi Hua Hai',
+      text: `Is course ka status abhi "${status}" hai, complete nahi hua hai. Kya phir bhi certificate generate karna chahte ho?`,
+      showCancelButton: true,
+      confirmButtonText: 'Haan, Generate Karo',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#6c5dd3',
+    }).then(result => {
+      if (result.isConfirmed) {
+        document.getElementById('cert-form').submit();
+      }
+    });
+  }
+});
 </script>
 @endpush

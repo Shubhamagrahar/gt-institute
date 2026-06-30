@@ -1,4 +1,3 @@
-{{-- PROTOTYPE PAGE: Certificate & Marksheet Management --}}
 @extends('layouts.institute')
 @section('title','Certificates & Marksheets')
 @section('page-title','Certificates & Marksheets')
@@ -15,7 +14,6 @@
 .cs-blue   { background:linear-gradient(135deg,#8a73f5,#5b4ec7); color:#fff; }
 .cs-amber  { background:linear-gradient(135deg,#f59e0b,#b45309); color:#fff; }
 .cs-green  { background:linear-gradient(135deg,#10b981,#047857); color:#fff; }
-.cs-purple { background:linear-gradient(135deg,var(--accent,#6366f1),#4338ca); color:#fff; }
 .cs-icon   { width:52px;height:52px;border-radius:14px;background:rgba(255,255,255,.18);
              display:flex;align-items:center;justify-content:center;flex-shrink:0; }
 .cs-icon svg{ width:24px;height:24px;stroke:#fff;fill:none; }
@@ -27,40 +25,8 @@
 .sec-head-bar { width:4px;height:20px;border-radius:3px;background:var(--accent,#6366f1); }
 .sec-head-txt { font-size:15px;font-weight:800;color:var(--text,#1a1a2e); }
 
-/* ─── Flow cards ─── */
-.flow-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
-@media(max-width:700px){ .flow-grid{grid-template-columns:1fr;} }
-
-.flow-card { border-radius:14px; border:1.5px solid var(--border,#e2e8f0);
-             background:var(--bg-2,#fff); overflow:hidden; }
-.flow-card-head { padding:16px 18px; display:flex;align-items:center;gap:12px;
-                  border-bottom:1px solid var(--border,#e2e8f0); }
-.flow-card-icon { width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
-                  justify-content:center;flex-shrink:0; }
-.fci-blue  { background:#f5f3ff; }
-.fci-amber { background:#fffbeb; }
-.fci-blue  svg{ stroke:#8a73f5; }
-.fci-amber svg{ stroke:#f59e0b; }
-.flow-card-title { font-size:14px;font-weight:800; }
-.flow-card-sub   { font-size:11px;color:var(--text-2,#64748b);margin-top:2px; }
-.flow-steps { padding:0; margin:0; list-style:none; }
-.flow-step  { display:flex;align-items:flex-start;gap:12px;padding:13px 18px;
-              border-bottom:1px solid var(--border,#e2e8f0); }
-.flow-step:last-child{ border-bottom:none; }
-.step-num { width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:800;
-            display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px; }
-.sn-blue  { background:#f5f3ff;color:#8a73f5; }
-.sn-amber { background:#fffbeb;color:#f59e0b; }
-.step-txt  { font-size:13px;font-weight:600;color:var(--text,#1a1a2e); }
-.step-sub  { font-size:11px;color:var(--text-2,#64748b);margin-top:2px; }
-.step-badge{ display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;
-             border-radius:5px;margin-top:4px;text-transform:uppercase;letter-spacing:.5px; }
-.sb-pending { background:#fef3c7;color:#92400e; }
-.sb-approve { background:#d1fae5;color:#065f46; }
-.sb-reject  { background:#fee2e2;color:#991b1b; }
-
 /* ─── Doc type cards ─── */
-.doc-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:24px; }
+.doc-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px; }
 @media(max-width:700px){ .doc-grid{grid-template-columns:1fr;} }
 
 .doc-card { border-radius:14px;border:1.5px solid var(--border,#e2e8f0);
@@ -70,11 +36,32 @@
 .doc-badge { display:inline-block;font-size:11px;font-weight:900;letter-spacing:.8px;
              text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:10px; }
 .db-marksheet { background:#ede9fe;color:#5b21b6; }
-.db-tc        { background:#ede9fe;color:#4c3fae; }
 .db-cc        { background:#dcfce7;color:#15803d; }
 .doc-title { font-size:15px;font-weight:800;margin-bottom:6px; }
 .doc-desc  { font-size:12px;color:var(--text-2,#64748b);line-height:1.6; }
 .doc-eligible{ font-size:11px;margin-top:10px;font-weight:700;color:var(--text-2); }
+
+/* ─── Flow cards ─── */
+.flow-grid { display:grid; grid-template-columns:1fr; gap:16px; margin-bottom:24px; }
+
+.flow-card { border-radius:14px; border:1.5px solid var(--border,#e2e8f0);
+             background:var(--bg-2,#fff); overflow:hidden; }
+.flow-card-head { padding:16px 18px; display:flex;align-items:center;gap:12px;
+                  border-bottom:1px solid var(--border,#e2e8f0); }
+.flow-card-icon { width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
+                  justify-content:center;flex-shrink:0; background:#f5f3ff; }
+.flow-card-icon svg{ stroke:#8a73f5; }
+.flow-card-title { font-size:14px;font-weight:800; }
+.flow-card-sub   { font-size:11px;color:var(--text-2,#64748b);margin-top:2px; }
+.flow-steps { padding:0; margin:0; list-style:none; display:grid; grid-template-columns:1fr 1fr; }
+@media(max-width:700px){ .flow-steps{grid-template-columns:1fr;} }
+.flow-step  { display:flex;align-items:flex-start;gap:12px;padding:13px 18px;
+              border-bottom:1px solid var(--border,#e2e8f0); }
+.step-num { width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:800;
+            background:#f5f3ff;color:#8a73f5;
+            display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px; }
+.step-txt  { font-size:13px;font-weight:600;color:var(--text,#1a1a2e); }
+.step-sub  { font-size:11px;color:var(--text-2,#64748b);margin-top:2px; }
 
 /* ─── Action panel ─── */
 .action-panel { border-radius:14px;border:1.5px solid var(--border,#e2e8f0);
@@ -88,7 +75,6 @@
 .ai-blue   { background:#f5f3ff; } .ai-blue   svg{ stroke:#8a73f5; }
 .ai-purple { background:#ede9fe; } .ai-purple svg{ stroke:#5b21b6; }
 .ai-amber  { background:#fffbeb; } .ai-amber  svg{ stroke:#f59e0b; }
-.ai-green  { background:#dcfce7; } .ai-green  svg{ stroke:#15803d; }
 .action-info { flex:1; }
 .action-title { font-size:14px;font-weight:700; }
 .action-desc  { font-size:12px;color:var(--text-2,#64748b);margin-top:2px; }
@@ -102,26 +88,6 @@
   background:var(--accent,#6366f1);color:#fff;border-color:var(--accent,#6366f1); }
 .action-cta .primary:hover { opacity:.85; }
 
-/* ─── Pending requests preview ─── */
-.req-table{ width:100%;border-collapse:collapse;font-size:13px; }
-.req-table thead th{ background:var(--bg-3,#f8fafc);padding:10px 14px;text-align:left;
-  font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
-  color:var(--text-2,#64748b);border-bottom:1px solid var(--border,#e2e8f0); }
-.req-table tbody td{ padding:12px 14px;border-bottom:1px solid var(--border,#e2e8f0);vertical-align:middle; }
-.req-table tbody tr:last-child td{ border-bottom:none; }
-.req-table tbody tr:hover{ background:var(--bg-3,#f8fafc); }
-.badge-pending { background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;
-  padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px; }
-.badge-approved{ background:#d1fae5;color:#065f46;font-size:10px;font-weight:800;
-  padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px; }
-.badge-rejected{ background:#fee2e2;color:#991b1b;font-size:10px;font-weight:800;
-  padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px; }
-.doc-type-chip { font-size:10px;font-weight:800;padding:2px 9px;border-radius:5px;
-  text-transform:uppercase;letter-spacing:.5px; }
-.dtc-ms { background:#ede9fe;color:#5b21b6; }
-.dtc-tc { background:#ede9fe;color:#4c3fae; }
-.dtc-cc { background:#dcfce7;color:#15803d; }
-
 /* ─── Coming soon note ─── */
 .proto-note { background:linear-gradient(135deg,#fef9c3,#fef3c7);border:1.5px solid #fbbf24;
   border-radius:12px;padding:14px 18px;margin-bottom:24px;
@@ -134,12 +100,12 @@
 
 @section('content')
 
-{{-- PROTOTYPE NOTICE --}}
+{{-- Scope notice: only the franchise-request half is still a preview --}}
 <div class="proto-note">
   <div class="proto-note-icon">🧪</div>
   <div>
-    <div class="proto-note-txt">Prototype — Design Preview</div>
-    <div class="proto-note-sub">Yeh page sirf workflow aur UI ka design dikhata hai. Backend baad mein implement hoga.</div>
+    <div class="proto-note-txt">Franchise Request flow abhi design preview hai</div>
+    <div class="proto-note-sub">Direct Generation aur Walk-in Certificate fully working hain. Franchise se request aane wala flow abhi tak sirf UI design hai — backend baad mein implement hoga.</div>
   </div>
 </div>
 
@@ -150,7 +116,7 @@
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
     </div>
     <div>
-      <div class="cs-num">3</div>
+      <div class="cs-num">{{ $pendingCount }}</div>
       <div class="cs-lbl">Pending Requests</div>
     </div>
   </div>
@@ -159,7 +125,7 @@
       <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
     </div>
     <div>
-      <div class="cs-num">12</div>
+      <div class="cs-num">{{ $generatedThisMonth }}</div>
       <div class="cs-lbl">Generated This Month</div>
     </div>
   </div>
@@ -168,7 +134,7 @@
       <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
     </div>
     <div>
-      <div class="cs-num">47</div>
+      <div class="cs-num">{{ $totalGenerated }}</div>
       <div class="cs-lbl">Total Generated</div>
     </div>
   </div>
@@ -184,20 +150,14 @@
   <div class="doc-card">
     <div class="doc-badge db-marksheet">Marksheet</div>
     <div class="doc-title">Marksheet</div>
-    <div class="doc-desc">Student ka subject-wise marks aur final grade dikhata hai. Institute manually marks enter karta hai.</div>
-    <div class="doc-eligible">Eligible: CLOSE status students only</div>
+    <div class="doc-desc">Subject-wise marks, percentage aur grade dikhata hai — sab marks ke basis pe automatically calculate hota hai.</div>
+    <div class="doc-eligible">Ek certificate generation se dono document bante hain</div>
   </div>
   <div class="doc-card">
-    <div class="doc-badge db-tc">TC</div>
-    <div class="doc-title">Transfer Certificate</div>
-    <div class="doc-desc">Student ne course complete kiya. Start date, end date, passing year ke saath official document.</div>
-    <div class="doc-eligible">Eligible: CLOSE status students only</div>
-  </div>
-  <div class="doc-card">
-    <div class="doc-badge db-cc">CC</div>
-    <div class="doc-title">Character Certificate</div>
-    <div class="doc-desc">Student ka character aur conduct certify karta hai. Academic session aur grade ke saath.</div>
-    <div class="doc-eligible">Eligible: CLOSE status students only</div>
+    <div class="doc-badge db-cc">Certificate</div>
+    <div class="doc-title">Certificate of Completion</div>
+    <div class="doc-desc">Student ne course successfully complete kiya — usi marks-data se grade ke saath formal certificate banta hai.</div>
+    <div class="doc-eligible">Ek certificate generation se dono document bante hain</div>
   </div>
 </div>
 
@@ -208,113 +168,36 @@
 </div>
 
 <div class="flow-grid">
-  {{-- Institute Direct --}}
   <div class="flow-card">
     <div class="flow-card-head">
-      <div class="flow-card-icon fci-blue">
+      <div class="flow-card-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
       </div>
       <div>
-        <div class="flow-card-title">Institute Direct Generation</div>
-        <div class="flow-card-sub">Apne directly enrolled students ke liye</div>
+        <div class="flow-card-title">Direct Generation</div>
+        <div class="flow-card-sub">Apne enrolled students ke liye — Marksheet + Certificate dono ek hi data se</div>
       </div>
     </div>
     <ul class="flow-steps">
       <li class="flow-step">
-        <div class="step-num sn-blue">1</div>
-        <div>
-          <div class="step-txt">Student Search</div>
-          <div class="step-sub">Name / Mobile / Enrollment No. se search karo</div>
-        </div>
+        <div class="step-num">1</div>
+        <div><div class="step-txt">Student Search</div><div class="step-sub">Name / Mobile / Enrollment No. se search karo</div></div>
       </li>
       <li class="flow-step">
-        <div class="step-num sn-blue">2</div>
-        <div>
-          <div class="step-txt">Eligibility Check</div>
-          <div class="step-sub">Sirf CLOSE status enrollment eligible hai</div>
-        </div>
+        <div class="step-num">2</div>
+        <div><div class="step-txt">Course Select</div><div class="step-sub">Student jin courses mein enrolled hai, unka status ke saath</div></div>
       </li>
       <li class="flow-step">
-        <div class="step-num sn-blue">3</div>
-        <div>
-          <div class="step-txt">Document Type Select</div>
-          <div class="step-sub">Marksheet / TC / CC</div>
-          <div>
-            <span class="step-badge" style="background:#ede9fe;color:#5b21b6">Marksheet</span>
-            <span class="step-badge" style="background:#ede9fe;color:#4c3fae;margin-left:4px">TC</span>
-            <span class="step-badge" style="background:#dcfce7;color:#15803d;margin-left:4px">CC</span>
-          </div>
-        </div>
+        <div class="step-num">3</div>
+        <div><div class="step-txt">Subjects Auto-fill</div><div class="step-sub">Course ke subjects + max marks automatically aate hain</div></div>
       </li>
       <li class="flow-step">
-        <div class="step-num sn-blue">4</div>
-        <div>
-          <div class="step-txt">Details Fill (Only Marksheet)</div>
-          <div class="step-sub">Subject-wise marks ya overall grade enter karo</div>
-        </div>
+        <div class="step-num">4</div>
+        <div><div class="step-txt">Obtained Marks Bharo</div><div class="step-sub">Percentage aur grade live calculate hota hai</div></div>
       </li>
       <li class="flow-step">
-        <div class="step-num sn-blue">5</div>
-        <div>
-          <div class="step-txt">Generate → Print PDF</div>
-          <div class="step-sub">Certificate PDF new tab mein khulega, auto-print</div>
-        </div>
-      </li>
-    </ul>
-  </div>
-
-  {{-- Franchise Request --}}
-  <div class="flow-card">
-    <div class="flow-card-head">
-      <div class="flow-card-icon fci-amber">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </div>
-      <div>
-        <div class="flow-card-title">Franchise → Request Flow</div>
-        <div class="flow-card-sub">Franchise apne students ke liye request karta hai</div>
-      </div>
-    </div>
-    <ul class="flow-steps">
-      <li class="flow-step">
-        <div class="step-num sn-amber">1</div>
-        <div>
-          <div class="step-txt">Franchise Request Submit</div>
-          <div class="step-sub">Franchise panel se student select karke type choose karta hai</div>
-          <span class="step-badge sb-pending">Pending</span>
-        </div>
-      </li>
-      <li class="flow-step">
-        <div class="step-num sn-amber">2</div>
-        <div>
-          <div class="step-txt">Institute Ko Notification</div>
-          <div class="step-sub">Dashboard pe pending request count dikhega</div>
-        </div>
-      </li>
-      <li class="flow-step">
-        <div class="step-num sn-amber">3</div>
-        <div>
-          <div class="step-txt">Institute Review</div>
-          <div class="step-sub">Request details check karta hai — student, course, type</div>
-        </div>
-      </li>
-      <li class="flow-step">
-        <div class="step-num sn-amber">4</div>
-        <div>
-          <div class="step-txt">Approve ya Reject</div>
-          <div class="step-sub">Approve karne ke baad generate option milega</div>
-          <div>
-            <span class="step-badge sb-approve">Approve</span>
-            <span class="step-badge sb-reject" style="margin-left:4px">Reject + Note</span>
-          </div>
-        </div>
-      </li>
-      <li class="flow-step">
-        <div class="step-num sn-amber">5</div>
-        <div>
-          <div class="step-txt">Generate → Franchise Ko Notify</div>
-          <div class="step-sub">PDF generate hota hai. Franchise download kar sakta hai.</div>
-          <span class="step-badge sb-approve">Generated</span>
-        </div>
+        <div class="step-num">5</div>
+        <div><div class="step-txt">Generate → History List</div><div class="step-sub">Yahan se Print Marksheet ya Print Certificate karo</div></div>
       </li>
     </ul>
   </div>
@@ -333,7 +216,7 @@
     </div>
     <div class="action-info">
       <div class="action-title">Generate Certificate / Marksheet</div>
-      <div class="action-desc">Directly apne kisi bhi eligible (CLOSE) student ka document generate karo</div>
+      <div class="action-desc">Directly apne kisi bhi enrolled student ka document generate karo</div>
     </div>
     <div class="action-cta">
       <a href="{{ route('institute.certificates.generate') }}" class="primary">Generate</a>
@@ -345,10 +228,10 @@
     </div>
     <div class="action-info">
       <div class="action-title">Franchise Requests</div>
-      <div class="action-desc">Franchise se aayi pending requests review karo — approve ya reject karo</div>
+      <div class="action-desc">Franchise se aayi pending requests review karo — design preview</div>
     </div>
     <div class="action-cta">
-      <a href="{{ route('institute.certificates.requests') }}">View Requests <span style="background:#f59e0b;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:4px;">3</span></a>
+      <a href="{{ route('institute.certificates.requests') }}">View Requests <span style="background:#f59e0b;color:#fff;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:4px;">{{ $pendingCount }}</span></a>
     </div>
   </div>
   <div class="action-row">
@@ -357,90 +240,11 @@
     </div>
     <div class="action-info">
       <div class="action-title">Generated Documents History</div>
-      <div class="action-desc">Saare generated certificates aur marksheets ka record — reprint bhi kar sako</div>
+      <div class="action-desc">Saare generated certificates ka record — Marksheet/Certificate dobara print bhi kar sako</div>
     </div>
     <div class="action-cta">
       <a href="{{ route('institute.certificates.history') }}">View All</a>
     </div>
-  </div>
-</div>
-
-{{-- ─── PENDING REQUESTS PREVIEW ─── --}}
-<div class="sec-head">
-  <div class="sec-head-bar"></div>
-  <div class="sec-head-txt">Pending Franchise Requests (Preview)</div>
-</div>
-
-<div class="gt-card" style="padding:0;overflow:hidden;">
-  <table class="req-table">
-    <thead>
-      <tr>
-        <th>Student</th>
-        <th>Course</th>
-        <th>Type</th>
-        <th>Franchise</th>
-        <th>Requested On</th>
-        <th>Status</th>
-        <th style="text-align:right;">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {{-- Sample rows (dummy data) --}}
-      <tr>
-        <td>
-          <div style="font-weight:700;">Priya Sharma</div>
-          <div style="font-size:11px;color:var(--text-2);">INST20260002/ENR/0003</div>
-        </td>
-        <td style="font-size:12px;">Computer Fundamentals</td>
-        <td><span class="doc-type-chip dtc-ms">Marksheet</span></td>
-        <td style="font-size:12px;color:var(--text-2);">ABC Franchise</td>
-        <td style="font-size:12px;color:var(--text-2);">21 Jun 2026</td>
-        <td><span class="badge-pending">Pending</span></td>
-        <td style="text-align:right;">
-          <div style="display:flex;gap:6px;justify-content:flex-end;">
-            <button class="btn btn-primary btn-xs">Approve</button>
-            <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#fca5a5;">Reject</button>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <div style="font-weight:700;">Rahul Verma</div>
-          <div style="font-size:11px;color:var(--text-2);">INST20260002/ENR/0007</div>
-        </td>
-        <td style="font-size:12px;">Tally Prime</td>
-        <td><span class="doc-type-chip dtc-tc">TC</span></td>
-        <td style="font-size:12px;color:var(--text-2);">XYZ Center</td>
-        <td style="font-size:12px;color:var(--text-2);">22 Jun 2026</td>
-        <td><span class="badge-pending">Pending</span></td>
-        <td style="text-align:right;">
-          <div style="display:flex;gap:6px;justify-content:flex-end;">
-            <button class="btn btn-primary btn-xs">Approve</button>
-            <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#fca5a5;">Reject</button>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td>
-          <div style="font-weight:700;">Anita Patel</div>
-          <div style="font-size:11px;color:var(--text-2);">INST20260002/ENR/0011</div>
-        </td>
-        <td style="font-size:12px;">DTP & Graphics</td>
-        <td><span class="doc-type-chip dtc-cc">CC</span></td>
-        <td style="font-size:12px;color:var(--text-2);">ABC Franchise</td>
-        <td style="font-size:12px;color:var(--text-2);">23 Jun 2026</td>
-        <td><span class="badge-pending">Pending</span></td>
-        <td style="text-align:right;">
-          <div style="display:flex;gap:6px;justify-content:flex-end;">
-            <button class="btn btn-primary btn-xs">Approve</button>
-            <button class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#fca5a5;">Reject</button>
-          </div>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <div style="padding:12px 16px;border-top:1px solid var(--border);text-align:center;">
-    <a href="{{ route('institute.certificates.requests') }}" style="font-size:13px;font-weight:700;color:var(--accent);">View All Requests →</a>
   </div>
 </div>
 

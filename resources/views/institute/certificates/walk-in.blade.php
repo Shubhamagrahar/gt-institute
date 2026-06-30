@@ -20,14 +20,6 @@
 .fg label { font-size:11px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:5px; }
 .fg input,.fg select,.fg textarea { width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px; font-size:13px; background:var(--bg-3); color:var(--text); outline:none; transition:.15s; box-sizing:border-box; }
 .fg input:focus,.fg select:focus { border-color:var(--accent); background:var(--bg-2); }
-/* Doc type selector */
-.doc-type-row { display:flex; gap:10px; margin-bottom:4px; }
-.doc-radio { flex:1; border:1.5px solid var(--border); border-radius:10px; padding:12px; text-align:center; cursor:pointer; transition:.12s; }
-.doc-radio input { display:none; }
-.doc-radio:has(input:checked) { border-color:var(--accent); background:var(--bg-3); }
-.doc-radio .dr-code { font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; }
-.doc-radio .dr-name { font-size:12px; font-weight:700; margin-top:3px; }
-.dr-ms { color:#5b21b6; } .dr-tc { color:#4c3fae; } .dr-cc { color:#15803d; }
 /* Marks table */
 .marks-table { width:100%; border-collapse:collapse; font-size:13px; }
 .marks-table th { background:var(--bg-3); padding:8px 10px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-2); border-bottom:1px solid var(--border); }
@@ -38,9 +30,12 @@
 .add-subject-btn { margin-top:10px; padding:7px 14px; border:1.5px dashed var(--border); border-radius:8px; background:transparent; color:var(--text-2); font-size:12px; font-weight:600; cursor:pointer; width:100%; transition:.12s; }
 .add-subject-btn:hover { border-color:var(--accent); color:var(--accent); }
 .remove-row { background:none; border:none; cursor:pointer; color:#ef4444; padding:0 6px; font-size:16px; }
-/* Section toggle */
-.ms-only, .tc-only, .cc-only { display:none; }
 .submit-bar { padding:16px 22px; display:flex; align-items:center; justify-content:space-between; background:var(--bg-3); }
+.result-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px; }
+@media(max-width:560px){ .result-summary{grid-template-columns:1fr 1fr;} }
+.rs-box { border:1.5px solid var(--border); border-radius:10px; padding:10px 12px; text-align:center; }
+.rs-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:var(--text-2); }
+.rs-value { font-size:17px; font-weight:900; margin-top:3px; }
 </style>
 @endpush
 
@@ -56,34 +51,11 @@
     </div>
   </div>
 
-  <form method="POST" action="{{ route('institute.certificates.store') }}">
+  <form method="POST" action="{{ route('institute.certificates.store') }}" id="walkin-form">
     @csrf
     <input type="hidden" name="is_walk_in" value="1">
-    <input type="hidden" name="doc_type" id="f-doc-type" value="MARKSHEET">
 
     <div class="form-panel">
-
-      {{-- Document Type --}}
-      <div class="form-section">
-        <div class="fs-title">Document Type</div>
-        <div class="doc-type-row">
-          <label class="doc-radio">
-            <input type="radio" name="doc_type_sel" value="MARKSHEET" checked onchange="switchType('MARKSHEET')">
-            <div class="dr-code dr-ms">MS</div>
-            <div class="dr-name">Marksheet</div>
-          </label>
-          <label class="doc-radio">
-            <input type="radio" name="doc_type_sel" value="TC" onchange="switchType('TC')">
-            <div class="dr-code dr-tc">TC</div>
-            <div class="dr-name">Transfer Cert.</div>
-          </label>
-          <label class="doc-radio">
-            <input type="radio" name="doc_type_sel" value="CC" onchange="switchType('CC')">
-            <div class="dr-code dr-cc">CC</div>
-            <div class="dr-name">Character Cert.</div>
-          </label>
-        </div>
-      </div>
 
       {{-- Student Details --}}
       <div class="form-section">
@@ -100,12 +72,22 @@
         </div>
         <div class="form-row cols2">
           <div class="fg">
+            <label>Mother's Name</label>
+            <input type="text" name="mother_name" placeholder="e.g. Sita Sharma">
+          </div>
+          <div class="fg">
             <label>Mobile</label>
             <input type="text" name="mobile" placeholder="10-digit mobile">
           </div>
+        </div>
+        <div class="form-row cols2">
           <div class="fg">
             <label>Date of Birth</label>
             <input type="date" name="dob">
+          </div>
+          <div class="fg">
+            <label>Enrollment / Reg. No. <small style="font-weight:400">(optional)</small></label>
+            <input type="text" name="enrollment_no" placeholder="External reg. number if any">
           </div>
         </div>
       </div>
@@ -130,102 +112,46 @@
           </div>
           <div class="fg">
             <label>End Date</label>
-            <input type="date" name="end_date" id="wi-end-date" oninput="autoYear()">
+            <input type="date" name="end_date">
           </div>
           <div class="fg">
             <label>Academic Session</label>
             <input type="text" name="academic_session" placeholder="e.g. 2025-26">
           </div>
         </div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Passing Year</label>
-            <input type="text" name="passing_year" id="wi-passing-year" placeholder="e.g. 2026">
-          </div>
-          <div class="fg">
-            <label>Reference / Reg. No. <small style="font-weight:400">(optional)</small></label>
-            <input type="text" name="ref_no" placeholder="External reg. number if any">
-          </div>
-        </div>
       </div>
 
-      {{-- MARKSHEET section --}}
-      <div class="form-section ms-only" id="ms-section" style="display:block;">
+      {{-- Subject-wise Marks --}}
+      <div class="form-section">
         <div class="fs-title">Subject-wise Marks</div>
         <div style="overflow-x:auto;">
           <table class="marks-table">
             <thead>
               <tr>
-                <th style="width:35%">Subject</th>
-                <th style="width:18%">Max</th>
-                <th style="width:18%">Obtained</th>
-                <th style="width:17%">Grade</th>
-                <th style="width:12%"></th>
+                <th style="width:16%">Code</th>
+                <th style="width:36%">Subject</th>
+                <th style="width:16%">Max</th>
+                <th style="width:16%">Obtained</th>
+                <th style="width:16%"></th>
               </tr>
             </thead>
             <tbody id="wi-marks-body">
               <tr>
+                <td><input type="text" name="subjects[0][code]" placeholder="e.g. DCA101"></td>
                 <td><input type="text" name="subjects[0][name]" placeholder="Subject name"></td>
                 <td><input type="number" name="subjects[0][max]" placeholder="100" oninput="wiCalc()"></td>
                 <td><input type="number" name="subjects[0][obtained]" placeholder="75" oninput="wiCalc()"></td>
-                <td><input type="text" name="subjects[0][grade]" placeholder="A"></td>
                 <td></td>
               </tr>
             </tbody>
           </table>
         </div>
         <button type="button" class="add-subject-btn" onclick="wiAddRow()">+ Add Subject</button>
-        <div class="form-row cols3" style="margin-top:14px;">
-          <div class="fg"><label>Total Max</label><input type="number" id="wi-max" name="total_max" readonly style="background:var(--bg-3);"></div>
-          <div class="fg"><label>Total Obtained</label><input type="number" id="wi-obt" name="total_obtained" readonly style="background:var(--bg-3);"></div>
-          <div class="fg"><label>Percentage</label><input type="text" id="wi-pct" name="percentage" readonly style="background:var(--bg-3);"></div>
-        </div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Overall Grade</label>
-            <select name="overall_grade">
-              <option>A+</option><option>A</option><option>B+</option><option>B</option><option>C</option><option>D</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Result</label>
-            <select name="result">
-              <option value="PASS">PASS</option>
-              <option value="FAIL">FAIL</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {{-- TC section --}}
-      <div class="form-section tc-only" id="tc-section">
-        <div class="fs-title">TC Details</div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Reason for Leaving</label>
-            <select name="tc_reason">
-              <option>Course Completed</option><option>Transfer</option><option>Personal Reasons</option>
-            </select>
-          </div>
-          <div class="fg">
-            <label>Conduct</label>
-            <select name="tc_conduct"><option>Good</option><option>Satisfactory</option><option>Excellent</option></select>
-          </div>
-        </div>
-      </div>
-
-      {{-- CC section --}}
-      <div class="form-section cc-only" id="cc-section">
-        <div class="fs-title">Character Certificate Details</div>
-        <div class="form-row cols2">
-          <div class="fg">
-            <label>Character Grade</label>
-            <select name="character_grade"><option>Satisfactory</option><option>Good</option><option>Excellent</option></select>
-          </div>
-          <div class="fg">
-            <label>Conduct</label>
-            <select name="cc_conduct"><option>Good</option><option>Excellent</option><option>Satisfactory</option></select>
-          </div>
+        <div class="result-summary">
+          <div class="rs-box"><div class="rs-label">Total Max</div><div class="rs-value" id="wi-max">0</div></div>
+          <div class="rs-box"><div class="rs-label">Total Obtained</div><div class="rs-value" id="wi-obt">0</div></div>
+          <div class="rs-box"><div class="rs-label">Percentage</div><div class="rs-value" id="wi-pct">0%</div></div>
+          <div class="rs-box"><div class="rs-label">Result</div><div class="rs-value" id="wi-result">—</div></div>
         </div>
       </div>
 
@@ -233,7 +159,7 @@
       <div class="submit-bar">
         <a href="{{ route('institute.certificates.generate') }}" class="btn btn-outline btn-sm">← Enrolled Student</a>
         <button type="submit" class="btn btn-primary" style="padding:10px 28px;">
-          Generate &amp; Print
+          Generate
         </button>
       </div>
 
@@ -247,37 +173,27 @@
 <script>
 let wiRowCount = 1;
 
-function switchType(t) {
-  document.getElementById('f-doc-type').value = t;
-  document.getElementById('ms-section').style.display = t === 'MARKSHEET' ? 'block' : 'none';
-  document.getElementById('tc-section').style.display = t === 'TC'        ? 'block' : 'none';
-  document.getElementById('cc-section').style.display = t === 'CC'        ? 'block' : 'none';
-}
-
-function autoYear() {
-  const v = document.getElementById('wi-end-date').value;
-  if (v) document.getElementById('wi-passing-year').value = v.substring(0,4);
-}
-
 function wiCalc() {
   let mx = 0, ob = 0;
   document.querySelectorAll('#wi-marks-body tr').forEach(row => {
     mx += parseFloat(row.querySelector('[name*="[max]"]')?.value) || 0;
     ob += parseFloat(row.querySelector('[name*="[obtained]"]')?.value) || 0;
   });
-  document.getElementById('wi-max').value = mx || '';
-  document.getElementById('wi-obt').value = ob || '';
-  document.getElementById('wi-pct').value = mx > 0 ? (ob/mx*100).toFixed(2) + '%' : '';
+  document.getElementById('wi-max').textContent = mx;
+  document.getElementById('wi-obt').textContent = ob;
+  const pct = mx > 0 ? (ob / mx * 100) : 0;
+  document.getElementById('wi-pct').textContent = pct.toFixed(2) + '%';
+  document.getElementById('wi-result').textContent = mx > 0 ? (pct < 35 ? 'FAIL' : 'PASS') : '—';
 }
 
 function wiAddRow() {
   const i = wiRowCount++;
   const tr = document.createElement('tr');
   tr.innerHTML = `
+    <td><input type="text" name="subjects[${i}][code]" placeholder="e.g. DCA10${i+1}"></td>
     <td><input type="text" name="subjects[${i}][name]" placeholder="Subject name"></td>
     <td><input type="number" name="subjects[${i}][max]" placeholder="100" oninput="wiCalc()"></td>
     <td><input type="number" name="subjects[${i}][obtained]" placeholder="0" oninput="wiCalc()"></td>
-    <td><input type="text" name="subjects[${i}][grade]" placeholder="A"></td>
     <td><button type="button" class="remove-row" onclick="this.closest('tr').remove();wiCalc()">×</button></td>`;
   document.getElementById('wi-marks-body').appendChild(tr);
 }
