@@ -228,7 +228,7 @@
   <div style="display:grid;grid-template-columns:repeat(5,1fr);">
     @php
       $pipelineCols = [
-        ['label'=>'Open',        'value'=>$enquiryStats['enquiryOpen'],      'color'=>'#2563eb', 'tab'=>'open'],
+        ['label'=>'Open',        'value'=>$enquiryStats['enquiryOpen'],      'color'=>'#6c5dd3', 'tab'=>'open'],
         ['label'=>'Due Today',   'value'=>$enquiryStats['enquiryDueToday'],  'color'=>'#f59e0b', 'tab'=>'due'],
         ['label'=>'Overdue',     'value'=>$enquiryStats['enquiryOverdue'],   'color'=>'#ef4444', 'tab'=>'due'],
         ['label'=>'Converted',   'value'=>$enquiryStats['enquiryConverted'], 'color'=>'#10b981', 'tab'=>'converted'],
@@ -253,7 +253,7 @@
       $lostPct = $enquiryStats['enquiryTotal'] > 0 ? round(($enquiryStats['enquiryLost']/$enquiryStats['enquiryTotal'])*100) : 0;
       $openPct = 100 - $convPct - $lostPct;
     @endphp
-    <div style="width:{{ $openPct }}%;background:#2563eb;"></div>
+    <div style="width:{{ $openPct }}%;background:#6c5dd3;"></div>
     <div style="width:{{ $convPct }}%;background:#10b981;"></div>
     <div style="width:{{ $lostPct }}%;background:#ef4444;"></div>
   </div>
@@ -441,8 +441,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 (function () {
-  const accent  = '#2563eb';
-  const accentL = 'rgba(37,99,235,.12)';
+  const accent  = '#6c5dd3';
+  const accentL = 'rgba(108,93,211,.12)';
   const green   = '#10b981';
   const amber   = '#f59e0b';
   const gridCol = 'rgba(26,31,60,.07)';

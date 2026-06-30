@@ -22,7 +22,7 @@ body{font-family:'Courier New',Courier,monospace;background:#e8ecf0;padding:12px
 .cancelled-stamp-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}
 .cancelled-stamp-box{border:5px double rgba(185,28,28,.55);border-radius:8px;padding:8px 14px;color:rgba(185,28,28,.55);font-size:22pt;font-weight:900;letter-spacing:.15em;text-transform:uppercase;font-family:'Arial Black',Arial,sans-serif;transform:rotate(-22deg);white-space:nowrap;line-height:1}
 .no-print button{padding:8px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;border:none}
-.btn-print{background:#1e40af;color:#fff}
+.btn-print{background:#4c3fae;color:#fff}
 .btn-close{background:#f1f5f9;color:#374151}
 @media print{
   body{background:#fff;padding:0}

@@ -21,11 +21,11 @@
 .badge-pending  { background:#fef3c7; color:#92400e; }
 .badge-approved { background:#d1fae5; color:#065f46; }
 .badge-rejected { background:#fee2e2; color:#991b1b; }
-.badge-generated{ background:#dbeafe; color:#1e40af; }
+.badge-generated{ background:#ede9fe; color:#4c3fae; }
 
 .doc-chip { display:inline-block; font-size:10px; font-weight:800; padding:2px 9px; border-radius:5px; text-transform:uppercase; }
 .dc-ms { background:#ede9fe; color:#5b21b6; }
-.dc-tc { background:#dbeafe; color:#1e40af; }
+.dc-tc { background:#ede9fe; color:#4c3fae; }
 .dc-cc { background:#dcfce7; color:#15803d; }
 
 .req-body { display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:0; }

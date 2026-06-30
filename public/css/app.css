@@ -44,8 +44,8 @@
   --success-bg: rgba(16,185,129,.08);
   --warning:    #f59e0b;
   --warning-bg: rgba(245,158,11,.08);
-  --info:       #3b82f6;
-  --info-bg:    rgba(59,130,246,.08);
+  --info:       #8a73f5;
+  --info-bg:    rgba(138,115,245,.08);
 
   /* Misc */
   --radius:    10px;
@@ -122,7 +122,7 @@ img { max-width: 100%; height: auto; }
 }
 .gt-sidebar-brand .brand-icon {
   width: 34px; height: 34px;
-  background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+  background: linear-gradient(135deg, #5b4ec7, #8a73f5);
   border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
   font-weight: 800; font-size: 14px; color: #fff;
@@ -443,7 +443,7 @@ img { max-width: 100%; height: auto; }
 .gt-stat-icon.yellow { background: rgba(245,158,11,.1);  color: #f59e0b; }
 .gt-stat-icon.green  { background: rgba(16,185,129,.1);  color: var(--success); }
 .gt-stat-icon.red    { background: rgba(239,68,68,.1);   color: var(--danger); }
-.gt-stat-icon.blue   { background: rgba(59,130,246,.1);  color: var(--info); }
+.gt-stat-icon.blue   { background: rgba(138,115,245,.1);  color: var(--info); }
 .gt-stat-icon.teal   { background: rgba(20,184,166,.1);  color: #14b8a6; }
 .gt-stat-icon.orange { background: rgba(249,115,22,.1);  color: #f97316; }
 
@@ -453,7 +453,7 @@ img { max-width: 100%; height: auto; }
 
 /* ─── WELCOME BANNER ─── */
 .gt-welcome-banner {
-  background: linear-gradient(120deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+  background: linear-gradient(120deg, #3d3389 0%, #5b4ec7 50%, #6c5dd3 100%);
   border-radius: var(--radius);
   padding: 20px 24px;
   margin-bottom: 20px;
@@ -741,7 +741,7 @@ img { max-width: 100%; height: auto; }
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #2563eb 0%, #10b981 100%);
+  background: linear-gradient(90deg, #6c5dd3 0%, #10b981 100%);
 }
 .account-mini-card {
   background: var(--bg-3);
@@ -1158,7 +1158,7 @@ img { max-width: 100%; height: auto; }
 .gt-erp-btn-blue {
   background: var(--accent);
   color: #fff;
-  box-shadow: 0 2px 8px rgba(37,99,235,.3);
+  box-shadow: 0 2px 8px rgba(108,93,211,.3);
 }
 .gt-erp-btn-blue:hover { background: var(--accent-dim); color: #fff; opacity: 1; }
 .gt-erp-btn-amber {
@@ -1255,7 +1255,7 @@ img { max-width: 100%; height: auto; }
 
 /* ERP Welcome Banner */
 .gt-erp-banner {
-  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
+  background: linear-gradient(135deg, #3d3389 0%, #5b4ec7 55%, #6c5dd3 100%);
   border-radius: 14px;
   padding: 22px 26px;
   margin-bottom: 18px;

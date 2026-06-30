@@ -49,7 +49,7 @@
 .fr-stat-icon.orange{background:rgba(234,88,12,.12);color:#ea580c;}
 .fr-stat-icon.green{background:rgba(22,163,74,.12);color:#16a34a;}
 .fr-stat-icon.amber{background:rgba(245,158,11,.12);color:#f59e0b;}
-.fr-stat-icon.blue{background:rgba(59,130,246,.12);color:#3b82f6;}
+.fr-stat-icon.blue{background:rgba(138,115,245,.12);color:#8a73f5;}
 .fr-stat-icon.purple{background:rgba(139,92,246,.12);color:#8b5cf6;}
 .fr-stat-value{font-size:20px;font-weight:800;color:var(--text-1);}
 .fr-stat-label{font-size:11px;color:var(--text-3);margin-top:2px;text-transform:uppercase;letter-spacing:.06em;}

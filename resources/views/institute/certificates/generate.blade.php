@@ -52,7 +52,7 @@
 .dtb-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
 .dtb-name  { font-size:12px; font-weight:700; margin-top:3px; }
 .dtb-ms { color:#5b21b6; }
-.dtb-tc { color:#1e40af; }
+.dtb-tc { color:#4c3fae; }
 .dtb-cc { color:#15803d; }
 
 /* Form panel */

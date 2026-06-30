@@ -13,7 +13,7 @@
 .gt-tbl tbody tr:hover { background:var(--bg-3); }
 .doc-chip { display:inline-block; font-size:10px; font-weight:800; padding:2px 9px; border-radius:5px; text-transform:uppercase; }
 .dc-ms { background:#ede9fe; color:#5b21b6; }
-.dc-tc { background:#dbeafe; color:#1e40af; }
+.dc-tc { background:#ede9fe; color:#4c3fae; }
 .dc-cc { background:#dcfce7; color:#15803d; }
 .source-chip { display:inline-block; font-size:10px; font-weight:700; padding:2px 9px; border-radius:5px; }
 .sc-direct  { background:#f1f5f9; color:#64748b; }

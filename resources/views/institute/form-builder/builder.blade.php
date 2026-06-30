@@ -56,9 +56,9 @@
 .paper-title-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}
 .paper-title-row h4{margin:0;font-size:14px;font-weight:900;color:#0f172a}
 .paper-title-row p{margin:2px 0 0;font-size:10px;color:#64748b}
-.paper-badge{padding:6px 10px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-size:10px;font-weight:800}
+.paper-badge{padding:6px 10px;border-radius:999px;background:#f5f3ff;color:#5b4ec7;font-size:10px;font-weight:800}
 .paper-section{margin-top:12px}
-.paper-section-title{font-size:10px;font-weight:900;color:#1e3a8a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.paper-section-title{font-size:10px;font-weight:900;color:#3d3389;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
 .paper-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px}
 .paper-grid-fixed{margin-bottom:6px}
 .paper-field{min-height:44px}
@@ -73,7 +73,7 @@
 .paper-education{border:1px solid #d9e3f7;border-radius:10px;overflow:hidden}
 .paper-education table{width:100%;border-collapse:collapse}
 .paper-education th,.paper-education td{border:1px solid #e5edfa;padding:6px;font-size:9px;text-align:left}
-.paper-education th{background:#f8fbff;color:#1e3a8a}
+.paper-education th{background:#f8fbff;color:#3d3389}
 .paper-footer{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px;font-size:10px;font-weight:700;color:#334155}
 .paper-sign-line{margin-top:24px;border-bottom:1.6px solid #94a3b8}
 .fb-hidden{display:none!important}

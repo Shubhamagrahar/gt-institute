@@ -27,7 +27,7 @@
   border: 1px solid transparent;
 }
 
-.cfb-stat-card.blue  { background: #eff6ff; border-color: #bfdbfe; }
+.cfb-stat-card.blue  { background: #f5f3ff; border-color: #ddd6fe; }
 .cfb-stat-card.purple{ background: #f5f3ff; border-color: #ddd6fe; }
 .cfb-stat-card.green { background: #f0fdf4; border-color: #bbf7d0; }
 .cfb-stat-card.amber { background: #fffbeb; border-color: #fde68a; }
@@ -38,7 +38,7 @@
   text-transform: uppercase;
   letter-spacing: .5px;
 }
-.cfb-stat-card.blue   .cfb-stat-label  { color: #3b82f6; }
+.cfb-stat-card.blue   .cfb-stat-label  { color: #8a73f5; }
 .cfb-stat-card.purple .cfb-stat-label  { color: #7c3aed; }
 .cfb-stat-card.green  .cfb-stat-label  { color: #16a34a; }
 .cfb-stat-card.amber  .cfb-stat-label  { color: #d97706; }
@@ -166,11 +166,11 @@
   align-items: center;
   padding: 3px 9px;
   border-radius: 999px;
-  background: #eff6ff;
-  color: #1d4ed8;
+  background: #f5f3ff;
+  color: #5b4ec7;
   font-size: 11px;
   font-weight: 700;
-  border: 1px solid #bfdbfe;
+  border: 1px solid #ddd6fe;
 }
 
 .cfb-no-extra {

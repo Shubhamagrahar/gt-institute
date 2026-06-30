@@ -140,7 +140,7 @@
     width: 34px;
     height: 34px;
     border-radius: 12px;
-    background: linear-gradient(135deg, rgba(108,93,211,.14), rgba(59,130,246,.12));
+    background: linear-gradient(135deg, rgba(108,93,211,.14), rgba(138,115,245,.12));
     color: var(--accent);
     font-size: 13px;
     font-weight: 700;

@@ -10,21 +10,21 @@
     .otp-digit {
       width: 48px; height: 56px; text-align: center;
       font-size: 22px; font-weight: 700;
-      border-radius: 12px; border: 1.5px solid rgba(59,130,246,.35);
+      border-radius: 12px; border: 1.5px solid rgba(138,115,245,.35);
       background: rgba(255,255,255,.06); color: #fff;
       outline: none; caret-color: transparent;
       transition: border-color .2s, box-shadow .2s;
     }
-    .otp-digit:focus { border-color: rgba(59,130,246,.85); box-shadow: 0 0 0 3px rgba(59,130,246,.18); }
-    .otp-digit.filled { border-color: rgba(59,130,246,.7); background: rgba(59,130,246,.1); }
+    .otp-digit:focus { border-color: rgba(138,115,245,.85); box-shadow: 0 0 0 3px rgba(138,115,245,.18); }
+    .otp-digit.filled { border-color: rgba(138,115,245,.7); background: rgba(138,115,245,.1); }
     .resend-row { text-align: center; margin-top: 16px; font-size: 13px; color: rgba(255,255,255,.45); }
-    .resend-row a, .resend-row button { color: rgba(59,130,246,.92); text-decoration: none; background: none; border: none; cursor: pointer; font-size: 13px; padding: 0; }
+    .resend-row a, .resend-row button { color: rgba(138,115,245,.92); text-decoration: none; background: none; border: none; cursor: pointer; font-size: 13px; padding: 0; }
     .resend-row a:hover, .resend-row button:hover { color: #fff; }
     .masked-email { color: rgba(255,255,255,.65); font-size: 13px; text-align: center; margin-bottom: 20px; }
-    .back-link { display: flex; align-items: center; gap: 6px; color: rgba(59,130,246,.8); font-size: 12px; text-decoration: none; margin-bottom: 20px; }
+    .back-link { display: flex; align-items: center; gap: 6px; color: rgba(138,115,245,.8); font-size: 12px; text-decoration: none; margin-bottom: 20px; }
     .back-link:hover { color: #fff; }
     #otp-hidden { display: none; }
-    #verifying-msg { color: rgba(59,130,246,.85); }
+    #verifying-msg { color: rgba(138,115,245,.85); }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
@@ -42,7 +42,7 @@
       </div>
     </div>
 
-    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);color:#93c5fd;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:14px;">
+    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(138,115,245,.12);border:1px solid rgba(138,115,245,.25);color:#c4b5fd;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;padding:4px 12px;border-radius:999px;margin-bottom:14px;">
       Owner Panel
     </div>
 

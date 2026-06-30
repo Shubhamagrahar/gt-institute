@@ -32,7 +32,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(108,93,211,.12), rgba(59,130,246,.12));
+  background: linear-gradient(135deg, rgba(108,93,211,.12), rgba(138,115,245,.12));
   color: var(--accent);
   font-size: 18px;
   font-weight: 700;

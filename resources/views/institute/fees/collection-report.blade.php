@@ -29,9 +29,9 @@
 .mode-chip { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px;
   border-radius:6px; text-transform:uppercase; letter-spacing:.04em; }
 .m-cash   { background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; }
-.m-upi    { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
-.m-neft   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
-.m-imps   { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+.m-upi    { background:#f5f3ff; color:#5b4ec7; border:1px solid #ddd6fe; }
+.m-neft   { background:#f5f3ff; color:#5b4ec7; border:1px solid #ddd6fe; }
+.m-imps   { background:#f5f3ff; color:#5b4ec7; border:1px solid #ddd6fe; }
 .m-cheque { background:#fef9c3; color:#a16207; border:1px solid #fde68a; }
 
 .bar-track { height:8px; background:var(--bg-3); border-radius:4px; overflow:hidden; margin-top:5px; }
@@ -60,7 +60,7 @@
       <div class="cr-stat-label">Cash</div>
     </div>
     <div class="cr-stat">
-      <div class="cr-stat-num" style="color:#1d4ed8">₹{{ number_format($dailyByUpi, 0) }}</div>
+      <div class="cr-stat-num" style="color:#5b4ec7">₹{{ number_format($dailyByUpi, 0) }}</div>
       <div class="cr-stat-label">UPI / NEFT / IMPS</div>
     </div>
     <div class="cr-stat">

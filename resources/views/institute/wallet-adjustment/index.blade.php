@@ -88,7 +88,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(108,93,211,.2), rgba(59,130,246,.2));
+  background: linear-gradient(135deg, rgba(108,93,211,.2), rgba(138,115,245,.2));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -117,7 +117,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(108,93,211,.25), rgba(59,130,246,.25));
+  background: linear-gradient(135deg, rgba(108,93,211,.25), rgba(138,115,245,.25));
   display: flex;
   align-items: center;
   justify-content: center;

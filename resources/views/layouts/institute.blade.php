@@ -57,9 +57,9 @@
   $selectedSessId = session('selected_session_id', $activeSession?->id);
 @endphp
 
-<div style="margin:6px 12px 4px;background:rgba(37,99,235,.12);border:1px solid rgba(37,99,235,.25);border-radius:7px;padding:6px 10px;">
+<div style="margin:6px 12px 4px;background:rgba(108,93,211,.12);border:1px solid rgba(108,93,211,.25);border-radius:7px;padding:6px 10px;">
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#93c5fd" stroke-width="2" style="flex-shrink:0;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c4b5fd" stroke-width="2" style="flex-shrink:0;">
       <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/>
       <line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
     </svg>
@@ -71,7 +71,7 @@
 
   @if($allSessions->isEmpty())
     <a href="{{ route('institute.sessions.create') }}"
-       style="display:block;font-size:11.5px;color:#93c5fd;font-weight:600;">
+       style="display:block;font-size:11.5px;color:#c4b5fd;font-weight:600;">
       + Create First Session
     </a>
   @else
@@ -168,7 +168,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Open Enquiries
       @if($__sidebarEnqOpen > 0)
-        <span style="margin-left:auto;background:rgba(37,99,235,.2);color:#93c5fd;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">{{ $__sidebarEnqOpen }}</span>
+        <span style="margin-left:auto;background:rgba(108,93,211,.2);color:#c4b5fd;font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;">{{ $__sidebarEnqOpen }}</span>
       @endif
     </a>
     <a href="{{ route('institute.enquiries.index', ['tab'=>'due']) }}" class="gt-nav-item {{ request()->routeIs('institute.enquiries.index') && request()->get('tab')==='due' ? 'active' : '' }}">

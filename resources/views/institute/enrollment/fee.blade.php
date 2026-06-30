@@ -138,7 +138,7 @@
       <div class="summary-line"><span>Total Discount</span><strong id="total-discount">₹0.00</strong></div>
       <div class="summary-line"><span>Payment Type</span><strong id="summary-type">{{ $activeType === 'MONTHLY' ? 'MONTH' : $activeType }}</strong></div>
       <div class="summary-line" id="monthly-line" style="display:none;"><span>Approx Monthly</span><strong id="monthly-amount">₹0.00</strong></div>
-      <div class="summary-line" style="margin-top:8px;background:#eff6ff;border-radius:8px;padding:10px;"><span style="font-weight:700;">To Pay Now</span><strong id="summary-pay-now" style="color:#3b82f6;font-size:18px;">₹0.00</strong></div>
+      <div class="summary-line" style="margin-top:8px;background:#f5f3ff;border-radius:8px;padding:10px;"><span style="font-weight:700;">To Pay Now</span><strong id="summary-pay-now" style="color:#8a73f5;font-size:18px;">₹0.00</strong></div>
       <button type="submit" class="btn btn-primary w-full" style="justify-content:center;margin-top:18px;" {{ $plans->isEmpty() ? 'disabled' : '' }}>Complete &amp; Collect Payment</button>
     </div>
   </div>

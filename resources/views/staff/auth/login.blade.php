@@ -18,33 +18,33 @@
       border-color: rgba(255,255,255,.09) !important;
     }
 
-    /* Blue theme overrides */
+    /* Purple theme overrides */
     .gt-login-bg::before {
-      background: radial-gradient(circle, rgba(59,130,246,.22) 0%, transparent 65%) !important;
+      background: radial-gradient(circle, rgba(138,115,245,.22) 0%, transparent 65%) !important;
     }
     .gt-login-bg::after {
-      background: radial-gradient(circle, rgba(37,99,235,.16) 0%, transparent 65%) !important;
+      background: radial-gradient(circle, rgba(108,93,211,.16) 0%, transparent 65%) !important;
     }
     .gt-login-card {
-      border-color: rgba(96,165,250,.18) !important;
+      border-color: rgba(167,139,250,.18) !important;
     }
     .gt-login-page .gt-input:focus {
-      border-color: rgba(96,165,250,.55) !important;
-      box-shadow: 0 0 0 3px rgba(59,130,246,.12) !important;
+      border-color: rgba(167,139,250,.55) !important;
+      box-shadow: 0 0 0 3px rgba(138,115,245,.12) !important;
     }
     .btn-staff {
-      background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+      background: linear-gradient(135deg, #6c5dd3 0%, #8a73f5 100%);
       color: #fff; border: none; width: 100%;
       padding: 13px; border-radius: 10px;
       font-size: 14px; font-weight: 700; cursor: pointer;
       font-family: inherit;
       display: flex; align-items: center; justify-content: center; gap: 8px;
       transition: opacity .15s, transform .15s, box-shadow .15s;
-      box-shadow: 0 4px 16px rgba(37,99,235,.4);
+      box-shadow: 0 4px 16px rgba(108,93,211,.4);
     }
     .btn-staff:hover {
       opacity: .92; transform: translateY(-1px);
-      box-shadow: 0 6px 22px rgba(37,99,235,.5);
+      box-shadow: 0 6px 22px rgba(108,93,211,.5);
     }
     .btn-staff:active { transform: none; }
 
@@ -53,13 +53,13 @@
       display: flex; justify-content: space-between; align-items: center;
       gap: 12px; margin-top: 8px; margin-bottom: 12px;
     }
-    .login-meta-row a { color: rgba(96,165,250,.92); text-decoration: none; font-size: 13px; }
+    .login-meta-row a { color: rgba(167,139,250,.92); text-decoration: none; font-size: 13px; }
     .login-meta-row a:hover { color: #fff; }
 
     .portal-badge {
       display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(59,130,246,.12); border: 1px solid rgba(96,165,250,.25);
-      color: #93c5fd; border-radius: 20px; padding: 4px 12px;
+      background: rgba(138,115,245,.12); border: 1px solid rgba(167,139,250,.25);
+      color: #c4b5fd; border-radius: 20px; padding: 4px 12px;
       font-size: 11.5px; font-weight: 600; letter-spacing: .3px;
       margin-bottom: 10px;
     }
@@ -69,7 +69,7 @@
       text-align: center; margin-top: 20px;
       font-size: 12.5px; color: rgba(255,255,255,.35);
     }
-    .back-link a { color: rgba(96,165,250,.7); text-decoration: none; font-weight: 600; }
+    .back-link a { color: rgba(167,139,250,.7); text-decoration: none; font-weight: 600; }
     .back-link a:hover { color: #fff; }
   </style>
 </head>

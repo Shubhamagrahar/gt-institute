@@ -27,7 +27,7 @@
 .doc-radio:has(input:checked) { border-color:var(--accent); background:var(--bg-3); }
 .doc-radio .dr-code { font-size:11px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; }
 .doc-radio .dr-name { font-size:12px; font-weight:700; margin-top:3px; }
-.dr-ms { color:#5b21b6; } .dr-tc { color:#1e40af; } .dr-cc { color:#15803d; }
+.dr-ms { color:#5b21b6; } .dr-tc { color:#4c3fae; } .dr-cc { color:#15803d; }
 /* Marks table */
 .marks-table { width:100%; border-collapse:collapse; font-size:13px; }
 .marks-table th { background:var(--bg-3); padding:8px 10px; text-align:left; font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-2); border-bottom:1px solid var(--border); }

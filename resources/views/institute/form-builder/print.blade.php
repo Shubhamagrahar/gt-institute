@@ -21,7 +21,7 @@
     .print-form{background:#fff;border:1px solid #d8e2f3;box-shadow:0 18px 44px rgba(15,23,42,.08);padding:24px 24px 18px}
     .print-header{display:flex;justify-content:space-between;gap:20px;border-bottom:2px solid var(--brand);padding-bottom:12px;margin-bottom:16px}
     .print-title{font-size:28px;font-weight:900;color:var(--brand);line-height:1.1}
-    .print-subtitle{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#1e40af;margin-top:6px}
+    .print-subtitle{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#4c3fae;margin-top:6px}
     .print-address{font-size:12px;color:var(--muted);margin-top:8px;max-width:480px;line-height:1.55}
     .print-header-side{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted);text-align:right;min-width:220px}
     .print-top-grid{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:14px;margin-bottom:14px}

@@ -12,7 +12,7 @@
 
 /* ─── Stat cards ─── */
 .cert-stat { border-radius:14px; padding:20px 22px; display:flex; align-items:center; gap:16px; }
-.cs-blue   { background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:#fff; }
+.cs-blue   { background:linear-gradient(135deg,#8a73f5,#5b4ec7); color:#fff; }
 .cs-amber  { background:linear-gradient(135deg,#f59e0b,#b45309); color:#fff; }
 .cs-green  { background:linear-gradient(135deg,#10b981,#047857); color:#fff; }
 .cs-purple { background:linear-gradient(135deg,var(--accent,#6366f1),#4338ca); color:#fff; }
@@ -37,9 +37,9 @@
                   border-bottom:1px solid var(--border,#e2e8f0); }
 .flow-card-icon { width:38px;height:38px;border-radius:10px;display:flex;align-items:center;
                   justify-content:center;flex-shrink:0; }
-.fci-blue  { background:#eff6ff; }
+.fci-blue  { background:#f5f3ff; }
 .fci-amber { background:#fffbeb; }
-.fci-blue  svg{ stroke:#3b82f6; }
+.fci-blue  svg{ stroke:#8a73f5; }
 .fci-amber svg{ stroke:#f59e0b; }
 .flow-card-title { font-size:14px;font-weight:800; }
 .flow-card-sub   { font-size:11px;color:var(--text-2,#64748b);margin-top:2px; }
@@ -49,7 +49,7 @@
 .flow-step:last-child{ border-bottom:none; }
 .step-num { width:22px;height:22px;border-radius:50%;font-size:11px;font-weight:800;
             display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px; }
-.sn-blue  { background:#eff6ff;color:#3b82f6; }
+.sn-blue  { background:#f5f3ff;color:#8a73f5; }
 .sn-amber { background:#fffbeb;color:#f59e0b; }
 .step-txt  { font-size:13px;font-weight:600;color:var(--text,#1a1a2e); }
 .step-sub  { font-size:11px;color:var(--text-2,#64748b);margin-top:2px; }
@@ -70,7 +70,7 @@
 .doc-badge { display:inline-block;font-size:11px;font-weight:900;letter-spacing:.8px;
              text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:10px; }
 .db-marksheet { background:#ede9fe;color:#5b21b6; }
-.db-tc        { background:#dbeafe;color:#1e40af; }
+.db-tc        { background:#ede9fe;color:#4c3fae; }
 .db-cc        { background:#dcfce7;color:#15803d; }
 .doc-title { font-size:15px;font-weight:800;margin-bottom:6px; }
 .doc-desc  { font-size:12px;color:var(--text-2,#64748b);line-height:1.6; }
@@ -85,7 +85,7 @@
 .action-row:hover{ background:var(--bg-3,#f8fafc); }
 .action-icon { width:42px;height:42px;border-radius:11px;display:flex;align-items:center;
                justify-content:center;flex-shrink:0; }
-.ai-blue   { background:#eff6ff; } .ai-blue   svg{ stroke:#3b82f6; }
+.ai-blue   { background:#f5f3ff; } .ai-blue   svg{ stroke:#8a73f5; }
 .ai-purple { background:#ede9fe; } .ai-purple svg{ stroke:#5b21b6; }
 .ai-amber  { background:#fffbeb; } .ai-amber  svg{ stroke:#f59e0b; }
 .ai-green  { background:#dcfce7; } .ai-green  svg{ stroke:#15803d; }
@@ -119,7 +119,7 @@
 .doc-type-chip { font-size:10px;font-weight:800;padding:2px 9px;border-radius:5px;
   text-transform:uppercase;letter-spacing:.5px; }
 .dtc-ms { background:#ede9fe;color:#5b21b6; }
-.dtc-tc { background:#dbeafe;color:#1e40af; }
+.dtc-tc { background:#ede9fe;color:#4c3fae; }
 .dtc-cc { background:#dcfce7;color:#15803d; }
 
 /* ─── Coming soon note ─── */
@@ -241,7 +241,7 @@
           <div class="step-sub">Marksheet / TC / CC</div>
           <div>
             <span class="step-badge" style="background:#ede9fe;color:#5b21b6">Marksheet</span>
-            <span class="step-badge" style="background:#dbeafe;color:#1e40af;margin-left:4px">TC</span>
+            <span class="step-badge" style="background:#ede9fe;color:#4c3fae;margin-left:4px">TC</span>
             <span class="step-badge" style="background:#dcfce7;color:#15803d;margin-left:4px">CC</span>
           </div>
         </div>
