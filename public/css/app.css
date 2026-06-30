@@ -848,22 +848,22 @@ img { max-width: 100%; height: auto; }
 .gt-login-bg {
   position: absolute; inset: 0; pointer-events: none;
 }
-/* Top-left blue glow */
+/* Top-left purple glow */
 .gt-login-bg::before {
   content: '';
   position: absolute;
   top: -15%; left: -8%;
   width: 55vw; height: 55vw;
-  background: radial-gradient(circle, rgba(37,99,235,.25) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(108,93,211,.25) 0%, transparent 65%);
   border-radius: 50%;
 }
-/* Bottom-right blue glow */
+/* Bottom-right purple glow */
 .gt-login-bg::after {
   content: '';
   position: absolute;
   bottom: -20%; right: -8%;
   width: 48vw; height: 48vw;
-  background: radial-gradient(circle, rgba(59,130,246,.18) 0%, transparent 65%);
+  background: radial-gradient(circle, rgba(138,115,245,.18) 0%, transparent 65%);
   border-radius: 50%;
 }
 
@@ -949,7 +949,7 @@ img { max-width: 100%; height: auto; }
 
 /* Sign in button */
 .gt-login-page .btn-primary {
-  background: #2563eb;
+  background: var(--accent);
   color: #fff;
   font-size: 14px; font-weight: 600;
   padding: 13px;
@@ -957,9 +957,10 @@ img { max-width: 100%; height: auto; }
   justify-content: center;
   border: none; letter-spacing: .1px;
   margin-top: 4px;
+  box-shadow: 0 4px 16px rgba(108,93,211,.35);
 }
 .gt-login-page .btn-primary:hover {
-  background: #1d4ed8;
+  background: var(--accent-dim);
   opacity: 1; color: #fff;
 }
 
@@ -967,7 +968,7 @@ img { max-width: 100%; height: auto; }
   text-align: center; margin-top: 20px;
   font-size: 12px; color: rgba(255,255,255,.28);
 }
-.gt-login-powered a { color: rgba(59,130,246,.7); }
+.gt-login-powered a { color: rgba(138,115,245,.75); }
 .gt-login-powered a:hover { color: var(--accent); opacity: 1; }
 
 /* ══════════════════════════════════════════

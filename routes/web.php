@@ -80,7 +80,7 @@ Route::prefix('owner')->name('owner.')->group(function () {
         Route::get('/login',             [OwnerLoginController::class, 'showLogin'])->name('login');
         Route::post('/login',            [OwnerLoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
         Route::get('/login/otp',         [OwnerLoginController::class, 'showOtpVerify'])->name('login.otp.show');
-        Route::post('/login/otp',        [OwnerLoginController::class, 'verifyOtp'])->name('login.otp.verify')->middleware('throttle:5,1');
+        Route::post('/login/otp',        [OwnerLoginController::class, 'verifyOtp'])->name('login.otp.verify')->middleware('throttle:8,1');
         Route::post('/login/otp/resend', [OwnerLoginController::class, 'resendOtp'])->name('login.otp.resend')->middleware('throttle:3,1');
     });
     Route::post('/logout', [OwnerLoginController::class, 'logout'])->name('logout');
@@ -92,7 +92,7 @@ Route::middleware('guest:institute')->group(function () {
     Route::get('/franchise/login', fn() => view('auth.franchise-login'))->name('franchise.login');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
     Route::get('/login/otp', [LoginController::class, 'showOtpVerify'])->name('login.otp.show');
-    Route::post('/login/otp', [LoginController::class, 'verifyOtp'])->name('login.otp.verify')->middleware('throttle:5,1');
+    Route::post('/login/otp', [LoginController::class, 'verifyOtp'])->name('login.otp.verify')->middleware('throttle:8,1');
     Route::post('/login/otp/resend', [LoginController::class, 'resendOtp'])->name('login.otp.resend')->middleware('throttle:3,1');
     Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
     Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');

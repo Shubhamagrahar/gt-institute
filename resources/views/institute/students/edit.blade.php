@@ -6,7 +6,7 @@
 
 @push('styles')
 <style>
-.sec-nav{display:flex;gap:4px;flex-wrap:wrap;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:16px;position:sticky;top:68px;z-index:40;}
+.sec-nav{display:flex;gap:4px;flex-wrap:wrap;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:5px;margin-bottom:16px;position:sticky;top:0;z-index:40;}
 .sec-nav a{padding:5px 14px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--text-2);text-decoration:none;transition:all .13s;}
 .sec-nav a:hover{background:var(--bg-3);color:var(--text);}
 .sec-nav a.on{background:var(--accent);color:#fff;}
